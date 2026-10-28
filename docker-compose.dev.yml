@@ -1,0 +1,18 @@
+# Development: API, worker, DB and Redis in Docker; Next.js on the host with
+# hot reload, both behind Caddy at http://localhost:7892.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+#   cd web && npm run dev   (port 3456)
+services:
+  caddy:
+    volumes: !override
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on: !override
+      api:
+        condition: service_healthy
+  web:
+    profiles: ["prod-web"]

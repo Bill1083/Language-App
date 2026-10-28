@@ -1,0 +1,231 @@
+# ---------------------------------------------------------------------------
+# Parlo — self-hosted language learning, single-VPS deployment.
+#
+#   cp .env.example .env   # fill it in
+#   docker compose up -d --build
+#
+# Caddy is the single entry point (routes /api → api, everything else → web).
+# By default it is published on 127.0.0.1:${PORT} for the host's Nginx +
+# Certbot to front with HTTPS (same as the other apps on this box). For a box
+# without a reverse proxy, add docker-compose.standalone.yml and Caddy gets
+# certificates itself on 80/443 — see README.
+#
+# Memory/CPU limits keep the whole stack at ~3.5 GB / well under 4 cores, so it
+# shares the VPS politely. Optional profiles:
+#   --profile local-ai   self-hosted TTS (Kokoro) + STT (faster-whisper)
+#   --profile backup     nightly pg_dump + volume tarballs into ./backups
+#   --profile test       backend test suite (docker compose run --rm api-test)
+# ---------------------------------------------------------------------------
+
+name: parlo
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-api-env: &api-env
+  POSTGRES_HOST: db
+  REDIS_URL: redis://redis:6379/0
+  DATA_DIR: /data
+  CURRICULUM_DIR: /app/curriculum
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      CADDY_SITE_ADDRESS: ${CADDY_SITE_ADDRESS:-:80}
+    ports:
+      - "127.0.0.1:${PORT:-7892}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits: { cpus: "0.50", memory: 128M }
+    logging: *logging
+
+  web:
+    build:
+      context: ./web
+    image: parlo-web:latest
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/manifest.webmanifest').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    deploy:
+      resources:
+        limits: { cpus: "1.00", memory: 384M }
+    logging: *logging
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+      target: runtime
+    image: parlo-api:latest
+    restart: unless-stopped
+    command: ["api"]
+    env_file: .env
+    environment:
+      <<: *api-env
+    volumes:
+      - audio_cache:/data/audio_cache
+      - recordings:/data/recordings
+      - ./secrets:/secrets:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits: { cpus: "1.50", memory: 768M }
+    logging: *logging
+
+  worker:
+    image: parlo-api:latest
+    restart: unless-stopped
+    command: ["worker"]
+    env_file: .env
+    environment:
+      <<: *api-env
+    volumes:
+      - audio_cache:/data/audio_cache
+      - recordings:/data/recordings
+      - ./secrets:/secrets:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import redis,sys; sys.exit(0 if redis.Redis(host='redis').ping() else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits: { cpus: "1.00", memory: 768M }
+    logging: *logging
+
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: parlo
+      POSTGRES_DB: parlo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parlo -d parlo"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    deploy:
+      resources:
+        limits: { cpus: "1.00", memory: 1G }
+    logging: *logging
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "300", "10", "--maxmemory", "192mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    deploy:
+      resources:
+        limits: { cpus: "0.50", memory: 256M }
+    logging: *logging
+
+  # --- optional: local AI (off by default) ----------------------------------
+  tts:
+    profiles: ["local-ai"]
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "2.00", memory: 2G }
+    logging: *logging
+
+  stt:
+    profiles: ["local-ai"]
+    image: fedirz/faster-whisper-server:latest-cpu
+    restart: unless-stopped
+    environment:
+      WHISPER__MODEL: Systran/faster-whisper-small
+    volumes:
+      - whisper_models:/root/.cache/huggingface
+    deploy:
+      resources:
+        limits: { cpus: "2.00", memory: 2G }
+    logging: *logging
+
+  # --- optional: nightly backups ---------------------------------------------
+  backup:
+    profiles: ["backup"]
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: parlo
+      PGDATABASE: parlo
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_KEEP: ${BACKUP_KEEP:-7}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+    volumes:
+      - ./scripts/backup-loop.sh:/backup-loop.sh:ro
+      - ./backups:/backups
+      - audio_cache:/volumes/audio_cache:ro
+      - recordings:/volumes/recordings:ro
+    entrypoint: ["/bin/sh", "/backup-loop.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits: { cpus: "0.50", memory: 256M }
+    logging: *logging
+
+  # --- optional: backend tests ------------------------------------------------
+  api-test:
+    profiles: ["test"]
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+      target: test
+    environment:
+      APP_SECRET: test
+      DATA_DIR: /tmp/parlo
+      CURRICULUM_DIR: /app/curriculum
+
+volumes:
+  pgdata:
+  redis_data:
+  audio_cache:
+  recordings:
+  caddy_data:
+  caddy_config:
+  whisper_models:

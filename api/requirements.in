@@ -1,0 +1,18 @@
+# Direct dependencies. requirements.txt is the pinned lockfile compiled from
+# this file:  docker run --rm -v "$PWD:/w" -w /w python:3.13-slim sh -c \
+#   "pip install -q uv && uv pip compile requirements.in -o requirements.txt"
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pydantic
+pydantic-settings
+argon2-cffi
+httpx
+redis
+arq
+pyyaml
+python-multipart
+google-auth
+pywebpush

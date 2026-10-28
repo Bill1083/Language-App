@@ -1,0 +1,854 @@
+# Japanese course skeleton (A1 → C1), taught in English.
+# The writing-systems module (hiragana, katakana) lives in ja_kana.yaml and
+# must be completed or tested out of before A1. Kanji are introduced through
+# vocab, roughly following JLPT N5 → N1 (A1 ≈ N5, A2 ≈ N4, B1 ≈ N3, B2 ≈ N2,
+# C1 ≈ N1). Lesson content always carries furigana markup.
+
+language: ja
+name: Japanese
+
+levels:
+  A1:
+    - unit: Greetings & introductions
+      theme: greetings
+      objectives: [Greet people politely, Introduce yourself, Ask simple yes/no questions]
+      lessons:
+        - title: Hello and goodbye
+          objectives: [Greet people at different times of day, Thank and apologise]
+          vocab: [おはようございます, こんにちは, こんばんは, さようなら, ありがとうございます, すみません, じゃあね, おやすみなさい]
+          grammar: [Polite vs casual greetings]
+        - title: Nice to meet you
+          objectives: [Introduce yourself with your name]
+          vocab: [はじめまして, 私, 名前, よろしくお願いします, さん, 先生, 学生, です]
+          grammar: [X は Y です, The honorific さん]
+        - title: Nationality and work
+          objectives: [Say your nationality and job]
+          vocab: [日本, 日本人, イギリス, アメリカ, 会社員, 医者, 大学, 何]
+          grammar: [Country + 人, The particle の (日本語の先生)]
+        - title: Is it…?
+          objectives: [Ask and answer yes/no questions]
+          vocab: [はい, いいえ, そうです, ちがいます, あなた, 友達, 本当, ええ]
+          grammar: [Questions with か, Negative じゃありません]
+
+    - unit: Numbers, time & money
+      theme: numbers
+      objectives: [Count, Tell the time, Ask prices]
+      lessons:
+        - title: Numbers
+          objectives: [Count to 100, Give a phone number]
+          vocab: [一, 二, 三, 四, 五, 十, 百, 電話番号]
+          grammar: [Number readings (よん or し and なな or しち)]
+        - title: What time is it?
+          objectives: [Ask and tell the time]
+          vocab: [今, 何時, 〜時, 〜分, 半, 午前, 午後, ごろ]
+          grammar: [Time + に, から and まで]
+        - title: Days and dates
+          objectives: [Say days of the week and dates]
+          vocab: [月曜日, 火曜日, 水曜日, 日曜日, 今日, 明日, 昨日, 誕生日]
+          grammar: [Irregular date readings (ついたち and はつか)]
+        - title: How much is it?
+          objectives: [Ask prices and buy things]
+          vocab: [円, いくら, これ, それ, あれ, どれ, 高い, 安い]
+          grammar: [これ / それ / あれ / どれ, 〜をください]
+
+    - unit: Things & places
+      theme: places
+      objectives: [Point out things, Say where things and people are]
+      lessons:
+        - title: This book that bag
+          objectives: [Point things out with demonstratives]
+          vocab: [この, その, あの, どの, 本, かばん, 傘, 時計]
+          grammar: [この / その / あの + noun]
+        - title: Where is it?
+          objectives: [Ask where places are]
+          vocab: [ここ, そこ, あそこ, どこ, トイレ, 駅, 銀行, コンビニ]
+          grammar: [X はどこですか, ここ / そこ / あそこ]
+        - title: There is
+          objectives: [Say what and who is somewhere]
+          vocab: [あります, います, 猫, 犬, 机, 部屋, 公園, 誰]
+          grammar: [に あります / います, Animate vs inanimate existence]
+        - title: On under next to
+          objectives: [Describe locations precisely]
+          vocab: [上, 下, 中, 外, 前, 後ろ, 隣, 近く]
+          grammar: [Noun の 上 に]
+
+    - unit: Daily life
+      theme: routine
+      objectives: [Describe daily actions, Talk about the past, Say where you go]
+      lessons:
+        - title: I eat breakfast
+          objectives: [Describe daily actions]
+          vocab: [食べます, 飲みます, 見ます, 読みます, 起きます, 寝ます, 朝ご飯, 水]
+          grammar: [ます verbs, The object particle を]
+        - title: Every day
+          objectives: [Say when and how often you do things]
+          vocab: [毎日, 毎朝, よく, 時々, あまり, 全然, 週末, 働きます]
+          grammar: [Frequency adverbs and negative ません]
+        - title: Going places
+          objectives: [Say where you go and how]
+          vocab: [行きます, 来ます, 帰ります, 電車, バス, 歩いて, 学校, 会社]
+          grammar: [へ / に for destinations, で for means]
+        - title: Yesterday
+          objectives: [Talk about what you did]
+          vocab: [昨日, 先週, 勉強します, 買います, 会います, 映画, 買い物, 何も]
+          grammar: [Past ました / ませんでした]
+
+    - unit: Food & ordering
+      theme: food
+      objectives: [Order food and drink, Talk about likes, Invite people]
+      lessons:
+        - title: Food and drink
+          objectives: [Name common foods and drinks]
+          vocab: [ご飯, 肉, 魚, 野菜, お茶, コーヒー, ビール, 果物]
+          grammar: [Listing with と and や]
+        - title: At a restaurant
+          objectives: [Order politely]
+          vocab: [メニュー, 注文, お願いします, 一つ, 二つ, 水, お会計, いらっしゃいませ]
+          grammar: [〜をお願いします, Counter つ]
+        - title: I like sushi
+          objectives: [Say what you like and dislike]
+          vocab: [好き, 嫌い, 大好き, 寿司, ラーメン, 甘い, 辛い, 料理]
+          grammar: [X が好きです]
+        - title: Shall we go?
+          objectives: [Invite and accept invitations]
+          vocab: [一緒に, 〜ませんか, 〜ましょう, いいですね, ちょっと, 今度, 晩ご飯, 食べに行きます]
+          grammar: [〜ませんか / 〜ましょう, Verb stem + に行きます]
+
+    - unit: Describing things
+      theme: description
+      objectives: [Describe things with adjectives, Compare]
+      lessons:
+        - title: い-adjectives
+          objectives: [Describe things with い-adjectives]
+          vocab: [大きい, 小さい, 新しい, 古い, 面白い, 難しい, 暑い, 寒い]
+          grammar: [い-adjectives and their negative くないです]
+        - title: な-adjectives
+          objectives: [Describe things with な-adjectives]
+          vocab: [きれい, 静か, 便利, 有名, 元気, 親切, 簡単, にぎやか]
+          grammar: [な-adjectives before nouns and じゃないです]
+        - title: It was fun
+          objectives: [Describe past experiences]
+          vocab: [楽しい, つまらない, おいしい, 天気, 旅行, パーティー, どう, とても]
+          grammar: [Past adjectives かったです / でした]
+        - title: Which is bigger?
+          objectives: [Compare two things]
+          vocab: [より, ほう, 一番, どちら, 同じ, 速い, 遅い, 一番好き]
+          grammar: [A は B より〜, A のほうが, 〜の中で一番]
+
+    - unit: Family & people
+      theme: family
+      objectives: [Talk about your family, Describe people, Count people and things]
+      lessons:
+        - title: My family
+          objectives: [Name your own family members]
+          vocab: [家族, 父, 母, 兄, 姉, 弟, 妹, 両親]
+          grammar: [Humble family words for your own family]
+        - title: Your family
+          objectives: [Ask about someone else's family]
+          vocab: [ご家族, お父さん, お母さん, お兄さん, お姉さん, 子ども, 結婚しています, 何人]
+          grammar: [Respectful family words, 〜ています for states (結婚しています)]
+        - title: Describing people
+          objectives: [Describe appearance and personality]
+          vocab: [背が高い, 髪, 目, 長い, 短い, 優しい, 明るい, かわいい]
+          grammar: [X は Y が Adj (彼女は髪が長いです)]
+        - title: Counting
+          objectives: [Count people and things]
+          vocab: [一人, 二人, 三人, 一つ, 一枚, 一本, 一冊, 何本]
+          grammar: [Counters 人 / つ / 枚 / 本 / 冊]
+
+    - unit: Weather & plans
+      theme: weather
+      objectives: [Talk about weather and seasons, Say what you want to do]
+      lessons:
+        - title: The weather
+          objectives: [Describe the weather]
+          vocab: [天気, 晴れ, 雨, 雪, 曇り, 風, 天気予報, 降ります]
+          grammar: [Weather expressions (雨が降ります)]
+        - title: Seasons
+          objectives: [Talk about seasons]
+          vocab: [春, 夏, 秋, 冬, 季節, 桜, 紅葉, 暖かい]
+          grammar: [〜は〜が好きです for seasons, Adjective te-form preview (暑くて)]
+        - title: I want to go to Japan
+          objectives: [Say what you want to do]
+          vocab: [行きたい, 欲しい, 見たい, 京都, 温泉, お土産, 写真, 撮ります]
+          grammar: [Verb stem + たいです, X が欲しいです]
+        - title: Weekend plans
+          objectives: [Talk about plans]
+          vocab: [予定, 週末, 土曜日, 何をしますか, 掃除, 洗濯, 友達と, 家で]
+          grammar: [Particles で (place of action) and と (with)]
+
+  A2:
+    - unit: The て-form
+      theme: te-form
+      objectives: [Form the て-form, Make requests, Describe ongoing actions]
+      lessons:
+        - title: Making the て-form
+          objectives: [Conjugate verbs into the て-form]
+          vocab: [書いて, 話して, 待って, 遊んで, 来て, して, 行って, 使って]
+          grammar: [て-form rules by verb group]
+        - title: Please do
+          objectives: [Make polite requests]
+          vocab: [〜てください, 見せて, 教えて, 手伝って, ゆっくり, もう一度, 名前を書いて, 待ってください]
+          grammar: [〜てください]
+        - title: I'm doing it now
+          objectives: [Describe ongoing actions and states]
+          vocab: [〜ています, 住んでいます, 知っています, 持っています, 今, 電話, 雨が降っています, 着ています]
+          grammar: [〜ています for progress and states]
+        - title: After that
+          objectives: [Sequence actions]
+          vocab: [〜てから, それから, シャワーを浴びて, 歯を磨いて, 出かけて, 着替えて, 準備, 朝]
+          grammar: [〜て〜て for sequences, 〜てから]
+
+    - unit: Rules & permission
+      theme: rules
+      objectives: [Ask for and give permission, Talk about rules and obligations]
+      lessons:
+        - title: May I?
+          objectives: [Ask permission]
+          vocab: [〜てもいいですか, 座って, 窓, 開けて, 写真を撮って, 入って, どうぞ, 大丈夫]
+          grammar: [〜てもいいです]
+        - title: You must not
+          objectives: [State prohibitions]
+          vocab: [〜てはいけません, 禁止, たばこを吸って, 走って, 止めて, ここで, 美術館, ルール]
+          grammar: [〜てはいけません]
+        - title: I have to
+          objectives: [Talk about obligations]
+          vocab: [〜なければなりません, 薬, 宿題, 返します, 払います, 早く, 締め切り, 出します]
+          grammar: [ない-form and 〜なければなりません]
+        - title: You don't have to
+          objectives: [Say something isn't necessary]
+          vocab: [〜なくてもいいです, 靴を脱いで, 予約, 心配, 急いで, 現金, カード, 必要]
+          grammar: [〜なくてもいいです]
+
+    - unit: Plain form & casual speech
+      theme: plain-form
+      objectives: [Use plain forms, Speak casually with friends]
+      lessons:
+        - title: Dictionary form
+          objectives: [Use the plain present]
+          vocab: [食べる, 飲む, 行く, 来る, する, 見る, 帰る, 寝る]
+          grammar: [Dictionary form by verb group]
+        - title: Not doing
+          objectives: [Use the plain negative]
+          vocab: [食べない, 行かない, ない, 来ない, しない, わからない, 知らない, いない]
+          grammar: [ない-form]
+        - title: Did it
+          objectives: [Use the plain past]
+          vocab: [食べた, 行った, した, 来た, 見た, 楽しかった, 静かだった, 雨だった]
+          grammar: [た-form and plain past of adjectives]
+        - title: Talking with friends
+          objectives: [Switch between polite and casual speech]
+          vocab: [うん, ううん, そう, だよ, だね, じゃあ, マジ, めっちゃ]
+          grammar: [Politeness levels です/ます vs plain, Sentence-ending よ and ね]
+
+    - unit: Experiences & abilities
+      theme: experience
+      objectives: [Talk about experiences, Say what you can do]
+      lessons:
+        - title: Have you ever…?
+          objectives: [Talk about experiences]
+          vocab: [〜たことがあります, 富士山, 登る, 着物, 一度も, 外国, 経験, 何回]
+          grammar: [〜たことがある]
+        - title: I can…
+          objectives: [Say what you can do with ことができる]
+          vocab: [〜ことができます, 泳ぐ, 運転する, ピアノ, 弾く, 漢字, 料理する, 歌う]
+          grammar: [Dictionary form + ことができる]
+        - title: Potential form
+          objectives: [Use the potential form]
+          vocab: [話せる, 読める, 食べられる, 来られる, できる, 見える, 聞こえる, 上手]
+          grammar: [Potential verb forms]
+        - title: My hobbies
+          objectives: [Talk about hobbies]
+          vocab: [趣味, 〜のが好き, 〜こと, 映画を見ること, 釣り, 集める, 絵を描く, 上手 / 下手]
+          grammar: [Nominalising with の and こと]
+
+    - unit: Reasons & opinions
+      theme: opinions
+      objectives: [Give reasons, Share opinions, Report what people said]
+      lessons:
+        - title: Because
+          objectives: [Give reasons]
+          vocab: [から, ので, 疲れた, 熱がある, 忙しい, 遅れて, 道が込んでいて, 理由]
+          grammar: [から vs ので]
+        - title: I think
+          objectives: [Give your opinion]
+          vocab: [〜と思います, 意見, たぶん, きっと, 便利だと思う, 大切, 賛成, 反対]
+          grammar: [Plain form + と思います]
+        - title: He said
+          objectives: [Report speech]
+          vocab: [〜と言いました, 〜って, 伝える, 聞く, 先生が, 明日休み, 〜そうです, ニュース]
+          grammar: [Quotation with と言う]
+        - title: Probably
+          objectives: [Make guesses]
+          vocab: [〜でしょう, 〜かもしれません, 明日は晴れる, 多分, 遅れる, 間に合う, 試合, 勝つ]
+          grammar: [でしょう and かもしれない]
+
+    - unit: Giving & receiving
+      theme: giving
+      objectives: [Talk about gifts and favours]
+      lessons:
+        - title: Giving gifts
+          objectives: [Use あげる and もらう]
+          vocab: [あげる, もらう, プレゼント, 花, チョコレート, 誕生日に, 彼女, 彼]
+          grammar: [あげる / もらう and direction of giving]
+        - title: Someone gave me
+          objectives: [Use くれる]
+          vocab: [くれる, 祖母, 手紙, 送る, 貸す, 借りる, 嬉しい, お礼]
+          grammar: [くれる vs あげる]
+        - title: Doing favours
+          objectives: [Talk about doing things for others]
+          vocab: [〜てあげる, 〜てもらう, 〜てくれる, 案内する, 直す, 手伝う, 迎えに行く, 助かる]
+          grammar: [Benefactive auxiliaries てあげる / てもらう / てくれる]
+        - title: Thank you for…
+          objectives: [Thank people for favours]
+          vocab: [〜てくれてありがとう, お世話になりました, 感謝, わざわざ, おかげで, 気を使う, 恐縮, とんでもない]
+          grammar: [Thanking with 〜てくれて / 〜ていただいて]
+
+    - unit: Conditions
+      theme: conditionals
+      objectives: [Talk about conditions and consequences]
+      lessons:
+        - title: If and when (たら)
+          objectives: [Use 〜たら]
+          vocab: [〜たら, 着いたら, 暇だったら, 雨が降ったら, 安かったら, 終わったら, 連絡, 中止]
+          grammar: [〜たら conditional]
+        - title: Whenever (と)
+          objectives: [Describe automatic consequences]
+          vocab: [〜と, 押すと, 曲がると, 春になると, ボタン, 出る, 見える, 右]
+          grammar: [〜と for natural consequences]
+        - title: If (ば)
+          objectives: [Use the ば conditional]
+          vocab: [〜ば, 行けば, 安ければ, 時間があれば, 練習すれば, 間に合う, 上手になる, どうすれば]
+          grammar: [ば-form]
+        - title: If that's the case (なら)
+          objectives: [Give advice with なら]
+          vocab: [なら, 京都なら, それなら, 行くなら, 買うなら, おすすめ, 一番いい, 場合]
+          grammar: [なら for topics and advice]
+
+    - unit: Travel & getting around
+      theme: travel
+      objectives: [Navigate trains and directions, Book hotels, Make plans]
+      lessons:
+        - title: Directions
+          objectives: [Give and follow directions]
+          vocab: [まっすぐ, 曲がる, 右, 左, 角, 信号, 渡る, 道]
+          grammar: [〜て行く / 〜て来る, Sequence directions]
+        - title: Taking the train
+          objectives: [Buy tickets and change trains]
+          vocab: [切符, 乗る, 降りる, 乗り換え, 〜番線, 新幹線, 改札, 終電]
+          grammar: [に乗る / を降りる]
+        - title: At the hotel
+          objectives: [Check in and make requests]
+          vocab: [予約, チェックイン, 部屋, 鍵, 朝食, 和室, 一泊, 荷物]
+          grammar: [Polite requests 〜ていただけますか]
+        - title: Let's go
+          objectives: [Make plans with the volitional]
+          vocab: [行こう, 食べよう, しよう, 〜ようと思う, つもり, 計画, 来年, 留学]
+          grammar: [Volitional form and 〜ようと思う / つもり]
+
+  B1:
+    - unit: The passive
+      theme: passive
+      objectives: [Use passive forms in daily life and news]
+      lessons:
+        - title: Passive forms
+          objectives: [Form the passive]
+          vocab: [言われる, 呼ばれる, 褒められる, 叱られる, 頼まれる, 招待される, 作られる, 発明]
+          grammar: [Passive verb forms]
+        - title: Bad luck passive
+          objectives: [Express being inconvenienced]
+          vocab: [雨に降られる, 足を踏まれる, 財布を盗まれる, 泣かれる, 隣の人, 困る, 迷惑, 被害]
+          grammar: [The suffering passive (迷惑の受身)]
+        - title: Passive in news and writing
+          objectives: [Understand passive in news]
+          vocab: [行われる, 建てられる, 発表される, 開かれる, 世界中, 使われている, 輸出, 選ばれる]
+          grammar: [Impersonal passive in formal Japanese]
+        - title: Telling what happened
+          objectives: [Narrate incidents using the passive]
+          vocab: [事故, 警察, 届ける, 見つかる, 落とす, 被害届, 犯人, 捕まる]
+          grammar: [Passive vs intransitive verbs]
+
+    - unit: The causative
+      theme: causative
+      objectives: [Make and let people do things, Use causative-passive]
+      lessons:
+        - title: Make or let
+          objectives: [Form the causative]
+          vocab: [させる, 行かせる, 食べさせる, 待たせる, 習わせる, 子どもに, 自由に, 親]
+          grammar: [Causative 〜せる / 〜させる]
+        - title: Let me…
+          objectives: [Ask permission politely]
+          vocab: [〜させてください, 説明させて, 休ませて, 考えさせて, 担当, 発表, 意見, 一言]
+          grammar: [〜させてください / させていただきます]
+        - title: Made to do
+          objectives: [Use the causative-passive]
+          vocab: [飲まされる, 待たされる, 歌わされる, 残業させられる, 無理やり, 部長, 嫌々, 飲み会]
+          grammar: [Causative-passive forms]
+        - title: At work
+          objectives: [Talk about workplace tasks]
+          vocab: [上司, 部下, 同僚, 会議, 資料, 担当する, 任せる, 指示]
+          grammar: [Causative in workplace contexts]
+
+    - unit: Appearance & hearsay
+      theme: hearsay
+      objectives: [Express impressions and hearsay]
+      lessons:
+        - title: It looks…
+          objectives: [Describe appearances]
+          vocab: [おいしそう, 雨が降りそう, 高そう, 元気そう, 落ちそう, 今にも, 楽しそう, 眠そう]
+          grammar: [Stem + そうだ (appearance)]
+        - title: I heard that…
+          objectives: [Pass on information]
+          vocab: [〜そうだ, 〜によると, 天気予報によると, 噂, 結婚するそうだ, 閉店, 値上げ, 聞いた]
+          grammar: [Plain form + そうだ (hearsay)]
+        - title: It seems
+          objectives: [Make inferences]
+          vocab: [〜ようだ, 〜みたい, 誰もいないようだ, 風邪みたい, 様子, 気がする, 夢みたい, まるで]
+          grammar: [ようだ / みたいだ]
+        - title: Apparently
+          objectives: [Use らしい]
+          vocab: [〜らしい, 男らしい, 春らしい, 来月らしい, 辞める, 本物, 典型的, 噂によると]
+          grammar: [らしい for hearsay and typicality]
+
+    - unit: Polite Japanese (keigo)
+      theme: keigo
+      objectives: [Use honorific and humble language in common situations]
+      lessons:
+        - title: Honorific language
+          objectives: [Use 尊敬語]
+          vocab: [いらっしゃる, おっしゃる, 召し上がる, ご覧になる, なさる, お休みになる, お客様, 社長]
+          grammar: [尊敬語 special verbs and お〜になる]
+        - title: Humble language
+          objectives: [Use 謙譲語]
+          vocab: [参る, 申す, いただく, 拝見する, いたす, 伺う, 存じる, お〜する]
+          grammar: [謙譲語 special verbs and お〜する]
+        - title: On the phone
+          objectives: [Handle a business phone call]
+          vocab: [お電話ありがとうございます, 少々お待ちください, 申し訳ございません, 席を外しております, 折り返し, 伝言, 担当者, かしこまりました]
+          grammar: [Business phone keigo]
+        - title: Customer service
+          objectives: [Understand shop and service keigo]
+          vocab: [いらっしゃいませ, ございます, 〜でございます, お決まりでしょうか, ご注文, お待たせしました, お会計, またお越しください]
+          grammar: [丁寧語 (ございます) and service phrases]
+
+    - unit: Purpose & change
+      theme: purpose
+      objectives: [Express purpose and change, Talk about decisions]
+      lessons:
+        - title: In order to
+          objectives: [Express purpose with ために]
+          vocab: [〜ために, 健康のために, 貯金する, 留学する, 将来, 目的, 夢, 努力]
+          grammar: [ために for purpose and benefit]
+        - title: So that
+          objectives: [Express purpose with ように]
+          vocab: [〜ように, 忘れないように, 聞こえるように, 間に合うように, メモする, 大きい声で, 気をつける, 祈る]
+          grammar: [ように with potential and negative verbs]
+        - title: I've come to…
+          objectives: [Describe gradual change]
+          vocab: [〜ようになる, 話せるようになった, 食べられるようになった, 〜なくなる, 慣れる, だんだん, 最近, 変わる]
+          grammar: [〜ようになる / 〜なくなる]
+        - title: Decisions
+          objectives: [Talk about decisions you or others made]
+          vocab: [〜ことにする, 〜ことになる, 引っ越す, 転勤, 決める, 決まる, 禁煙, 毎朝走る]
+          grammar: [ことにする vs ことになる]
+
+    - unit: Time expressions
+      theme: time
+      objectives: [Express timing precisely]
+      lessons:
+        - title: While it's still…
+          objectives: [Use うちに]
+          vocab: [〜うちに, 若いうちに, 温かいうちに, 明るいうちに, 忘れないうちに, 早めに, 機会, 今のうちに]
+          grammar: [うちに]
+        - title: Just about to / just did
+          objectives: [Use ところ]
+          vocab: [〜ところ, 出かけるところ, 食べているところ, 着いたところ, ちょうど, 今から, さっき, 途中]
+          grammar: [〜るところ / 〜ているところ / 〜たところ]
+        - title: Just / nothing but
+          objectives: [Use ばかり]
+          vocab: [〜たばかり, 〜てばかり, 買ったばかり, 寝てばかり, 文句, 新品, 入社, ゲーム]
+          grammar: [ばかり]
+        - title: During
+          objectives: [Use 間 and 間に]
+          vocab: [〜間, 〜間に, 夏休みの間, 留守の間に, ずっと, 待っている間, 泥棒, 昼寝]
+          grammar: [間 vs 間に]
+
+    - unit: Feelings & regrets
+      theme: feelings
+      objectives: [Express feelings, Regrets and contradictions]
+      lessons:
+        - title: Emotions
+          objectives: [Describe feelings]
+          vocab: [嬉しい, 悲しい, 寂しい, 恥ずかしい, 悔しい, 心配する, 驚く, 怒る]
+          grammar: [Emotion adjectives and third-person がる]
+        - title: Oops
+          objectives: [Express completion and regret]
+          vocab: [〜てしまう, 〜ちゃう, 忘れてしまった, 壊しちゃった, 全部食べてしまった, 失敗, うっかり, 後悔]
+          grammar: [〜てしまう / 〜ちゃう]
+        - title: Even though
+          objectives: [Express frustration with のに]
+          vocab: [〜のに, 約束したのに, 勉強したのに, せっかく, 残念, がっかり, 来なかった, 頑張った]
+          grammar: [のに]
+        - title: No wonder
+          objectives: [Explain with わけ]
+          vocab: [〜わけだ, 〜わけではない, 〜わけがない, なるほど, 道理で, 嫌いなわけではない, 当然, 理由]
+          grammar: [わけ]
+
+    - unit: Media & culture
+      theme: culture
+      objectives: [Discuss media and culture, Give opinions on topics]
+      lessons:
+        - title: Anime and manga
+          objectives: [Talk about anime and manga]
+          vocab: [アニメ, 漫画, 声優, 作品, 主人公, 作者, 人気, ストーリー]
+          grammar: [〜について (about)]
+        - title: The news
+          objectives: [Understand news topics]
+          vocab: [事件, 政治, 経済, 首相, 選挙, 地震, 発生, 報道]
+          grammar: [Written news style (〜した。〜という。)]
+        - title: Japanese customs
+          objectives: [Explain customs and etiquette]
+          vocab: [お辞儀, お正月, お盆, お中元, 習慣, マナー, 失礼, 常識]
+          grammar: [〜ことになっている for customs]
+        - title: For me
+          objectives: [Give perspectives]
+          vocab: [〜にとって, 〜として, 大切な, 意味, 価値, 外国人として, 若者, 経験]
+          grammar: [にとって vs として]
+
+  B2:
+    - unit: Formal written Japanese
+      theme: writing
+      objectives: [Read and write formal である style, Use formal connectors]
+      lessons:
+        - title: The である style
+          objectives: [Recognise and write である style]
+          vocab: [である, 〜ではない, 考えられる, 述べる, 示す, 現在, 問題, 必要がある]
+          grammar: [である style]
+        - title: Despite
+          objectives: [Express contrast formally]
+          vocab: [〜にもかかわらず, 〜ながらも, 反対, 努力, 結果, 悪天候, 開催, 予想]
+          grammar: [にもかかわらず]
+        - title: Towards and in contrast
+          objectives: [Use に対して]
+          vocab: [〜に対して, 〜に関して, 質問, 態度, 都市部, 地方, 割合, 対照的]
+          grammar: [に対して / に関して]
+        - title: Depending on
+          objectives: [Use によって]
+          vocab: [〜によって, 〜によっては, 人によって, 場合によっては, 異なる, 地域, 方法, 結果]
+          grammar: [によって (cause / means / variation)]
+
+    - unit: Business Japanese
+      theme: business
+      objectives: [Write business emails, Join meetings, Negotiate politely]
+      lessons:
+        - title: Business email
+          objectives: [Write a polite business email]
+          vocab: [お世話になっております, 恐れ入りますが, ご確認ください, 添付, 何卒, よろしくお願い申し上げます, 件名, ご査収]
+          grammar: [Business email conventions]
+        - title: Meetings
+          objectives: [Participate in a meeting]
+          vocab: [議題, 提案, 検討する, 賛成, 反対意見, 結論, 議事録, 共有]
+          grammar: [Softening opinions (〜かと思います)]
+        - title: Negotiation
+          objectives: [Negotiate indirectly]
+          vocab: [条件, 価格, 値引き, 納期, 前向きに, 難しい, 譲歩, 合意]
+          grammar: [Indirect refusal (〜は少し難しいかと)]
+        - title: Apologising at work
+          objectives: [Apologise formally]
+          vocab: [大変申し訳ございません, ご迷惑をおかけしました, 不手際, 再発防止, 深くお詫び申し上げます, 対応, 原因, 確認不足]
+          grammar: [Formal apology structures]
+
+    - unit: Society today
+      theme: society
+      objectives: [Discuss social issues in Japan]
+      lessons:
+        - title: An ageing society
+          objectives: [Discuss demographics]
+          vocab: [少子高齢化, 人口, 減少, 介護, 年金, 出生率, 若者, 地方]
+          grammar: [〜につれて / 〜にともなって]
+        - title: Environment
+          objectives: [Discuss environmental issues]
+          vocab: [環境, 温暖化, 再生可能エネルギー, ごみの分別, 削減, 資源, 持続可能, 取り組み]
+          grammar: [〜べきだ]
+        - title: Work culture
+          objectives: [Discuss work life]
+          vocab: [働き方改革, 残業, 過労, 有給休暇, 終身雇用, 転職, 在宅勤務, ワークライフバランス]
+          grammar: [〜とは限らない]
+        - title: Technology
+          objectives: [Discuss technology and society]
+          vocab: [人工知能, 技術, 発展, 便利さ, 個人情報, 依存, 影響, 将来性]
+          grammar: [〜一方で / 〜反面]
+
+    - unit: Nuanced grammar
+      theme: grammar
+      objectives: [Express obligation and tendency with nuance]
+      lessons:
+        - title: I can't very well…
+          objectives: [Use わけにはいかない]
+          vocab: [〜わけにはいかない, 約束, 断る, 休む, 責任, 立場, 今さら, 簡単に]
+          grammar: [わけにはいかない]
+        - title: Have no choice but
+          objectives: [Use ざるを得ない]
+          vocab: [〜ざるを得ない, 諦める, 中止せざるを得ない, 認める, 仕方がない, 状況, 判断, やむを得ず]
+          grammar: [ざるを得ない]
+        - title: -ish and a bit
+          objectives: [Use っぽい and 気味]
+          vocab: [〜っぽい, 〜気味, 子どもっぽい, 忘れっぽい, 風邪気味, 疲れ気味, 安っぽい, 怒りっぽい]
+          grammar: [っぽい / 気味 / がち]
+        - title: How… it was
+          objectives: [Express strong feelings with ことか and ものだ]
+          vocab: [〜ことか, 〜ものだ, どれほど, 何度, 懐かしい, よく遊んだものだ, 時が経つ, しみじみ]
+          grammar: [ことか / ものだ]
+
+    - unit: Conditions & concessions
+      theme: concession
+      objectives: [Express hypothetical concessions and conditions]
+      lessons:
+        - title: Even if
+          objectives: [Use としても]
+          vocab: [〜としても, 〜にしても, たとえ, 失敗した, 反対されても, 構わない, 後悔しない, 挑戦]
+          grammar: [たとえ〜ても / としても]
+        - title: Although
+          objectives: [Use ものの]
+          vocab: [〜ものの, 買ったものの, 合格したものの, 自信, 実際, 予想以上, 不安, 一応]
+          grammar: [ものの]
+        - title: Just because
+          objectives: [Use からといって]
+          vocab: [〜からといって, 高いからといって, 外国人だからといって, 必ずしも, 限らない, 判断する, 見た目, 偏見]
+          grammar: [からといって〜とは限らない]
+        - title: If only
+          objectives: [Use さえ〜ば]
+          vocab: [〜さえ, 〜さえ〜ば, お金さえあれば, 時間さえあれば, 努力さえすれば, 条件, 十分, 満足]
+          grammar: [さえ〜ば]
+
+    - unit: Media & communication
+      theme: media
+      objectives: [Read news, Analyse interviews ads and online talk]
+      lessons:
+        - title: Newspapers
+          objectives: [Read headlines]
+          vocab: [見出し, 記事, 社説, 速報, 景気, 改正, 懸念, 方針]
+          grammar: [Headline style (noun endings and omitted particles)]
+        - title: Interviews
+          objectives: [Understand interviews]
+          vocab: [インタビュー, 質問, 回答, 語る, 振り返る, 印象, 今後, 意気込み]
+          grammar: [Reported speech in interviews (〜とのことだ)]
+        - title: Advertising
+          objectives: [Analyse ads]
+          vocab: [広告, 宣伝, キャッチコピー, 消費者, 新発売, 限定, 話題, 魅力]
+          grammar: [Persuasive expressions]
+        - title: Online
+          objectives: [Understand online Japanese]
+          vocab: [炎上, 拡散, 投稿, コメント, いいね, フォロワー, ネット, 草]
+          grammar: [Internet slang and abbreviations]
+
+    - unit: Culture & tradition
+      theme: tradition
+      objectives: [Discuss traditions arts and dialects]
+      lessons:
+        - title: Festivals
+          objectives: [Talk about festivals]
+          vocab: [祭り, 神社, お寺, 花火大会, 浴衣, 屋台, 神輿, 伝統]
+          grammar: [〜をはじめ]
+        - title: Traditional arts
+          objectives: [Discuss traditional arts]
+          vocab: [茶道, 華道, 書道, 歌舞伎, 能, 侘び寂び, 精神, 作法]
+          grammar: [〜を通して]
+        - title: Religion and beliefs
+          objectives: [Discuss religion in Japan]
+          vocab: [神道, 仏教, 参拝, お守り, おみくじ, 初詣, 信仰, 縁起]
+          grammar: [〜とされている]
+        - title: Kansai dialect
+          objectives: [Understand basic Kansai-ben]
+          vocab: [めっちゃ, あかん, ほんま, おおきに, なんでやねん, ちゃう, 〜へん, 〜はる]
+          grammar: [Kansai-ben verb endings]
+
+    - unit: Relationships & communication
+      theme: relationships
+      objectives: [Navigate indirect communication]
+      lessons:
+        - title: Tatemae and honne
+          objectives: [Understand public face vs true feelings]
+          vocab: [建前, 本音, 空気を読む, 遠慮, 気を遣う, 察する, 和, 曖昧]
+          grammar: [Indirect expressions (〜かなと思って)]
+        - title: Saying no
+          objectives: [Refuse politely]
+          vocab: [ちょっと…, 考えておきます, 残念ながら, 都合が悪い, せっかくですが, 遠慮しておきます, また今度, 難しいかも]
+          grammar: [Trailing-off refusals]
+        - title: Apologies
+          objectives: [Apologise appropriately]
+          vocab: [申し訳ない, ごめん, 失礼しました, 反省, 許す, 誤解, 謝る, 気にしないで]
+          grammar: [Apology levels]
+        - title: Giving advice
+          objectives: [Give advice gently]
+          vocab: [〜たほうがいい, 〜ほうがいいんじゃない, アドバイス, 相談, 悩み, 無理しないで, 様子を見る, 気分転換]
+          grammar: [Softened advice]
+
+  C1:
+    - unit: Literary Japanese
+      theme: literary
+      objectives: [Recognise literary and classical forms]
+      lessons:
+        - title: Classical remnants
+          objectives: [Recognise classical endings in modern writing]
+          vocab: [〜べし, 〜ず, 〜ぬ, 〜なり, 〜けり, 〜ごとし, 言わずと知れた, 知らぬ間に]
+          grammar: [Classical auxiliaries in modern Japanese]
+        - title: Unique to
+          objectives: [Use ならではの]
+          vocab: [〜ならではの, 日本ならではの, 職人, 地元, 味わい, 雰囲気, 独特, 魅力]
+          grammar: [ならでは]
+        - title: Formal expressions
+          objectives: [Use をもって and に至る]
+          vocab: [〜をもって, 〜に至る, 〜に至っては, 本日をもって, 閉店, 終了, 結論に至る, 経緯]
+          grammar: [をもって / に至る]
+        - title: Literary style
+          objectives: [Read literary prose]
+          vocab: [描写, 情景, 比喩, 余韻, 文体, 語り手, 心情, 象徴]
+          grammar: [Literary sentence endings and omission]
+
+    - unit: Academic Japanese
+      theme: academic
+      objectives: [Write structured essays, Cite and connect ideas]
+      lessons:
+        - title: Essay structure
+          objectives: [Plan an academic essay]
+          vocab: [序論, 本論, 結論, 論点, 論拠, 仮説, 考察, 要旨]
+          grammar: [Academic essay conventions]
+        - title: Connectors
+          objectives: [Link ideas formally]
+          vocab: [したがって, ゆえに, すなわち, なお, ただし, 一方, さらに, 以上のことから]
+          grammar: [Formal conjunctions]
+        - title: Citing
+          objectives: [Report sources]
+          vocab: [〜によれば, 〜と述べている, 指摘する, 引用, 先行研究, 文献, 調査, 示唆する]
+          grammar: [Reporting verbs]
+        - title: Sino-Japanese vocabulary
+          objectives: [Use 漢語 for concise writing]
+          vocab: [増加, 減少, 実施, 導入, 検証, 改善, 促進, 抑制]
+          grammar: [漢語 nominal style (〜化 / 〜性 / 〜的)]
+
+    - unit: Idioms & proverbs
+      theme: idioms
+      objectives: [Understand four-character idioms proverbs and onomatopoeia]
+      lessons:
+        - title: Four-character idioms
+          objectives: [Use common 四字熟語]
+          vocab: [一石二鳥, 一期一会, 十人十色, 自業自得, 以心伝心, 七転八起, 一生懸命, 半信半疑]
+          grammar: [四字熟語 in sentences]
+        - title: Body idioms
+          objectives: [Use 慣用句 with body parts]
+          vocab: [顔が広い, 口が軽い, 耳が痛い, 腹が立つ, 手を焼く, 頭が固い, 足を引っ張る, 目がない]
+          grammar: [慣用句]
+        - title: Proverbs
+          objectives: [Understand ことわざ]
+          vocab: [猿も木から落ちる, 石の上にも三年, 花より団子, 七転び八起き, 急がば回れ, 能ある鷹は爪を隠す, 出る杭は打たれる, 塵も積もれば山となる]
+          grammar: [Proverbs in conversation]
+        - title: Onomatopoeia
+          objectives: [Use giongo and gitaigo]
+          vocab: [ドキドキ, ワクワク, イライラ, ぐっすり, ぺらぺら, ニコニコ, ゴロゴロ, しとしと]
+          grammar: [Onomatopoeia with する and と]
+
+    - unit: Advanced grammar
+      theme: grammar
+      objectives: [Master N1 grammar patterns]
+      lessons:
+        - title: As if about to
+          objectives: [Use んばかり]
+          vocab: [〜んばかりに, 泣かんばかり, 溢れんばかり, 言わんばかり, 拍手, 歓声, 表情, 態度]
+          grammar: [んばかり]
+        - title: Once it comes to
+          objectives: [Use ともなると]
+          vocab: [〜ともなると, 〜ともなれば, 社長ともなると, 年末ともなると, 責任, 重み, 立場, 当然]
+          grammar: [ともなると]
+        - title: Regardless of
+          objectives: [Use いかんによらず and を問わず]
+          vocab: [〜いかんによらず, 〜を問わず, 〜にかかわらず, 年齢, 性別, 理由, 結果, 経験]
+          grammar: [いかん / を問わず]
+        - title: In disregard of
+          objectives: [Use をよそに and をものともせず]
+          vocab: [〜をよそに, 〜をものともせず, 心配, 反対, 周囲, 困難, 逆境, 挑む]
+          grammar: [をよそに / をものともせず]
+
+    - unit: Politics & law
+      theme: law
+      objectives: [Discuss law politics and rights]
+      lessons:
+        - title: Law
+          objectives: [Understand legal vocabulary]
+          vocab: [裁判, 裁判官, 弁護士, 判決, 有罪, 無罪, 訴える, 法律]
+          grammar: [Legal written style]
+        - title: Politics
+          objectives: [Discuss politics]
+          vocab: [国会, 与党, 野党, 政策, 演説, 公約, 支持率, 憲法]
+          grammar: [〜に基づいて]
+        - title: Debate
+          objectives: [Argue with concessions]
+          vocab: [確かに, とはいえ, もっとも, 一理ある, 反論, 主張, 根拠, 説得力]
+          grammar: [Concession then counter (確かに〜が)]
+        - title: Rights
+          objectives: [Discuss rights and freedoms]
+          vocab: [人権, 表現の自由, 平等, 差別, 権利, 義務, 保障, 尊重]
+          grammar: [〜べきではない]
+
+    - unit: Economy & business
+      theme: economy
+      objectives: [Discuss economics and management]
+      lessons:
+        - title: Economy
+          objectives: [Discuss the economy]
+          vocab: [景気, 株価, 金利, 物価, 円安, 円高, 不況, 成長率]
+          grammar: [Describing trends (〜傾向にある)]
+        - title: Management
+          objectives: [Discuss leadership]
+          vocab: [経営, 戦略, 組織, 人材, 育成, 効率, 成果, 方針]
+          grammar: [〜に応じて]
+        - title: Presentations
+          objectives: [Present formally]
+          vocab: [発表, 資料, ご覧ください, まず, 次に, 最後に, グラフ, 推移]
+          grammar: [Presentation keigo]
+        - title: Fine negotiation
+          objectives: [Negotiate with nuance]
+          vocab: [落としどころ, 妥協, 歩み寄る, 根回し, 持ち帰る, 検討の余地, 前向き, 白紙]
+          grammar: [Indirect commitment phrases]
+
+    - unit: History & culture
+      theme: history
+      objectives: [Discuss Japanese history and culture]
+      lessons:
+        - title: History
+          objectives: [Talk about historical periods]
+          vocab: [江戸時代, 明治維新, 武士, 将軍, 鎖国, 開国, 戦後, 時代]
+          grammar: [Historical narration]
+        - title: Literature
+          objectives: [Discuss classic literature]
+          vocab: [源氏物語, 俳句, 短歌, 作家, 小説, 名作, 季語, 文学]
+          grammar: [Describing works]
+        - title: Cinema
+          objectives: [Analyse Japanese films]
+          vocab: [監督, 脚本, 演出, 撮影, 名場面, 結末, 映像美, 巨匠]
+          grammar: [Critique language]
+        - title: Food culture
+          objectives: [Discuss washoku]
+          vocab: [和食, 旬, 出汁, うま味, 懐石料理, 郷土料理, 無形文化遺産, 食文化]
+          grammar: [Cultural explanation with nuance]
+
+    - unit: Humour & wordplay
+      theme: humour
+      objectives: [Understand puns manzai and irony]
+      lessons:
+        - title: Puns
+          objectives: [Understand dajare]
+          vocab: [ダジャレ, 親父ギャグ, 同音異義語, 言葉遊び, 笑い, 寒い, ウケる, ツッコむ]
+          grammar: [Homophones]
+        - title: Manzai
+          objectives: [Understand manzai comedy]
+          vocab: [漫才, ボケ, ツッコミ, 芸人, ネタ, オチ, 間, 客席]
+          grammar: [Comedic timing and casual Kansai speech]
+        - title: Irony
+          objectives: [Recognise irony and sarcasm]
+          vocab: [皮肉, 嫌味, 冗談, 本気, 反語, 遠回し, 毒舌, 自虐]
+          grammar: [Irony with 〜ものか and rhetorical questions]
+        - title: Storytelling
+          objectives: [Tell a story vividly]
+          vocab: [語る, 盛り上げる, 話のオチ, 臨場感, 誇張, 間を取る, 引き込む, 聞き手]
+          grammar: [Narrative present and sentence-final particles]

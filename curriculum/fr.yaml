@@ -1,0 +1,854 @@
+# French course skeleton (A1 → C1), taught in English.
+# Level → units → lessons. Each lesson lists objectives, the new target vocab
+# (nouns with their article) and the grammar point(s). The LLM writes the
+# explanations, examples and exercises from this; edit freely — changed
+# lessons are regenerated on their next visit.
+
+language: fr
+name: French
+
+levels:
+  A1:
+    - unit: Greetings & introductions
+      theme: greetings
+      objectives: [Greet people and say goodbye, Introduce yourself, Ask how someone is]
+      lessons:
+        - title: Hello and goodbye
+          objectives: [Greet people formally and informally, Say goodbye at different times of day]
+          vocab: [bonjour, salut, bonsoir, au revoir, à bientôt, à demain, merci, s'il vous plaît]
+          grammar: [Formal vs informal greetings (vous and tu)]
+        - title: What's your name?
+          objectives: [Say your name, Ask someone's name]
+          vocab: [je m'appelle, comment, enchanté, madame, monsieur, oui, non, et toi]
+          grammar: [Subject pronouns je / tu / vous, The verb s'appeler in the present]
+        - title: Where are you from?
+          objectives: [Say where you are from and your nationality]
+          vocab: [je suis, anglais, français, américain, la France, l'Angleterre, le pays, la ville]
+          grammar: [The verb être in the present, Masculine and feminine nationalities]
+        - title: How are you?
+          objectives: [Ask and answer how someone is]
+          vocab: [ça va, bien, très, mal, comme ci comme ça, et vous, pas mal, fatigué]
+          grammar: [Ça va as a question and an answer, Intonation questions]
+
+    - unit: Numbers, time & dates
+      theme: numbers
+      objectives: [Count to 100, Tell the time, Say dates and your age]
+      lessons:
+        - title: Numbers 0 to 20
+          objectives: [Count from zero to twenty, Give a phone number]
+          vocab: [zéro, un, deux, trois, cinq, dix, quinze, vingt, le numéro, le téléphone]
+          grammar: [Pronouncing final consonants in numbers]
+        - title: Numbers to 100 and age
+          objectives: [Count to one hundred, Say how old you are]
+          vocab: [trente, quarante, cinquante, soixante, soixante-dix, quatre-vingts, cent, l'an, l'âge]
+          grammar: [The verb avoir in the present, Avoir for age (j'ai vingt ans)]
+        - title: Telling the time
+          objectives: [Ask and tell the time]
+          vocab: [l'heure, midi, minuit, et quart, et demie, moins le quart, le matin, le soir]
+          grammar: [Il est … heure(s), The 24-hour clock]
+        - title: Days and dates
+          objectives: [Say the day and date, Talk about your birthday]
+          vocab: [lundi, mardi, mercredi, samedi, dimanche, janvier, la semaine, l'anniversaire]
+          grammar: [Le + number for dates (le 3 mai), Days and months without capitals]
+
+    - unit: Family & people
+      theme: family
+      objectives: [Describe your family, Describe people's appearance and personality]
+      lessons:
+        - title: My family
+          objectives: [Name family members, Say who is in your family]
+          vocab: [la famille, le père, la mère, le frère, la sœur, le fils, la fille, les parents]
+          grammar: [Possessive adjectives mon / ma / mes / ton / ta / tes]
+        - title: Describing people
+          objectives: [Describe appearance and personality]
+          vocab: [grand, petit, jeune, sympa, gentil, drôle, les cheveux, les yeux]
+          grammar: [Adjective agreement (masculine / feminine / plural)]
+        - title: Brothers sisters and ages
+          objectives: [Say how many siblings you have, Ask about someone's family]
+          vocab: [l'enfant, le mari, la femme, le cousin, la cousine, marié, célibataire, unique]
+          grammar: [Avoir + un / une / des, Negation with de (je n'ai pas de frère)]
+        - title: Pets and likes
+          objectives: [Say what you like and dislike]
+          vocab: [le chien, le chat, aimer, adorer, détester, la musique, le sport, beaucoup]
+          grammar: [Regular -er verbs in the present, Aimer + le / la / les]
+
+    - unit: Food & ordering
+      theme: food
+      objectives: [Order in a café and restaurant, Talk about food, Pay the bill]
+      lessons:
+        - title: At the café
+          objectives: [Order drinks politely]
+          vocab: [un café, un thé, une eau, un croissant, je voudrais, l'addition, le serveur, la carte]
+          grammar: [Indefinite articles un / une / des, Je voudrais for polite requests]
+        - title: Food and drink
+          objectives: [Say what you eat and drink]
+          vocab: [le pain, le fromage, la viande, le poisson, les légumes, le fruit, le vin, manger]
+          grammar: [Partitive articles du / de la / des]
+        - title: At the restaurant
+          objectives: [Order a meal, Ask for recommendations]
+          vocab: [l'entrée, le plat, le dessert, prendre, boire, le menu, saignant, bon appétit]
+          grammar: [The verbs prendre and boire in the present]
+        - title: Paying the bill
+          objectives: [Ask for the bill and pay]
+          vocab: [combien, c'est, l'euro, la carte bancaire, en espèces, le pourboire, cher, payer]
+          grammar: [Combien + est-ce que, C'est vs il est]
+
+    - unit: Directions & places
+      theme: town
+      objectives: [Name places in town, Ask for and give directions, Talk about transport]
+      lessons:
+        - title: Places in town
+          objectives: [Name places in a town, Say what there is in your town]
+          vocab: [la gare, la banque, la pharmacie, le musée, le supermarché, la boulangerie, la rue, la place]
+          grammar: [Il y a / il n'y a pas de]
+        - title: Where is it?
+          objectives: [Ask where a place is, Describe location]
+          vocab: [où, près de, loin de, à côté de, en face de, devant, derrière, entre]
+          grammar: [Prepositions of place with de (à côté du musée)]
+        - title: Giving directions
+          objectives: [Understand and give simple directions]
+          vocab: [tourner, à gauche, à droite, tout droit, continuer, traverser, le feu, le carrefour]
+          grammar: [The imperative (tournez / tourne)]
+        - title: Getting around
+          objectives: [Talk about transport]
+          vocab: [le bus, le métro, le train, la voiture, à pied, le vélo, le billet, aller]
+          grammar: [Aller à + le / la / les (au / à la / aux), En vs à for transport]
+
+    - unit: Daily routine
+      theme: routine
+      objectives: [Describe your daily routine, Talk about hobbies, Say how often you do things]
+      lessons:
+        - title: My day
+          objectives: [Describe your morning and evening routine]
+          vocab: [se lever, se réveiller, se doucher, s'habiller, se coucher, le petit-déjeuner, le déjeuner, le dîner]
+          grammar: [Reflexive verbs in the present]
+        - title: At what time?
+          objectives: [Say when you do things]
+          vocab: [à huit heures, tôt, tard, d'abord, ensuite, puis, après, travailler]
+          grammar: [À + time, Sequencing words]
+        - title: Hobbies and free time
+          objectives: [Talk about hobbies]
+          vocab: [faire, jouer, le foot, la guitare, lire, la natation, le week-end, le temps libre]
+          grammar: [Faire de / jouer à / jouer de]
+        - title: How often?
+          objectives: [Say how often you do things, Make negative sentences]
+          vocab: [toujours, souvent, parfois, rarement, jamais, tous les jours, le lundi, d'habitude]
+          grammar: [Ne … pas and ne … jamais, Position of frequency adverbs]
+
+    - unit: Shopping
+      theme: shopping
+      objectives: [Buy clothes and food, Ask prices, Point things out]
+      lessons:
+        - title: Clothes and colours
+          objectives: [Name clothes and colours]
+          vocab: [la chemise, le pantalon, la robe, les chaussures, le pull, rouge, bleu, blanc]
+          grammar: [Colour adjectives and agreement, Adjectives after the noun]
+        - title: In a clothes shop
+          objectives: [Ask for a size and try things on]
+          vocab: [je cherche, la taille, essayer, la cabine, trop, grand, petit, ça me va]
+          grammar: [Est-ce que questions, Trop + adjective]
+        - title: Prices and quantities
+          objectives: [Buy food at the market, Ask about prices]
+          vocab: [un kilo de, une bouteille de, un paquet de, la pomme, la tomate, le marché, coûter, voilà]
+          grammar: [Quantity + de (un kilo de pommes)]
+        - title: This one or that one
+          objectives: [Point out and compare items]
+          vocab: [ce, cette, ces, celui-ci, préférer, moins cher, joli, le cadeau]
+          grammar: [Demonstrative adjectives ce / cet / cette / ces]
+
+    - unit: Weather & seasons
+      theme: weather
+      objectives: [Talk about the weather and seasons, Talk about plans]
+      lessons:
+        - title: What's the weather like?
+          objectives: [Describe the weather]
+          vocab: [il fait beau, il fait chaud, il fait froid, il pleut, il neige, le soleil, le vent, le nuage]
+          grammar: [Impersonal il fait / il y a for weather]
+        - title: Seasons and months
+          objectives: [Talk about seasons and favourite times of year]
+          vocab: [le printemps, l'été, l'automne, l'hiver, juillet, décembre, la saison, préféré]
+          grammar: [En été / au printemps]
+        - title: What are you going to do?
+          objectives: [Talk about plans]
+          vocab: [demain, ce soir, la semaine prochaine, partir, visiter, la plage, la montagne, les vacances]
+          grammar: [The near future aller + infinitive]
+        - title: Weekend plans
+          objectives: [Make and respond to suggestions]
+          vocab: [on, ensemble, d'accord, bonne idée, peut-être, libre, le cinéma, sortir]
+          grammar: [On = nous in spoken French, Suggestions with on + verb]
+
+  A2:
+    - unit: Talking about the past
+      theme: past
+      objectives: [Say what you did, Tell a short story in the past]
+      lessons:
+        - title: What did you do?
+          objectives: [Talk about past actions with avoir]
+          vocab: [hier, la semaine dernière, regarder, acheter, parler, finir, déjà, pas encore]
+          grammar: [Passé composé with avoir (regular verbs)]
+        - title: Where did you go?
+          objectives: [Talk about movement in the past]
+          vocab: [aller, venir, arriver, partir, rester, rentrer, naître, mourir]
+          grammar: [Passé composé with être and agreement]
+        - title: Irregular past participles
+          objectives: [Use common irregular verbs in the past]
+          vocab: [faire, voir, prendre, mettre, écrire, lire, avoir, être]
+          grammar: [Irregular past participles (fait vu pris mis été eu)]
+        - title: Telling a story
+          objectives: [Narrate a sequence of events]
+          vocab: [d'abord, ensuite, après, enfin, tout à coup, le lendemain, raconter, l'histoire]
+          grammar: [Sequencing events in the passé composé, Negation in the passé composé]
+
+    - unit: Home & living
+      theme: home
+      objectives: [Describe your home, Talk about chores, Compare places]
+      lessons:
+        - title: Rooms and furniture
+          objectives: [Describe your home]
+          vocab: [l'appartement, la maison, la cuisine, la chambre, le salon, la salle de bains, le lit, la table]
+          grammar: [Prepositions sur / sous / dans]
+        - title: Renting a flat
+          objectives: [Ask about an apartment to rent]
+          vocab: [louer, le loyer, le propriétaire, meublé, le quartier, l'étage, l'ascenseur, y]
+          grammar: [The pronoun y for places]
+        - title: Household chores
+          objectives: [Talk about obligations at home]
+          vocab: [le ménage, la vaisselle, la lessive, ranger, nettoyer, devoir, il faut, les courses]
+          grammar: [Devoir + infinitive, Il faut + infinitive]
+        - title: My neighbourhood
+          objectives: [Describe and compare neighbourhoods]
+          vocab: [calme, bruyant, animé, propre, le voisin, le parc, plus, moins]
+          grammar: [Comparatives plus / moins / aussi … que, Meilleur and mieux]
+
+    - unit: Health & the body
+      theme: health
+      objectives: [Say what hurts, See a doctor, Buy medicine]
+      lessons:
+        - title: The body
+          objectives: [Name parts of the body, Say what hurts]
+          vocab: [la tête, le ventre, le dos, la jambe, le bras, la gorge, les dents, avoir mal]
+          grammar: [Avoir mal à + au / à la / aux]
+        - title: At the doctor's
+          objectives: [Describe symptoms and how long you've had them]
+          vocab: [le médecin, malade, la fièvre, tousser, le rhume, la grippe, le rendez-vous, depuis]
+          grammar: [Depuis + present tense]
+        - title: At the pharmacy
+          objectives: [Ask for medicine and understand instructions]
+          vocab: [le médicament, l'ordonnance, le comprimé, le sirop, prendre, fois par jour, conseiller, la crème]
+          grammar: [Direct object pronouns le / la / les]
+        - title: Healthy habits
+          objectives: [Give health advice]
+          vocab: [la santé, dormir, se reposer, faire du sport, éviter, le sucre, l'alcool, en forme]
+          grammar: [Negative imperative (ne mange pas trop)]
+
+    - unit: Travel & holidays
+      theme: travel
+      objectives: [Book a hotel, Buy train tickets, Talk about holidays]
+      lessons:
+        - title: Booking a hotel
+          objectives: [Book a room and ask about services]
+          vocab: [la réservation, la chambre double, la nuit, la clé, le petit-déjeuner compris, complet, réserver, l'accueil]
+          grammar: [Polite conditional je voudrais / pourriez-vous]
+        - title: At the train station
+          objectives: [Buy a ticket and ask about times]
+          vocab: [l'aller simple, l'aller-retour, le quai, la voie, en retard, à l'heure, composter, la correspondance]
+          grammar: [Question words quand / à quelle heure / combien de temps]
+        - title: Holiday memories
+          objectives: [Describe a past holiday]
+          vocab: [le voyage, la valise, l'étranger, se baigner, bronzer, c'était, magnifique, le souvenir]
+          grammar: [C'était + adjective, Passé composé review]
+        - title: Holiday plans
+          objectives: [Talk about future holidays]
+          vocab: [prévoir, le séjour, la location, camper, la tente, l'avion, le vol, quand]
+          grammar: [Near future with time expressions, Quand + present]
+
+    - unit: Work & studies
+      theme: work
+      objectives: [Talk about jobs and studies, Describe your skills]
+      lessons:
+        - title: Jobs
+          objectives: [Say what you do for a living]
+          vocab: [le métier, le médecin, l'infirmier, l'infirmière, le professeur, l'ingénieur, le vendeur, la vendeuse]
+          grammar: [Masculine and feminine job titles, No article after être (je suis médecin)]
+        - title: My working day
+          objectives: [Describe a typical workday]
+          vocab: [le bureau, le collègue, la réunion, le patron, l'entreprise, commencer, finir, la pause]
+          grammar: [Pronominal verbs review, Commencer à / finir de]
+        - title: School and studies
+          objectives: [Talk about studies and recent events]
+          vocab: [l'université, les études, la matière, l'examen, réussir, étudier, le diplôme, venir de]
+          grammar: [Recent past venir de + infinitive]
+        - title: Skills
+          objectives: [Say what you can do and who you know]
+          vocab: [savoir, connaître, pouvoir, parler, conduire, nager, l'ordinateur, la langue]
+          grammar: [Savoir vs connaître, Pouvoir + infinitive]
+
+    - unit: Food & cooking
+      theme: cooking
+      objectives: [Follow a recipe, Talk about quantities and preferences]
+      lessons:
+        - title: Following a recipe
+          objectives: [Understand and give cooking instructions]
+          vocab: [la recette, couper, mélanger, ajouter, cuire, le four, la poêle, l'œuf]
+          grammar: [The vous imperative in recipes]
+        - title: How much?
+          objectives: [Talk about quantities with en]
+          vocab: [la farine, le beurre, le lait, le sel, un peu de, assez de, en, une cuillère]
+          grammar: [The pronoun en with quantities]
+        - title: Food preferences
+          objectives: [Express preferences and diets]
+          vocab: [préférer, aimer mieux, végétarien, allergique, épicé, sucré, salé, le goût]
+          grammar: [Préférer conjugation (stem change), Aimer mieux]
+        - title: The best restaurant
+          objectives: [Recommend and review restaurants]
+          vocab: [délicieux, le service, l'ambiance, recommander, le meilleur, le pire, l'avis, la spécialité]
+          grammar: [The superlative le plus / le moins]
+
+    - unit: Childhood memories
+      theme: memories
+      objectives: [Describe your childhood, Talk about past habits]
+      lessons:
+        - title: When I was little
+          objectives: [Describe what life was like]
+          vocab: [l'enfance, quand j'étais petit, habiter, l'école, le jouet, timide, sage, la campagne]
+          grammar: [Formation of the imparfait]
+        - title: Past habits
+          objectives: [Say what you used to do]
+          vocab: [chaque été, tous les dimanches, jouer, passer, les grands-parents, la colonie, souvent, autrefois]
+          grammar: [Imparfait for habits]
+        - title: Describing the past
+          objectives: [Set the scene in the past]
+          vocab: [il y avait, c'était, il faisait, le village, la fête, heureux, triste, le temps]
+          grammar: [Imparfait for descriptions and states]
+        - title: One day
+          objectives: [Combine background and events]
+          vocab: [un jour, soudain, pendant que, tomber, se casser, appeler, l'accident, avoir peur]
+          grammar: [Imparfait vs passé composé (introduction)]
+
+    - unit: Communication & technology
+      theme: technology
+      objectives: [Make phone calls, Write messages, Make arrangements]
+      lessons:
+        - title: On the phone
+          objectives: [Make and answer a phone call]
+          vocab: [allô, appeler, rappeler, le message, occupé, de la part de, ne quittez pas, le portable]
+          grammar: [Indirect object pronouns lui / leur]
+        - title: Emails and messages
+          objectives: [Write a short formal and informal message]
+          vocab: [le courriel, cher, chère, cordialement, bises, la pièce jointe, envoyer, répondre]
+          grammar: [Letter openings and closings by register]
+        - title: Social media
+          objectives: [Talk about apps and social media]
+          vocab: [le réseau social, partager, la photo, poster, l'appli, le mot de passe, en ligne, télécharger]
+          grammar: [Relative pronouns qui and que]
+        - title: Making arrangements
+          objectives: [Suggest accept and decline invitations]
+          vocab: [le rendez-vous, se retrouver, disponible, malheureusement, volontiers, ça marche, annuler, proposer]
+          grammar: [Si on + imparfait for suggestions, Accepting and declining]
+
+  B1:
+    - unit: Feelings & opinions
+      theme: opinions
+      objectives: [Express feelings and opinions, Agree and disagree, Justify your view]
+      lessons:
+        - title: In my opinion
+          objectives: [Give and ask for opinions]
+          vocab: [à mon avis, je pense que, je trouve que, selon moi, l'opinion, croire, penser, il me semble]
+          grammar: [Opinion verbs + indicative]
+        - title: Agreeing and disagreeing
+          objectives: [Agree disagree and nuance]
+          vocab: [d'accord, pas du tout, tout à fait, au contraire, avoir raison, avoir tort, plutôt, c'est vrai]
+          grammar: [Moi aussi / moi non plus / moi si]
+        - title: Feelings
+          objectives: [Describe how you feel and why]
+          vocab: [se sentir, inquiet, déçu, fier, jaloux, soulagé, énervé, rendre]
+          grammar: [Être + adjective + de + infinitive, Rendre + adjective]
+        - title: Giving reasons
+          objectives: [Justify opinions with reasons]
+          vocab: [parce que, car, puisque, comme, grâce à, à cause de, donc, c'est pourquoi]
+          grammar: [Cause and consequence connectors]
+
+    - unit: Stories & narration
+      theme: narration
+      objectives: [Narrate past events clearly, Use past tenses together]
+      lessons:
+        - title: Background and events
+          objectives: [Choose between imparfait and passé composé]
+          vocab: [pendant, alors que, au moment où, se promener, rencontrer, remarquer, décider, la scène]
+          grammar: [Imparfait vs passé composé]
+        - title: Before that
+          objectives: [Talk about an earlier past]
+          vocab: [déjà, avant, oublier, perdre, la veille, se rendre compte, auparavant, trop tard]
+          grammar: [The plus-que-parfait]
+        - title: Linking a story
+          objectives: [Use time connectors in stories]
+          vocab: [soudain, finalement, à ce moment-là, aussitôt, dès que, lorsque, entre-temps, au bout de]
+          grammar: [Time connectors for narration]
+        - title: Telling an anecdote
+          objectives: [Tell an engaging personal anecdote]
+          vocab: [l'anecdote, incroyable, bizarre, la chance, la malchance, il paraît que, figure-toi, du coup]
+          grammar: [Narrative tenses together, Spoken fillers]
+
+    - unit: Future & plans
+      theme: future
+      objectives: [Talk about the future, Make predictions and conditions]
+      lessons:
+        - title: In the future
+          objectives: [Make predictions]
+          vocab: [l'avenir, un jour, dans dix ans, devenir, changer, le futur, probablement, sûrement]
+          grammar: [The futur simple of regular verbs]
+        - title: Irregular futures
+          objectives: [Use common irregular futures]
+          vocab: [je serai, j'aurai, j'irai, je ferai, je pourrai, je viendrai, je verrai, il faudra]
+          grammar: [Irregular futur simple stems]
+        - title: When I finish
+          objectives: [Talk about future sequences]
+          vocab: [quand, dès que, aussitôt que, la retraite, déménager, s'installer, le projet, le rêve]
+          grammar: [Quand / dès que + futur]
+        - title: If it's sunny
+          objectives: [Talk about real conditions]
+          vocab: [si, sinon, au cas où, à condition de, prévoir, l'imprévu, la météo, annuler]
+          grammar: [Si + présent → futur / impératif]
+
+    - unit: Working life
+      theme: career
+      objectives: [Handle a job interview, Talk about experience, Communicate at work]
+      lessons:
+        - title: The job interview
+          objectives: [Ask and answer interview questions]
+          vocab: [l'entretien, le poste, le candidat, la candidature, le salaire, les qualités, les défauts, motivé]
+          grammar: [Inverted questions (pourquoi voulez-vous…)]
+        - title: Experience
+          objectives: [Describe your experience and career]
+          vocab: [l'expérience, le stage, embaucher, licencier, démissionner, le CV, la formation, le contrat]
+          grammar: [Depuis / il y a / pendant]
+        - title: At the office
+          objectives: [Describe the workplace]
+          vocab: [l'équipe, le responsable, le projet, la tâche, le délai, gérer, organiser, l'open space]
+          grammar: [Relative pronouns où and dont]
+        - title: Meetings and calls
+          objectives: [Participate in a meeting politely]
+          vocab: [l'ordre du jour, prendre la parole, proposer, le compte rendu, la visioconférence, reporter, valider, convenir]
+          grammar: [Formal register and vous]
+
+    - unit: Environment & society
+      theme: environment
+      objectives: [Discuss environmental issues, Express necessity and wishes with the subjunctive]
+      lessons:
+        - title: Our planet
+          objectives: [Talk about environmental problems]
+          vocab: [l'environnement, la pollution, le réchauffement climatique, recycler, les déchets, l'énergie, protéger, gaspiller]
+          grammar: [Il faut que + subjonctif (introduction)]
+        - title: The subjunctive
+          objectives: [Form the present subjunctive of regular verbs]
+          vocab: [il est important que, il est nécessaire que, vouloir que, souhaiter que, consommer, réduire, trier, économiser]
+          grammar: [Present subjunctive of regular verbs]
+        - title: Irregular subjunctives
+          objectives: [Use common irregular subjunctives]
+          vocab: [que je sois, que j'aie, que je fasse, que j'aille, que je puisse, que je sache, il faut que, avant que]
+          grammar: [Irregular subjunctive forms]
+        - title: Finding solutions
+          objectives: [Propose and debate solutions]
+          vocab: [la solution, le gouvernement, les citoyens, agir, interdire, encourager, la loi, durable]
+          grammar: [Subjunctive after expressions of necessity and will]
+
+    - unit: Media & culture
+      theme: media
+      objectives: [Talk about films books and news, Recommend things]
+      lessons:
+        - title: Films and books
+          objectives: [Talk about what you've watched and read]
+          vocab: [le film, le roman, l'auteur, le réalisateur, l'intrigue, le personnage, la fin, sortir]
+          grammar: [Double object pronouns (je le lui ai donné)]
+        - title: The news
+          objectives: [Understand and report news headlines]
+          vocab: [les informations, le journal, l'article, l'événement, élire, arrêter, annoncer, la une]
+          grammar: [The passive voice]
+        - title: I'd recommend it
+          objectives: [Give recommendations and polite advice]
+          vocab: [recommander, conseiller, valoir la peine, à voir absolument, décevant, ennuyeux, passionnant, émouvant]
+          grammar: [The present conditional]
+        - title: Music and art
+          objectives: [Describe music and art]
+          vocab: [la chanson, le concert, l'exposition, le tableau, le peintre, la mélodie, vraiment, facilement]
+          grammar: [Adverbs ending in -ment]
+
+    - unit: Travel problems
+      theme: problems
+      objectives: [Complain politely, Deal with problems when travelling]
+      lessons:
+        - title: Making a complaint
+          objectives: [Complain politely and ask for a solution]
+          vocab: [se plaindre, la réclamation, rembourser, le problème, inadmissible, le responsable, j'aimerais, échanger]
+          grammar: [Conditional for polite complaints]
+        - title: Lost and found
+          objectives: [Report a lost or stolen item]
+          vocab: [perdre, voler, le portefeuille, le sac, les papiers, la déclaration, retrouver, le commissariat]
+          grammar: [Past tenses with object pronouns]
+        - title: On the road
+          objectives: [Describe actions happening at the same time]
+          vocab: [en conduisant, en marchant, la panne, l'autoroute, le péage, crever, le garage, la dépanneuse]
+          grammar: [The gérondif (en + -ant)]
+        - title: Accommodation issues
+          objectives: [Get things fixed]
+          vocab: [la fuite, le chauffage, la climatisation, cassé, réparer, faire réparer, le plombier, bruyant]
+          grammar: [Causative faire + infinitive]
+
+    - unit: Health & lifestyle
+      theme: lifestyle
+      objectives: [Discuss lifestyle choices, Talk hypothetically, Give advice]
+      lessons:
+        - title: Lifestyle choices
+          objectives: [Compare lifestyles]
+          vocab: [le mode de vie, sain, l'alimentation, le sommeil, autant de, plus de, moins de, l'équilibre]
+          grammar: [Comparing quantities (autant de / plus de)]
+        - title: Sport
+          objectives: [Talk about sports and fitness]
+          vocab: [s'entraîner, la salle de sport, la course, le match, gagner, perdre, l'équipe, le champion]
+          grammar: [Depuis / il y a / ça fait … que]
+        - title: Stress and wellbeing
+          objectives: [Talk about hypothetical situations]
+          vocab: [le stress, se détendre, la méditation, le burn-out, épuisé, la pression, se plaindre, profiter]
+          grammar: [Si + imparfait → conditionnel]
+        - title: If I were you
+          objectives: [Give advice]
+          vocab: [à ta place, tu devrais, tu pourrais, il vaudrait mieux, le conseil, essayer, arrêter, prendre soin]
+          grammar: [Devoir / pouvoir in the conditional for advice]
+
+  B2:
+    - unit: Debate & argument
+      theme: debate
+      objectives: [Build a structured argument, Concede and counter, Persuade]
+      lessons:
+        - title: Structuring an argument
+          objectives: [Organise ideas in a debate]
+          vocab: [d'une part, d'autre part, en premier lieu, par ailleurs, en outre, en revanche, en conclusion, l'argument]
+          grammar: [Logical connectors for argument]
+        - title: Even though
+          objectives: [Make concessions]
+          vocab: [bien que, quoique, même si, malgré, pourtant, cependant, néanmoins, avoir beau]
+          grammar: [Bien que / quoique + subjonctif, Malgré + noun]
+        - title: If only
+          objectives: [Speculate about the past]
+          vocab: [si j'avais su, regretter, le regret, l'occasion, rater, saisir, autrement, à temps]
+          grammar: [Si + plus-que-parfait → conditionnel passé]
+        - title: Convincing others
+          objectives: [Persuade and challenge]
+          vocab: [convaincre, persuader, réfuter, nuancer, il est évident que, force est de constater, prétendre, admettre]
+          grammar: [Indicative vs subjunctive after certainty and doubt]
+
+    - unit: Work & the economy
+      theme: economy
+      objectives: [Discuss business and the economy, Report what others said, Write formally]
+      lessons:
+        - title: Business vocabulary
+          objectives: [Talk about companies and markets]
+          vocab: [l'entreprise, le chiffre d'affaires, la croissance, le marché, la concurrence, investir, le bénéfice, la crise]
+          grammar: [Nominalisation (croître → la croissance)]
+        - title: Negotiating
+          objectives: [Negotiate and compromise]
+          vocab: [négocier, le compromis, l'offre, la proposition, céder, insister, la marge, le délai]
+          grammar: [The past conditional]
+        - title: He said that…
+          objectives: [Report speech]
+          vocab: [affirmer, déclarer, expliquer, préciser, demander si, répondre que, ajouter, avouer]
+          grammar: [Reported speech and tense changes]
+        - title: Formal emails
+          objectives: [Write a formal professional email]
+          vocab: [je me permets de, suite à, veuillez, ci-joint, dans l'attente de, je vous prie d'agréer, solliciter, l'objet]
+          grammar: [Formal email conventions]
+
+    - unit: Society & politics
+      theme: society
+      objectives: [Discuss social and political issues, Express doubt and possibility]
+      lessons:
+        - title: Institutions
+          objectives: [Talk about government and elections]
+          vocab: [l'État, le président, le gouvernement, l'Assemblée, l'élection, voter, le parti, la réforme]
+          grammar: [Passive with par and de]
+        - title: Doubt and possibility
+          objectives: [Express doubt and probability]
+          vocab: [douter que, il est possible que, il se peut que, il est peu probable que, sembler, incertain, la rumeur, vraisemblable]
+          grammar: [Subjunctive after doubt and possibility]
+        - title: Social issues
+          objectives: [Discuss inequality and solidarity]
+          vocab: [l'inégalité, la pauvreté, le chômage, la solidarité, l'intégration, la discrimination, le logement, défavorisé]
+          grammar: [Impersonal constructions (il est … de / que)]
+        - title: Current affairs
+          objectives: [Summarise and discuss a news story]
+          vocab: [l'actualité, la manifestation, la grève, le débat, la polémique, le sondage, l'opinion publique, faire la une]
+          grammar: [Summarising with nominal style]
+
+    - unit: Science & technology
+      theme: science
+      objectives: [Discuss innovation, Explain processes, Make predictions about the future]
+      lessons:
+        - title: Innovation
+          objectives: [Describe inventions and technology]
+          vocab: [l'innovation, l'invention, la recherche, le chercheur, l'intelligence artificielle, le progrès, développer, la découverte]
+          grammar: [Relative pronouns lequel / auquel / duquel]
+        - title: How it works
+          objectives: [Explain a process]
+          vocab: [fonctionner, le processus, l'étape, permettre de, transformer, produire, la machine, l'appareil]
+          grammar: [Passive and se faire constructions]
+        - title: By 2050
+          objectives: [Predict completed future actions]
+          vocab: [d'ici 2050, aura disparu, remplacer, l'avenir, la robotique, automatiser, la menace, l'opportunité]
+          grammar: [The futur antérieur]
+        - title: Ethics and technology
+          objectives: [Debate ethical questions]
+          vocab: [l'éthique, la vie privée, les données, la surveillance, le risque, réguler, l'abus, la responsabilité]
+          grammar: [Expressing hypotheses and conditions]
+
+    - unit: Literature & the arts
+      theme: literature
+      objectives: [Read literary texts, Discuss style and art]
+      lessons:
+        - title: Reading literature
+          objectives: [Recognise the passé simple in texts]
+          vocab: [il fut, il eut, il alla, il fit, il dit, le récit, le narrateur, le chapitre]
+          grammar: [Recognising the passé simple]
+        - title: Style
+          objectives: [Describe a writer's style]
+          vocab: [le style, la métaphore, la description, l'ironie, le ton, sobre, lyrique, un ancien ami]
+          grammar: [Adjectives that change meaning with position]
+        - title: Criticism
+          objectives: [Write a nuanced critique]
+          vocab: [l'œuvre, le chef-d'œuvre, la critique, original, convenu, réussi, souligner, mettre en valeur]
+          grammar: [Nuancing judgements]
+        - title: Poetry and song
+          objectives: [Understand imagery in poems and songs]
+          vocab: [le poème, le vers, la rime, l'image, évoquer, la nostalgie, le refrain, l'interprète]
+          grammar: [Present participle in descriptive writing]
+
+    - unit: Relationships & psychology
+      theme: relationships
+      objectives: [Discuss relationships and emotions in depth, Express regret]
+      lessons:
+        - title: Personalities
+          objectives: [Describe personality in nuance]
+          vocab: [susceptible, rancunier, généreux, égoïste, bienveillant, têtu, réservé, extraverti]
+          grammar: [Intensifiers and attenuators (plutôt assez vraiment)]
+        - title: Conflict
+          objectives: [Talk about arguments and making up]
+          vocab: [se disputer, se réconcilier, se fâcher, le malentendu, reprocher, pardonner, en vouloir à, la rancune]
+          grammar: [Reciprocal pronominal verbs]
+        - title: Emotions
+          objectives: [Express emotional reactions]
+          vocab: [être ravi que, avoir peur que, regretter que, être surpris que, l'émotion, bouleversé, ému, touché]
+          grammar: [Subjunctive after emotions]
+        - title: I should have…
+          objectives: [Express regret and reproach]
+          vocab: [j'aurais dû, j'aurais pu, tu aurais mieux fait de, la culpabilité, s'excuser, réparer, assumer, la faute]
+          grammar: [Past conditional of devoir and pouvoir]
+
+    - unit: Media & communication
+      theme: communication
+      objectives: [Evaluate information, Analyse advertising and online communication]
+      lessons:
+        - title: Fake news
+          objectives: [Discuss reliability of information]
+          vocab: [la désinformation, la source, fiable, vérifier, la rumeur, selon, présumé, le complot]
+          grammar: [Journalistic conditional (le suspect aurait…)]
+        - title: Interviews
+          objectives: [Conduct and understand interviews]
+          vocab: [l'interview, le journaliste, l'invité, poser une question, témoigner, le témoignage, dénoncer, révéler]
+          grammar: [Indirect questions]
+        - title: Advertising
+          objectives: [Analyse persuasive language]
+          vocab: [la publicité, le slogan, la marque, le consommateur, cibler, séduire, la promotion, la tendance]
+          grammar: [Imperative and persuasive structures]
+        - title: Online communication
+          objectives: [Adapt register online]
+          vocab: [le forum, le commentaire, l'influenceur, la vidéo, l'abonné, viral, le harcèlement, la netiquette]
+          grammar: [Register shifts between spoken and written French]
+
+    - unit: The French-speaking world
+      theme: culture
+      objectives: [Discuss francophone cultures, Compare cultures, Talk about living abroad]
+      lessons:
+        - title: La Francophonie
+          objectives: [Talk about French-speaking countries]
+          vocab: [la francophonie, le Québec, la Belgique, la Suisse, le Sénégal, l'accent, la colonisation, le patrimoine]
+          grammar: [Prepositions with countries and cities]
+        - title: Cultural differences
+          objectives: [Compare customs]
+          vocab: [la coutume, la politesse, le tutoiement, la bise, le malaise, s'adapter, choquer, habituel]
+          grammar: [Advanced comparison structures]
+        - title: Regional French
+          objectives: [Recognise regional words and expressions]
+          vocab: [le dialecte, l'expression, septante, nonante, le dépanneur, le déjeuner, le souper, la tuque]
+          grammar: [Regional variation in vocabulary]
+        - title: Living abroad
+          objectives: [Reflect on expatriate experiences]
+          vocab: [l'expatrié, le dépaysement, le mal du pays, s'intégrer, la démarche, le titre de séjour, l'enrichissement, apprendre]
+          grammar: [Past subjunctive]
+
+  C1:
+    - unit: Register & nuance
+      theme: register
+      objectives: [Move between registers, Recognise formal and informal markers]
+      lessons:
+        - title: Three registers
+          objectives: [Recognise formal standard and informal French]
+          vocab: [la voiture, la bagnole, l'automobile, le boulot, l'emploi, bosser, travailler, le registre]
+          grammar: [Register differences in vocabulary and syntax]
+        - title: The expletive ne
+          objectives: [Use the ne explétif in formal French]
+          vocab: [avant qu'il ne parte, de peur que, à moins que, craindre que, éviter que, plus … que je ne pensais, empêcher, redouter]
+          grammar: [Ne explétif]
+        - title: Formal inversion
+          objectives: [Use inversion in formal writing]
+          vocab: [peut-être, sans doute, ainsi, aussi, à peine, toujours est-il que, encore, du moins]
+          grammar: [Subject-verb inversion after adverbs]
+        - title: Slang and verlan
+          objectives: [Understand everyday slang and verlan]
+          vocab: [ouf, chelou, relou, kiffer, la meuf, le mec, ouais, grave]
+          grammar: [Verlan formation and familiar syntax (dropped ne)]
+
+    - unit: Academic French
+      theme: academic
+      objectives: [Write structured essays, Cite and report sources]
+      lessons:
+        - title: The dissertation
+          objectives: [Plan a French-style essay]
+          vocab: [la problématique, la thèse, l'antithèse, la synthèse, l'introduction, le plan, la transition, le développement]
+          grammar: [Thesis-antithesis-synthesis structure]
+        - title: Logic connectors
+          objectives: [Link ideas precisely]
+          vocab: [dès lors, en effet, or, ainsi, de surcroît, quant à, il n'en demeure pas moins, en définitive]
+          grammar: [Advanced logical connectors]
+        - title: Nominal style
+          objectives: [Write concisely with nouns]
+          vocab: [la mise en place, la prise de conscience, l'élaboration, le recours, la remise en cause, l'essor, le déclin, l'émergence]
+          grammar: [Nominalisation in academic writing]
+        - title: Citing sources
+          objectives: [Report and evaluate sources]
+          vocab: [selon, d'après, comme le souligne, citer, la référence, l'étude, l'hypothèse, corroborer]
+          grammar: [Reporting verbs and modalisation]
+
+    - unit: Idioms & expressions
+      theme: idioms
+      objectives: [Understand and use common idioms and proverbs]
+      lessons:
+        - title: Body idioms
+          objectives: [Use idioms with body parts]
+          vocab: [coûter les yeux de la tête, avoir le bras long, casser les pieds, tenir à cœur, mettre les pieds dans le plat, avoir un poil dans la main, se creuser la tête, sur le bout de la langue]
+          grammar: [Fixed expressions and their variations]
+        - title: Animal idioms
+          objectives: [Use idioms with animals]
+          vocab: [avoir un chat dans la gorge, poser un lapin, quand les poules auront des dents, avoir une faim de loup, il fait un froid de canard, revenons à nos moutons, une langue de vipère, myope comme une taupe]
+          grammar: [Comparative idioms (comme)]
+        - title: Food idioms
+          objectives: [Use idioms with food]
+          vocab: [ce n'est pas ma tasse de thé, raconter des salades, tomber dans les pommes, avoir la pêche, mettre du beurre dans les épinards, c'est la fin des haricots, en faire tout un fromage, couper la poire en deux]
+          grammar: [Idioms in context and register]
+        - title: Proverbs
+          objectives: [Understand common proverbs]
+          vocab: [qui vivra verra, petit à petit l'oiseau fait son nid, l'habit ne fait pas le moine, mieux vaut tard que jamais, chacun ses goûts, après la pluie le beau temps, le proverbe, la sagesse]
+          grammar: [Archaic structures in proverbs]
+
+    - unit: Advanced grammar
+      theme: grammar
+      objectives: [Master complex structures and tense agreement]
+      lessons:
+        - title: Literary subjunctive
+          objectives: [Recognise the imperfect subjunctive]
+          vocab: [qu'il fût, qu'il eût, qu'il fît, qu'il allât, qu'il pût, qu'il vînt, littéraire, désuet]
+          grammar: [Imperfect and pluperfect subjunctive recognition]
+        - title: Participle or adjective?
+          objectives: [Distinguish participe présent and adjectif verbal]
+          vocab: [fatigant, fatiguant, convaincant, convainquant, différent, différant, négligent, précédent]
+          grammar: [Participe présent vs adjectif verbal]
+        - title: Compound forms
+          objectives: [Use past infinitives and compound participles]
+          vocab: [après avoir mangé, après être parti, ayant fini, étant arrivé, sans avoir vu, une fois, avoir terminé, s'étant levé]
+          grammar: [Past infinitive and participe passé composé]
+        - title: Sequence of tenses
+          objectives: [Keep tenses consistent in complex sentences]
+          vocab: [la concordance, l'antériorité, la simultanéité, la postériorité, rapporter, la subordonnée, la principale, le mode]
+          grammar: [Concordance des temps]
+
+    - unit: Politics & law
+      theme: law
+      objectives: [Discuss law and rights, Analyse political discourse]
+      lessons:
+        - title: Legal vocabulary
+          objectives: [Understand legal language]
+          vocab: [le tribunal, le juge, l'avocat, le procès, condamner, acquitter, la plainte, le verdict]
+          grammar: [Legal passive and impersonal structures]
+        - title: Political discourse
+          objectives: [Analyse political speeches]
+          vocab: [le discours, la rhétorique, l'électorat, le programme, la promesse, démagogique, l'adversaire, mobiliser]
+          grammar: [Rhetorical devices (anaphore and question rhétorique)]
+        - title: Concession and refutation
+          objectives: [Argue with subtle concessions]
+          vocab: [certes, il n'empêche que, toujours est-il, quand bien même, encore que, si … soit-il, admettons que, soit]
+          grammar: [Advanced concession structures]
+        - title: Rights and justice
+          objectives: [Debate rights and freedoms]
+          vocab: [les droits de l'homme, la liberté d'expression, la laïcité, l'égalité, la justice, revendiquer, bafouer, garantir]
+          grammar: [Expressing obligation and prohibition formally]
+
+    - unit: Economy & business
+      theme: business
+      objectives: [Discuss finance and management, Present and negotiate professionally]
+      lessons:
+        - title: Finance
+          objectives: [Discuss financial topics]
+          vocab: [la bourse, l'action, le taux d'intérêt, l'inflation, l'endettement, le placement, rentable, la faillite]
+          grammar: [Expressing trends and variations]
+        - title: Management
+          objectives: [Talk about leadership and teams]
+          vocab: [le management, déléguer, la stratégie, le leadership, l'objectif, motiver, la performance, le télétravail]
+          grammar: [Expressing purpose (afin que pour que de sorte que)]
+        - title: Presentations
+          objectives: [Give a structured presentation]
+          vocab: [la présentation, le diaporama, aborder, en guise d'introduction, passons à, pour conclure, le graphique, la tendance]
+          grammar: [Signposting language]
+        - title: Fine negotiation
+          objectives: [Negotiate with tact]
+          vocab: [la contre-proposition, l'enjeu, le terrain d'entente, ménager, faire valoir, la concession, le blocage, aboutir]
+          grammar: [Softening with conditional and modal verbs]
+
+    - unit: History & culture
+      theme: history
+      objectives: [Discuss French history philosophy and culture]
+      lessons:
+        - title: French history
+          objectives: [Talk about key historical events]
+          vocab: [la Révolution, la monarchie, la République, l'Empire, la guerre, la Résistance, la Libération, le siècle]
+          grammar: [Historical present and passé simple]
+        - title: Philosophy
+          objectives: [Discuss philosophical ideas]
+          vocab: [la pensée, la raison, l'existence, la liberté, le doute, l'esprit, réfléchir, la conscience]
+          grammar: [Abstract nouns and complex relatives]
+        - title: French cinema
+          objectives: [Analyse films]
+          vocab: [la Nouvelle Vague, le cinéaste, le plan-séquence, le scénario, le jeu des acteurs, la mise en scène, le cadrage, le dénouement]
+          grammar: [Describing techniques and effects]
+        - title: Gastronomy and identity
+          objectives: [Discuss food culture and identity]
+          vocab: [le terroir, l'appellation, le savoir-faire, la gastronomie, le patrimoine, l'art de vivre, le repas gastronomique, la convivialité]
+          grammar: [Expressing cultural generalisations with nuance]
+
+    - unit: Humour & wordplay
+      theme: humour
+      objectives: [Understand jokes puns and irony, Tell stories with flair]
+      lessons:
+        - title: Puns
+          objectives: [Understand French wordplay]
+          vocab: [le jeu de mots, le calembour, l'homophone, la contrepèterie, le double sens, faire rire, la blague, le sous-entendu]
+          grammar: [Homophones and spelling]
+        - title: Irony and sarcasm
+          objectives: [Recognise irony]
+          vocab: [l'ironie, le second degré, sarcastique, l'antiphrase, pince-sans-rire, se moquer, la dérision, l'humour noir]
+          grammar: [Antiphrasis and tone]
+        - title: Comedy
+          objectives: [Understand sketches and stand-up]
+          vocab: [le sketch, l'humoriste, la chute, le comique de répétition, la vanne, le public, improviser, hilarant]
+          grammar: [Colloquial spoken syntax]
+        - title: Storytelling with flair
+          objectives: [Tell a story vividly]
+          vocab: [captiver, le suspense, la tournure, imagé, le rebondissement, la mise en scène, l'exagération, le conteur]
+          grammar: [Rhythm and emphasis (c'est … qui / ce que … c'est)]

@@ -1,0 +1,324 @@
+# Japanese "Writing Systems" module (pre-A1). Built into lessons without the
+# LLM: each lesson introduces its characters with a mnemonic, then drills
+# recognition, reverse recognition, listening and matching.
+#
+# chars:  [kana, romaji, mnemonic]
+# words:  [word, romaji, meaning] — only uses kana taught up to that lesson
+
+hiragana:
+  title: Hiragana
+  objectives:
+    - Read and recognise all 46 basic hiragana
+    - Read voiced sounds (dakuten), combinations and small っ
+    - Sound out simple native Japanese words
+  lessons:
+    - title: Vowels あいうえお
+      chars:
+        - [あ, a, "An Apple with a stalk and a curly vine — 'a'"]
+        - [い, i, "Two eels swimming side by side — 'ee'"]
+        - [う, u, "Someone with a bruised face going 'oo!'"]
+        - [え, e, "An exotic bird with a feather on its head — 'eh'"]
+        - [お, o, "A UFO with a tail flying over — 'oh!'"]
+      words:
+        - [あい, ai, love]
+        - [いえ, ie, house]
+        - [うえ, ue, above]
+        - [あお, ao, blue]
+    - title: K-row かきくけこ
+      chars:
+        - [か, ka, "A man with a sword shouting 'KA-ta!' — ka"]
+        - [き, ki, "A key with two teeth — ki"]
+        - [く, ku, "A cuckoo's open beak — ku"]
+        - [け, ke, "A keg next to a bar — ke"]
+        - [こ, ko, "Two coins lying on top of each other — ko"]
+      words:
+        - [かお, kao, face]
+        - [あき, aki, autumn]
+        - [いけ, ike, pond]
+        - [ここ, koko, here]
+        - [えき, eki, station]
+    - title: S-row さしすせそ
+      chars:
+        - [さ, sa, "A signpost leaning to one side — sa"]
+        - [し, shi, "A fishing hook catching a sheep — shi"]
+        - [す, su, "A swing with a loop — su"]
+        - [せ, se, "A mouth with a big tooth saying 'say!' — se"]
+        - [そ, so, "A zig-zag thread being sewn — so"]
+      words:
+        - [すし, sushi, sushi]
+        - [いす, isu, chair]
+        - [あさ, asa, morning]
+        - [せかい, sekai, world]
+        - [そこ, soko, there]
+    - title: T-row たちつてと
+      chars:
+        - [た, ta, "The letters t and a squeezed together — ta"]
+        - [ち, chi, "A cheerleader doing a pose — chi"]
+        - [つ, tsu, "A tsunami wave rolling in — tsu"]
+        - [て, te, "A telescope pointing up — te"]
+        - [と, to, "A toe with a splinter in it — to"]
+      words:
+        - [ちかてつ, chikatetsu, subway]
+        - [くつ, kutsu, shoes]
+        - [たかい, takai, expensive / tall]
+        - [そと, soto, outside]
+        - [て, te, hand]
+    - title: N-row なにぬねの
+      chars:
+        - [な, na, "A nun praying beside a cross — na"]
+        - [に, ni, "A needle and two threads — ni"]
+        - [ぬ, nu, "A bowl of noodles with chopsticks — nu"]
+        - [ね, ne, "A cat (neko) curling its tail — ne"]
+        - [の, no, "A 'no entry' sign — no"]
+      words:
+        - [ねこ, neko, cat]
+        - [いぬ, inu, dog]
+        - [なつ, natsu, summer]
+        - [にく, niku, meat]
+        - [おかね, okane, money]
+    - title: H-row はひふへほ
+      chars:
+        - [は, ha, "Someone laughing 'ha!' next to a hat rack — ha"]
+        - [ひ, hi, "A big grin saying 'hee hee' — hi"]
+        - [ふ, fu, "Mount Fuji with a cloud — fu"]
+        - [へ, he, "The roof of a house on a hill — he"]
+        - [ほ, ho, "A hockey stick and a goal — ho"]
+      words:
+        - [はな, hana, flower / nose]
+        - [ひと, hito, person]
+        - [ふね, fune, ship]
+        - [へた, heta, bad at]
+        - [ほし, hoshi, star]
+    - title: M-row まみむめも
+      chars:
+        - [ま, ma, "A mama with a ponytail — ma"]
+        - [み, mi, "The number 21 — 'me' at 21"]
+        - [む, mu, "A cow going 'moo' — mu"]
+        - [め, me, "An eye (me) with an eyelash — me"]
+        - [も, mo, "A fish hook catching 'more' fish — mo"]
+      words:
+        - [みみ, mimi, ear]
+        - [め, me, eye]
+        - [もも, momo, peach]
+        - [むすめ, musume, daughter]
+        - [さしみ, sashimi, sashimi]
+    - title: Y and W rows, ん
+      chars:
+        - [や, ya, "A yak with horns — ya"]
+        - [ゆ, yu, "A unique fish swimming — yu"]
+        - [よ, yo, "A yo-yo on a string — yo"]
+        - [わ, wa, "A wasp's curled body — wa"]
+        - [を, wo, "Someone wobbling on one leg — pronounced 'o'; only used as the object particle"]
+        - [ん, n, "The letter n written lazily — n"]
+      words:
+        - [やま, yama, mountain]
+        - [ゆき, yuki, snow]
+        - [よこ, yoko, side]
+        - [わたし, watashi, I / me]
+        - [ほん, hon, book]
+    - title: R-row らりるれろ
+      chars:
+        - [ら, ra, "A rabbit sitting up — ra"]
+        - [り, ri, "Two reeds by the river — ri"]
+        - [る, ru, "A road with a loop at the end — ru"]
+        - [れ, re, "Someone kneeling to say a prayer — re"]
+        - [ろ, ro, "A road without the loop — ro"]
+      words:
+        - [さくら, sakura, cherry blossom]
+        - [くすり, kusuri, medicine]
+        - [くるま, kuruma, car]
+        - [これ, kore, this]
+        - [ろく, roku, six]
+    - title: Voiced sounds (゛ and ゜)
+      chars:
+        - [が, ga, "か with two ticks — the hard 'g' sound"]
+        - [ぎ, gi, "き plus ゛ — gi"]
+        - [ぐ, gu, "く plus ゛ — gu"]
+        - [げ, ge, "け plus ゛ — ge"]
+        - [ご, go, "こ plus ゛ — go"]
+        - [ざ, za, "さ plus ゛ — za"]
+        - [じ, ji, "し plus ゛ — ji"]
+        - [ず, zu, "す plus ゛ — zu"]
+        - [ぜ, ze, "せ plus ゛ — ze"]
+        - [ぞ, zo, "そ plus ゛ — zo"]
+        - [だ, da, "た plus ゛ — da"]
+        - [で, de, "て plus ゛ — de"]
+        - [ど, do, "と plus ゛ — do"]
+        - [ば, ba, "は plus ゛ — ba"]
+        - [び, bi, "ひ plus ゛ — bi"]
+        - [ぶ, bu, "ふ plus ゛ — bu"]
+        - [べ, be, "へ plus ゛ — be"]
+        - [ぼ, bo, "ほ plus ゛ — bo"]
+        - [ぱ, pa, "は with a circle ゜ — the popping 'p'"]
+        - [ぴ, pi, "ひ plus ゜ — pi"]
+        - [ぷ, pu, "ふ plus ゜ — pu"]
+        - [ぺ, pe, "へ plus ゜ — pe"]
+        - [ぽ, po, "ほ plus ゜ — po"]
+      words:
+        - [ごはん, gohan, rice / meal]
+        - [かぜ, kaze, wind]
+        - [でんわ, denwa, telephone]
+        - [ぶた, buta, pig]
+        - [さんぽ, sanpo, a walk]
+    - title: Combinations and small っ
+      chars:
+        - [きゃ, kya, "き + small ゃ glide together — kya"]
+        - [しゅ, shu, "し + small ゅ — shu"]
+        - [ちょ, cho, "ち + small ょ — cho"]
+        - [にゃ, nya, "に + small ゃ — the cat's 'nya'"]
+        - [りょ, ryo, "り + small ょ — ryo"]
+        - [じゃ, ja, "じ + small ゃ — ja"]
+        - [っ, (pause), "Small っ doubles the next consonant: a tiny pause, like the gap in 'bookcase'"]
+      words:
+        - [きっぷ, kippu, ticket]
+        - [しゃしん, shashin, photo]
+        - [りょこう, ryokou, travel]
+        - [ちょっと, chotto, a little]
+        - [おちゃ, ocha, tea]
+  test:
+    title: Hiragana test
+
+katakana:
+  title: Katakana
+  objectives:
+    - Read and recognise all 46 basic katakana
+    - Read voiced sounds, combinations and the long-vowel mark ー
+    - Read loanwords and foreign names
+  lessons:
+    - title: Vowels アイウエオ
+      chars:
+        - [ア, a, "An axe chopping — a"]
+        - [イ, i, "An eagle's beak and neck — i"]
+        - [ウ, u, "う with a hat on — u"]
+        - [エ, e, "An elevator going between two floors — e"]
+        - [オ, o, "An opera singer with arms spread — o"]
+        - [ー, (long), "The long-vowel bar used in loanwords: stretch the previous vowel (ケーキ = ke-e-ki)"]
+      words:
+        - [アイ, ai, "AI / eye (loan)"]
+    - title: K-row カキクケコ
+      chars:
+        - [カ, ka, "Just like か without the tick — ka"]
+        - [キ, ki, "A key with two teeth — ki"]
+        - [ク, ku, "A cook's hat from the side — ku"]
+        - [ケ, ke, "A kebab skewer — ke"]
+        - [コ, ko, "A corner of a box — ko"]
+      words:
+        - [ココア, kokoa, cocoa]
+        - [ケーキ, keeki, cake]
+    - title: S-row サシスセソ
+      chars:
+        - [サ, sa, "A signpost with a cross-bar — sa"]
+        - [シ, shi, "A smiling face looking sideways — she smiles (strokes rise from the bottom)"]
+        - [ス, su, "A person doing the splits — su"]
+        - [セ, se, "せ with sharp corners — se"]
+        - [ソ, so, "A needle sewing a stitch (stroke falls from the top) — so"]
+      words:
+        - [スキー, sukii, skiing]
+        - [アイス, aisu, ice cream]
+    - title: T-row タチツテト
+      chars:
+        - [タ, ta, "A tall letter t and a — ta"]
+        - [チ, chi, "A cheerleader with pom-poms — chi"]
+        - [ツ, tsu, "A tsunami of three drops (strokes fall from the top) — tsu"]
+        - [テ, te, "A telephone pole — te"]
+        - [ト, to, "A totem pole with a branch — to"]
+      words:
+        - [テスト, tesuto, test]
+        - [スーツ, suutsu, suit]
+    - title: N-row ナニヌネノ
+      chars:
+        - [ナ, na, "A knife cutting across — na"]
+        - [ニ, ni, "Two lines — 'ni' means two"]
+        - [ヌ, nu, "Noodles on chopsticks — nu"]
+        - [ネ, ne, "A necklace with a pendant — ne"]
+        - [ノ, no, "A single 'no' slash — no"]
+      words:
+        - [テニス, tenisu, tennis]
+        - [ネクタイ, nekutai, necktie]
+    - title: H-row ハヒフヘホ
+      chars:
+        - [ハ, ha, "Two lines laughing 'ha ha' — ha"]
+        - [ヒ, hi, "A heel kicking — hi"]
+        - [フ, fu, "A hook — fu"]
+        - [ヘ, he, "Same as へ — a hill — he"]
+        - [ホ, ho, "A holy cross with arms — ho"]
+      words:
+        - [ヒーター, hiitaa, heater]
+        - [コーヒー, koohii, coffee]
+    - title: M-row マミムメモ
+      chars:
+        - [マ, ma, "A mama's pointy nose — ma"]
+        - [ミ, mi, "Three lines: me, me, me — mi"]
+        - [ム, mu, "A cow's head — mu"]
+        - [メ, me, "An X marking a spot — me"]
+        - [モ, mo, "も with no hook — mo"]
+      words:
+        - [メモ, memo, memo]
+        - [ハム, hamu, ham]
+    - title: Y and W rows, ン
+      chars:
+        - [ヤ, ya, "A yak's horn — ya"]
+        - [ユ, yu, "A U-turn — yu"]
+        - [ヨ, yo, "A yo-yo case, three bars — yo"]
+        - [ワ, wa, "A wasp's wing — wa"]
+        - [ヲ, wo, "Wobbly ヲ, pronounced 'o' and rarely used"]
+        - [ン, n, "A face winking (stroke rises from the bottom) — n"]
+      words:
+        - [ワイン, wain, wine]
+        - [ヨーヨー, yooyoo, yo-yo]
+    - title: R-row ラリルレロ
+      chars:
+        - [ラ, ra, "A ramp — ra"]
+        - [リ, ri, "Two reeds — ri"]
+        - [ル, ru, "Two roots — ru"]
+        - [レ, re, "A lever — re"]
+        - [ロ, ro, "A robot's square mouth — ro"]
+      words:
+        - [ラーメン, raamen, ramen]
+        - [レストラン, resutoran, restaurant]
+    - title: Voiced sounds and ー
+      chars:
+        - [ガ, ga, "カ plus ゛ — ga"]
+        - [ギ, gi, "キ plus ゛ — gi"]
+        - [グ, gu, "ク plus ゛ — gu"]
+        - [ゲ, ge, "ケ plus ゛ — ge"]
+        - [ザ, za, "サ plus ゛ — za"]
+        - [ゴ, go, "コ plus ゛ — go"]
+        - [ジ, ji, "シ plus ゛ — ji"]
+        - [ズ, zu, "ス plus ゛ — zu"]
+        - [ゼ, ze, "セ plus ゛ — ze"]
+        - [ゾ, zo, "ソ plus ゛ — zo"]
+        - [ダ, da, "タ plus ゛ — da"]
+        - [デ, de, "テ plus ゛ — de"]
+        - [ド, do, "ト plus ゛ — do"]
+        - [バ, ba, "ハ plus ゛ — ba"]
+        - [ビ, bi, "ヒ plus ゛ — bi"]
+        - [ブ, bu, "フ plus ゛ — bu"]
+        - [ベ, be, "ヘ plus ゛ — be"]
+        - [ボ, bo, "ホ plus ゛ — bo"]
+        - [パ, pa, "ハ plus ゜ — pa"]
+        - [ピ, pi, "ヒ plus ゜ — pi"]
+        - [プ, pu, "フ plus ゜ — pu"]
+        - [ペ, pe, "ヘ plus ゜ — pe"]
+        - [ポ, po, "ホ plus ゜ — po"]
+      words:
+        - [パン, pan, bread]
+        - [バス, basu, bus]
+        - [ビール, biiru, beer]
+        - [デパート, depaato, department store]
+    - title: Combinations and foreign sounds
+      chars:
+        - [キャ, kya, "キ + small ャ — kya"]
+        - [シャ, sha, "シ + small ャ — sha"]
+        - [チョ, cho, "チ + small ョ — cho"]
+        - [ッ, (pause), "Small ッ doubles the next consonant"]
+        - [ファ, fa, "フ + small ァ — fa (foreign sound)"]
+        - [ティ, ti, "テ + small ィ — ti (foreign sound)"]
+        - [ウィ, wi, "ウ + small ィ — wi (foreign sound)"]
+      words:
+        - [シャツ, shatsu, shirt]
+        - [チョコレート, chokoreeto, chocolate]
+        - [カップ, kappu, cup]
+        - [パーティー, paatii, party]
+  test:
+    title: Katakana test

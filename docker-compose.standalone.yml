@@ -1,0 +1,13 @@
+# Standalone mode: no host reverse proxy, Caddy terminates HTTPS itself.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.standalone.yml up -d --build
+#
+# Needs DOMAIN in .env pointing at this server, and ports 80/443 free.
+services:
+  caddy:
+    environment:
+      CADDY_SITE_ADDRESS: ${DOMAIN:?Set DOMAIN in .env}
+    ports: !override
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"

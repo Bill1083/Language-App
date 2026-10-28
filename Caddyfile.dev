@@ -1,0 +1,54 @@
+# Development only: the frontend runs on the host with `npm run dev` (hot reload).
+# Parlo reverse proxy.
+#
+# Default: plain HTTP on :80 inside the container, published on 127.0.0.1 for
+# the host's Nginx to terminate TLS. With docker-compose.standalone.yml,
+# CADDY_SITE_ADDRESS is your domain and Caddy obtains HTTPS certificates itself
+# (browsers only allow microphone access over HTTPS).
+{
+	admin off
+	servers {
+		# Trust X-Forwarded-* from the host Nginx (Docker bridge = private range)
+		trusted_proxies static private_ranges
+	}
+}
+
+{$CADDY_SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "microphone=(self), camera=(), geolocation=()"
+		-Server
+	}
+
+	# API + WebSockets (Caddy proxies upgrades automatically). Long timeouts for
+	# streamed replies and lesson generation polling.
+	handle /api/* {
+		request_body {
+			max_size 8MB
+		}
+		reverse_proxy api:8000 {
+			flush_interval -1
+			transport http {
+				read_timeout 300s
+				write_timeout 300s
+			}
+		}
+	}
+
+	handle /healthz {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		reverse_proxy host.docker.internal:3456
+	}
+}
+
+# Container healthcheck (always plain HTTP, also in standalone mode)
+:8081 {
+	respond "ok" 200
+}

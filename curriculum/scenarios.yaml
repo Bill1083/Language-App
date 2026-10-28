@@ -1,0 +1,197 @@
+# Role-play scenarios for the Talk tab. Shared by every language: the AI plays
+# the scene in the target language, set in Paris / Rome / Tokyo. Add
+# `language: ja` (etc.) to make a scenario language-specific. Optional `notes`
+# are appended to the AI's instructions.
+
+- slug: cafe-order
+  title: Order at a café
+  emoji: ☕
+  min_level: A1
+  description: You walk into a busy café in the city centre and go up to the counter.
+  goal: Order a coffee and a pastry, then ask for the bill.
+  ai_role: a friendly barista
+  user_role: a customer
+
+- slug: meet-neighbour
+  title: Meet your new neighbour
+  emoji: 🏠
+  min_level: A1
+  description: You've just moved into an apartment and bump into your neighbour on the stairs.
+  goal: Introduce yourself, say where you're from and find out one thing about your neighbour.
+  ai_role: a chatty neighbour who has lived in the building for years
+  user_role: the new tenant
+
+- slug: ask-directions
+  title: Ask for directions
+  emoji: 🗺️
+  min_level: A1
+  description: You're lost on your way to the train station and stop a passer-by.
+  goal: Find out how to get to the station and how long it takes on foot.
+  ai_role: a helpful local in a bit of a hurry
+  user_role: a lost visitor
+
+- slug: market-shopping
+  title: Shopping at the market
+  emoji: 🍅
+  min_level: A1
+  description: Saturday morning at the local market. You need fruit and vegetables for dinner.
+  goal: Buy two kinds of fruit, ask the price, and pay.
+  ai_role: a cheerful market stall holder
+  user_role: a shopper
+
+- slug: hotel-checkin
+  title: Hotel check-in
+  emoji: 🛎️
+  min_level: A2
+  description: You arrive at your hotel in the evening after a long journey.
+  goal: Check in, ask what time breakfast is served, and ask for the Wi-Fi password.
+  ai_role: a polite hotel receptionist
+  user_role: a guest with a reservation
+
+- slug: train-station
+  title: At the train station
+  emoji: 🚆
+  min_level: A2
+  description: You're at the ticket office and want to take a day trip tomorrow.
+  goal: Buy a return ticket, ask the departure time and which platform it leaves from.
+  ai_role: a ticket office clerk
+  user_role: a traveller
+
+- slug: clothes-shop
+  title: Buying clothes
+  emoji: 👕
+  min_level: A2
+  description: You're looking for a jacket in a small clothing shop.
+  goal: Ask for a jacket in your size, try it on, and ask if there's another colour.
+  ai_role: a shop assistant
+  user_role: a customer
+
+- slug: doctor
+  title: At the doctor's
+  emoji: 🩺
+  min_level: A2
+  description: You've felt unwell for a few days and have a doctor's appointment.
+  goal: Describe your symptoms, say how long you've had them, and understand what to do.
+  ai_role: a calm, kind doctor
+  user_role: a patient
+
+- slug: restaurant-dinner
+  title: Dinner at a restaurant
+  emoji: 🍝
+  min_level: A2
+  description: A table for two at a neighbourhood restaurant on a Friday night.
+  goal: Ask for a recommendation, order a starter and a main course, and order drinks.
+  ai_role: an attentive waiter
+  user_role: a diner
+
+- slug: weekend-plans
+  title: Plan the weekend with a friend
+  emoji: 📅
+  min_level: A2
+  description: You're chatting with a friend about what to do this weekend.
+  goal: Agree on an activity, a day and a time to meet.
+  ai_role: a friend with lots of opinions
+  user_role: their friend
+
+- slug: restaurant-complaint
+  title: Complain at a restaurant
+  emoji: 😤
+  min_level: B1
+  description: Your meal arrived cold and it isn't what you ordered.
+  goal: Explain the problem politely and get it fixed or get a discount.
+  ai_role: a restaurant manager who wants to keep customers happy
+  user_role: an unhappy customer
+
+- slug: rent-apartment
+  title: Rent an apartment
+  emoji: 🔑
+  min_level: B1
+  description: You're viewing an apartment you'd like to rent for a year.
+  goal: Ask about the rent, what's included, and when you could move in — and negotiate one thing.
+  ai_role: a landlord showing the flat
+  user_role: a prospective tenant
+
+- slug: lost-luggage
+  title: Lost luggage
+  emoji: 🧳
+  min_level: B1
+  description: You've landed but your suitcase didn't arrive.
+  goal: Report the lost bag, describe it, and arrange for it to be delivered to your hotel.
+  ai_role: an airline baggage desk agent
+  user_role: a traveller
+
+- slug: job-interview
+  title: Job interview
+  emoji: 💼
+  min_level: B1
+  description: An interview for a job you really want at a local company.
+  goal: Present your experience, explain why you want the job, and ask one question about the role.
+  ai_role: a professional but friendly interviewer
+  user_role: the candidate
+
+- slug: phone-appointment
+  title: Book an appointment by phone
+  emoji: 📞
+  min_level: B1
+  description: You call a hair salon to book an appointment.
+  goal: Book a time that works for you and confirm the price.
+  ai_role: a busy receptionist
+  user_role: a caller
+
+- slug: debate-city-life
+  title: City or countryside?
+  emoji: 🌆
+  min_level: B2
+  description: A friendly debate with a colleague over lunch.
+  goal: Defend your view with at least two arguments and respond to a counter-argument.
+  ai_role: a colleague who strongly prefers the opposite view
+  user_role: yourself
+
+- slug: work-meeting
+  title: Team meeting
+  emoji: 🗂️
+  min_level: B2
+  description: A project is behind schedule and your manager calls a meeting.
+  goal: Explain the cause of the delay, propose a solution and agree on a new deadline.
+  ai_role: a demanding but fair manager
+  user_role: the project lead
+
+- slug: news-discussion
+  title: Discuss the news
+  emoji: 📰
+  min_level: C1
+  description: Over dinner, a well-informed friend wants to talk about a recent news story.
+  goal: Summarise a news story of your choice, give a nuanced opinion and respond to criticism.
+  ai_role: a sharp, well-read friend who likes to play devil's advocate
+  user_role: yourself
+
+- slug: izakaya
+  title: A night at the izakaya
+  emoji: 🏮
+  language: ja
+  min_level: A2
+  description: After work you join a colleague at a small izakaya.
+  goal: Order drinks and two dishes, make a toast, and chat about your day.
+  ai_role: a friendly colleague (and sometimes the izakaya staff)
+  user_role: a coworker
+  notes: Use the 乾杯 custom; the staff speak polite Japanese, the colleague casual.
+
+- slug: aperitivo
+  title: Aperitivo with friends
+  emoji: 🍹
+  language: it
+  min_level: A2
+  description: Early evening aperitivo at a bar with a friend of a friend.
+  goal: Order a drink, introduce yourself, and find out what the other person does for work.
+  ai_role: a sociable Roman who loves to talk
+  user_role: a new acquaintance
+
+- slug: boulangerie
+  title: At the boulangerie
+  emoji: 🥖
+  language: fr
+  min_level: A1
+  description: Early morning at the bakery on your street.
+  goal: Buy a baguette and two croissants, and wish the baker a good day.
+  ai_role: the baker
+  user_role: a customer

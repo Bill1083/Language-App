@@ -66,7 +66,8 @@ class LLMProvider:
     supports_audio = False
 
     async def complete_audio(
-        self, *, model: str, prompt: str, audio: bytes, mime: str, json_mode: bool = False, system: str | None = None
+        self, *, model: str, prompt: str, audio: bytes, mime: str, json_mode: bool = False, system: str | None = None,
+        thinking: str | None = "low",
     ) -> LLMResult:
         raise ProviderError(f"{self.name} does not accept audio input")
 
@@ -165,7 +166,7 @@ class GeminiLLM(LLMProvider):
                 if text:
                     yield text
 
-    async def complete_audio(self, *, model, prompt, audio, mime, json_mode=False, system=None):
+    async def complete_audio(self, *, model, prompt, audio, mime, json_mode=False, system=None, thinking="low"):
         self._require_key()
         contents = [{
             "role": "user",
@@ -174,7 +175,7 @@ class GeminiLLM(LLMProvider):
                 {"text": prompt},
             ],
         }]
-        body = self._body(contents, system, json_mode, 0.0, 2048, "low")
+        body = self._body(contents, system, json_mode, 0.0, 2048, thinking)
         data = await self._post(self._url(model, "generateContent"), body)
         return LLMResult(text=self._text(data), model=model, provider=self.name, usage=self._usage(data.get("usageMetadata")))
 

@@ -125,8 +125,8 @@ If you changed `nginx.conf` in the repo, copy the changed lines into `/etc/nginx
   Language API**, or remove the restriction), or the project isn't on a paid tier (429 quota errors).
 - **"Gemini error 503: This model is currently experiencing high demand"** — Google's side, and
   usually temporary. Parlo switches to the backup model (`LLM_MODEL_FALLBACK`, default
-  `gemini-3.5-flash-lite`) when the main one is overloaded or hasn't started replying within 25 s,
-  and keeps using the backup first for two minutes. The admin test shows which model answered. If
+  `gemini-3.5-flash-lite`) when the main one is overloaded, hasn't started replying within 12 s
+  or hasn't transcribed a recording within 12 s, and keeps using the backup first for five minutes. The admin test shows which model answered. If
   it keeps happening, set a different main model in **Admin → Providers**.
 
 ## Resource use

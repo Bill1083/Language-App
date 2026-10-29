@@ -225,7 +225,7 @@ function ConversationScreen({ conv }: { conv: Conversation }) {
               key={p.client_id}
               lang={lang}
               turn={p.text ? ({ text: p.text } as never) : undefined}
-              pendingLabel={p.status === "transcribing" ? "Transcribing…" : undefined}
+              pendingLabel={p.status === "transcribing" ? (p.note ?? "Transcribing…") : undefined}
               localAudio={p.localAudio}
             />
           ))}

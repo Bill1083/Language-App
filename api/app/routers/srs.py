@@ -9,7 +9,19 @@ from ..deps import CurrentUser, Db
 from ..models import SrsCard, Unit
 from ..services.languages import CEFR
 from ..services.progress import award_xp, check_achievements
-from ..services.srs import card_json, ensure_kana_cards, forecast, level_summary, practice, queue, review
+from ..services.srs import (
+    card_json,
+    completed_lessons,
+    ensure_kana_cards,
+    forecast,
+    level_summary,
+    practice,
+    practice_blocks,
+    practice_from_lessons,
+    practice_item,
+    queue,
+    review,
+)
 
 LEVEL_LABELS = {"PRE": "Kana", **{c: c for c in CEFR}}
 
@@ -55,21 +67,67 @@ async def practice_levels(lang: str, user: CurrentUser, db: Db) -> list[dict[str
     return [lv | {"label": LEVEL_LABELS.get(lv["level"], lv["level"])} for lv in await level_summary(db, user, lang)]
 
 
-@router.get("/{lang}/practice")
-async def practice_session(lang: str, user: CurrentUser, db: Db, level: str | None = None, unit_id: int | None = None,
-                           limit: int = 30) -> dict[str, Any]:
-    if not level and not unit_id:
-        raise HTTPException(400, "Pick a level or a unit to practise")
+def _ids(csv: str | None, extra: int | None = None) -> list[int]:
+    ids = [int(u) for u in (csv or "").split(",") if u.strip().isdigit()]
+    return ids + ([extra] if extra else [])
+
+
+def _joined(titles: list[str], noun: str) -> str:
+    return " · ".join(titles) if len(titles) <= 2 else f"{len(titles)} {noun}"
+
+
+async def _practice_cards(db, user, lang: str, *, level: str | None, units: str | None, unit_id: int | None,
+                          lessons: str | None, order: str, limit: int, card_types: list[str] | None = None,
+                          by_lesson: bool = False):
+    """Resolve a practice selection (lesson blocks, units or a whole level) to cards and a title."""
+    lesson_ids, unit_ids = _ids(lessons), _ids(units, unit_id)
+    if not (level or unit_ids or lesson_ids):
+        raise HTTPException(400, "Pick the blocks you want to practise")
     if lang == "ja":
         await ensure_kana_cards(db, user.id)
-    cards = await practice(db, user, lang, level=level, unit_id=unit_id, limit=min(max(limit, 5), 100))
-    if unit_id:
-        unit = await db.get(Unit, unit_id)
-        title = unit.title if unit else "Unit"
+    limit = min(max(limit, 1), 100)
+    if lesson_ids or by_lesson:
+        chosen = await completed_lessons(db, user.id, lang, lesson_ids=lesson_ids, unit_ids=unit_ids, level=level)
+        cards = await practice_from_lessons(db, user, lang, chosen, order=order, limit=limit, card_types=card_types)
+        if lesson_ids:
+            return cards, _joined([le.title for le in chosen], "blocks")
     else:
-        title = LEVEL_LABELS.get(level or "", level or "")
+        cards = await practice(db, user, lang, level=level, unit_ids=unit_ids, order=order, limit=limit,
+                               card_types=card_types)
+    if not unit_ids:
+        return cards, LEVEL_LABELS.get(level or "", level or "")
+    titles = list(await db.scalars(select(Unit.title).where(Unit.id.in_(unit_ids)).order_by(Unit.order)))
+    return cards, _joined(titles, "units")
+
+
+@router.get("/{lang}/practice/blocks")
+async def get_practice_blocks(lang: str, user: CurrentUser, db: Db) -> list[dict[str, Any]]:
+    """Finished lessons from the course map, by level and unit, to pick for practice."""
+    if lang == "ja":
+        await ensure_kana_cards(db, user.id)
+    return [lv | {"label": LEVEL_LABELS.get(lv["level"], lv["level"])} for lv in await practice_blocks(db, user, lang)]
+
+
+@router.get("/{lang}/practice")
+async def practice_session(lang: str, user: CurrentUser, db: Db, level: str | None = None, unit_id: int | None = None,
+                           units: str | None = None, lessons: str | None = None, order: str = "shuffle",
+                           limit: int = 30) -> dict[str, Any]:
+    """Flashcards for lesson blocks ("lessons=12,13"), units ("units=3,4") or a level."""
+    cards, title = await _practice_cards(db, user, lang, level=level, units=units, unit_id=unit_id, lessons=lessons,
+                                         order=order, limit=limit)
     return {"cards": [card_json(c) for c in cards], "title": title,
             "counts": {"due": len(cards), "new": 0, "mistakes_new": 0}}
+
+
+@router.get("/{lang}/practice/items")
+async def practice_items(lang: str, user: CurrentUser, db: Db, level: str | None = None, unit_id: int | None = None,
+                         units: str | None = None, lessons: str | None = None, order: str = "course",
+                         limit: int = 20) -> dict[str, Any]:
+    """Words (meaning → type the word) and kana (symbol → type the romaji) for typing practice."""
+    cards, title = await _practice_cards(db, user, lang, level=level, units=units, unit_id=unit_id, lessons=lessons,
+                                         order=order, limit=min(limit, 50), card_types=["produce", "kana"],
+                                         by_lesson=True)
+    return {"items": [practice_item(c) for c in cards], "title": title}
 
 
 @router.post("/review")

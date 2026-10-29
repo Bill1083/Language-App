@@ -159,10 +159,14 @@ function Session() {
   const mistakes = params.get("mistakes") === "1";
   const level = params.get("level");
   const unit = params.get("unit");
-  const practice = !!(level || unit);
+  const units = params.get("units");
+  const lessons = params.get("lessons");
+  const order = params.get("order");
+  const limit = params.get("limit");
+  const practice = !!(level || unit || units || lessons);
   const router = useRouter();
   const qc = useQueryClient();
-  const { data, isLoading, refetch } = useQueue(lang, { mistakes, level, unit });
+  const { data, isLoading, refetch } = useQueue(lang, { mistakes, level, unit, units, lessons, order, limit });
   const [queue, setQueue] = React.useState<SrsCard[] | null>(null);
   const [pos, setPos] = React.useState(0);
   const [revealed, setRevealed] = React.useState(false);
@@ -297,7 +301,11 @@ function Session() {
           ) : (
             <Button size="lg" asChild><Link href="/">Home</Link></Button>
           )}
-          <Button size="lg" variant="outline" asChild><Link href="/review">Review overview</Link></Button>
+          {practice ? (
+            <Button size="lg" variant="outline" asChild><Link href="/practice">Choose other blocks</Link></Button>
+          ) : (
+            <Button size="lg" variant="outline" asChild><Link href="/review">Review overview</Link></Button>
+          )}
         </div>
       </div>
     );

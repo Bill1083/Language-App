@@ -4,8 +4,9 @@ import asyncio
 
 import pytest
 
-from app.providers.base import ChatMessage, LLMResult, ProviderError
+from app.providers.base import ChatMessage, LLMResult, ProviderError, STTResult
 from app.providers.llm import LLMProvider
+from app.providers.stt import GeminiSTT
 from app.services import ai as ai_mod
 from app.services import runtime_config
 from app.services.ai import BACKUP_NOTICE, RETRY_NOTICE, AIService
@@ -69,7 +70,7 @@ def make(monkeypatch):
             llm_provider="gemini", llm_base_url="",
             llm_models={"conversation": MAIN, "feedback": MAIN, "content": MAIN},
             tts_provider_lesson="google", tts_provider_conversation="google", tts_base_url="", tts_azure_region="",
-            stt_provider="gemini", stt_base_url="", stt_model="", stt_combined_feedback=False,
+            stt_provider="gemini", stt_base_url="", stt_model=MAIN, stt_combined_feedback=False,
             daily_ai_budget_usd=0, voices={}, llm_fallback_model=backup,
         )
         return service, llm
@@ -168,3 +169,57 @@ async def test_gemini_gets_a_backup_model_by_default_and_off_disables_it(monkeyp
     assert cfg.backup_model == ""
     assert cfg.llm_fallback_model == "off"
     runtime_config.invalidate()
+
+
+class ScriptedSTT(GeminiSTT):
+    """Gemini STT whose behaviour depends on the model: "ok" | "503" | "hang"."""
+
+    def __init__(self, model: str, script: dict[str, str], calls: list[str]):
+        super().__init__(api_key="key", model=model)
+        self.script, self.calls = script, calls
+
+    async def transcribe(self, audio, mime, lang, duration_s=0.0):
+        self.calls.append(self.model)
+        if self.script[self.model] == "503":
+            raise busy()
+        if self.script[self.model] == "hang":
+            await asyncio.sleep(5)
+        return STTResult(text="すみません、駅はどこですか", provider="gemini", model=self.model)
+
+
+def scripted_stt(monkeypatch, script: dict[str, str]) -> list[str]:
+    calls: list[str] = []
+    monkeypatch.setattr(ai_mod, "stt_for", lambda cfg, model=None: ScriptedSTT(model, script, calls))
+    return calls
+
+
+async def test_transcription_falls_back_to_the_backup_and_says_so(make, monkeypatch):
+    service, _ = make({})
+    calls = scripted_stt(monkeypatch, {MAIN: "503", BACKUP: "ok"})
+    notices: list[str] = []
+
+    async def on_retry(message: str) -> None:
+        notices.append(message)
+
+    result = await service.transcribe(b"audio", "audio/webm", "ja", 2.0, on_retry=on_retry)
+    assert result.model == BACKUP and result.text
+    assert calls == [MAIN, BACKUP]
+    assert notices == [BACKUP_NOTICE]
+
+
+async def test_slow_transcription_times_out_and_falls_back(make, monkeypatch):
+    monkeypatch.setattr(ai_mod, "STT_TIMEOUT", 0.05)
+    service, _ = make({})
+    calls = scripted_stt(monkeypatch, {MAIN: "hang", BACKUP: "ok"})
+    result = await service.transcribe(b"audio", "audio/webm", "ja", 2.0)
+    assert result.model == BACKUP
+    assert calls == [MAIN, BACKUP]
+    assert "longer than" in service.failures[0]
+
+
+async def test_an_overloaded_reply_model_sends_transcription_to_the_backup_too(make, monkeypatch):
+    service, _ = make({MAIN: "503", BACKUP: "ok"})
+    await service.llm_text("t", "conversation", system="s", messages=HELLO)  # marks MAIN as overloaded
+    calls = scripted_stt(monkeypatch, {MAIN: "ok", BACKUP: "ok"})
+    await service.transcribe(b"audio", "audio/webm", "ja", 2.0)
+    assert calls == [BACKUP]

@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import { AudioQueue } from "@/lib/audio";
 import type { Feedback, PronunciationFlag, Turn } from "@/lib/types";
 
-export type PendingTurn = { client_id: string; text: string; localAudio?: string; status: "sending" | "transcribing" };
+export type PendingTurn = {
+  client_id: string; text: string; localAudio?: string; status: "sending" | "transcribing"; note?: string;
+};
 export type Streaming = { stream_id: string; text: string; status?: string } | null;
 type Status = "connecting" | "open" | "reconnecting" | "closed";
 
@@ -16,7 +18,7 @@ export type StartError = { message: string; detail?: string } | null;
 
 type ServerEvent =
   | { type: "pong" }
-  | { type: "transcribing"; client_id?: string }
+  | { type: "transcribing"; client_id?: string; message?: string }
   | { type: "user_turn"; client_id?: string; turn: Turn }
   | { type: "ai_start"; stream_id: string }
   | { type: "ai_status"; stream_id: string; message: string }
@@ -30,7 +32,7 @@ type ServerEvent =
   | { type: "error"; message: string; detail?: string; client_id?: string; retryable?: boolean };
 
 /** No word from the server this long after the AI started its turn: give up
- *  waiting (the server itself tries two models for at most ~25 s each). */
+ *  waiting (the server itself tries two models for at most ~12 s each to start). */
 const SILENT_REPLY_MS = 70_000;
 
 const FAILURES: Record<number, SocketFailure> = {
@@ -96,7 +98,9 @@ export function useConversationSocket(
   const handle = React.useCallback((ev: ServerEvent) => {
     switch (ev.type) {
       case "transcribing":
-        setPending((p) => p.map((x) => (x.client_id === ev.client_id ? { ...x, status: "transcribing" } : x)));
+        setPending((p) =>
+          p.map((x) => (x.client_id === ev.client_id ? { ...x, status: "transcribing", note: ev.message ?? x.note } : x)),
+        );
         break;
       case "user_turn":
         setPending((p) => p.filter((x) => x.client_id !== ev.client_id));

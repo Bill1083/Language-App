@@ -69,7 +69,9 @@ class GeminiSTT(STTProvider):
 
     async def transcribe(self, audio, mime, lang, duration_s=0.0):
         prompt = VERBATIM_PROMPT.format(language=LANG_NAMES.get(lang, lang), script_note=_script_note(lang))
-        result = await self._llm().complete_audio(model=self.model, prompt=prompt, audio=audio, mime=mime)
+        # Verbatim transcription needs no reasoning; minimal thinking saves 1–3 s per clip.
+        result = await self._llm().complete_audio(model=self.model, prompt=prompt, audio=audio, mime=mime,
+                                                  thinking="minimal")
         text = result.text.strip().strip('"')
         return STTResult(text=text, provider=self.name, model=self.model, audio_seconds=duration_s, usage=result.usage)
 

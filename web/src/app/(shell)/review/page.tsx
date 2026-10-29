@@ -26,8 +26,11 @@ function PracticeByLevel({ lang }: { lang: Lang }) {
         </span>
         <div className="min-w-0 flex-1">
           <p className="font-bold">Practise what you&apos;ve learnt</p>
-          <p className="text-sm text-muted-foreground">Go over a whole level or a single unit any time, due or not.</p>
+          <p className="text-sm text-muted-foreground">Type the words or flip cards — pick the blocks, up to 20 at a time.</p>
         </div>
+        <Button asChild variant="soft" size="sm" className="shrink-0">
+          <Link href="/practice">Choose</Link>
+        </Button>
       </div>
       {!data ? (
         <div className="space-y-2 border-t p-5">
@@ -64,7 +67,7 @@ function PracticeByLevel({ lang }: { lang: Lang }) {
                     <ChevronDown className={cn("ml-auto size-4 shrink-0 text-muted-foreground transition-transform", expanded && "rotate-180")} />
                   </button>
                   <Button asChild size="sm">
-                    <Link href={`/review-session?level=${lv.level}`}>Practise</Link>
+                    <Link href={`/practice?level=${lv.level}`}>Practise</Link>
                   </Button>
                 </div>
                 {expanded && (
@@ -72,7 +75,7 @@ function PracticeByLevel({ lang }: { lang: Lang }) {
                     {lv.units.map((u) => (
                       <li key={u.id}>
                         <Link
-                          href={`/review-session?unit=${u.id}`}
+                          href={`/practice?unit=${u.id}`}
                           className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-muted"
                         >
                           <span className="min-w-0 flex-1">

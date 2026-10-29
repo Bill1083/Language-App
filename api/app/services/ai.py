@@ -22,7 +22,7 @@ from ..config import get_settings
 from ..db import SessionLocal
 from ..models import AiUsage
 from ..providers.base import ChatMessage, LLMResult, ProviderError, STTResult, Usage, extract_json
-from ..providers.llm import LLMProvider, make_llm
+from ..providers.llm import DEFAULT_FALLBACK_MODELS, LLMProvider, make_llm
 from ..providers.stt import GeminiSTT, STTProvider, make_stt
 from ..providers.tts import TTSProvider, make_tts
 from . import pricing
@@ -32,11 +32,14 @@ log = logging.getLogger("parlo.ai")
 T = TypeVar("T", bound=BaseModel)
 
 
-FIRST_TOKEN_TIMEOUT = 25.0  # s for a streamed reply to start before moving on to the next model
+FIRST_TOKEN_TIMEOUT = 12.0  # s for a streamed reply to start before moving on to the next model
 STALL_TIMEOUT = 30.0  # s without a token once a streamed reply has started
-OVERLOAD_COOLDOWN = 120.0  # s to try the backup model first after the main one was overloaded
+STT_TIMEOUT = 12.0  # s for a transcript (combined transcript + feedback gets twice that)
+OVERLOAD_COOLDOWN = 300.0  # s to try the backup model first after the main one was overloaded
 RETRY_DELAY = 1.5  # s before retrying the same model
 OVERLOAD_STATUSES = {429, 500, 502, 503, 504, 529}
+# Non-streamed calls: an overloaded Gemini can sit on a request for a minute and then hang up.
+COMPLETE_TIMEOUTS = {"conversation": 20.0, "feedback": 45.0, "content": 150.0}
 
 RETRY_NOTICE = "The AI is busy right now — trying again…"
 BACKUP_NOTICE = "The AI is busy right now — switching to the backup model…"
@@ -67,16 +70,27 @@ def clear_overloaded(provider: str, model: str) -> None:
     _cooling.pop(f"{provider}:{model}", None)
 
 
+def _ordered(provider: str, main: str, backup: str) -> list[str]:
+    if not backup or backup == main:
+        return [main, main]
+    if _cooling.get(f"{provider}:{main}", 0.0) > time.monotonic():
+        return [backup, main]
+    return [main, backup]
+
+
 def model_order(cfg: AIConfig, kind: str) -> list[str]:
     """Models to try for one call: the task's own model, then the backup —
     backup first while the main model is cooling down after an overload.
     Without a backup the same model is tried twice."""
-    main, backup = cfg.llm_models[kind], cfg.backup_model
-    if not backup or backup == main:
-        return [main, main]
-    if _cooling.get(f"{cfg.llm_provider}:{main}", 0.0) > time.monotonic():
-        return [backup, main]
-    return [main, backup]
+    return _ordered(cfg.llm_provider, cfg.llm_models[kind], cfg.backup_model)
+
+
+def stt_model_order(cfg: AIConfig) -> list[str]:
+    """Same for transcription: Gemini STT can fall back to the backup Gemini model."""
+    backup = ""
+    if cfg.stt_provider == "gemini":
+        backup = cfg.backup_model if cfg.llm_provider == "gemini" else DEFAULT_FALLBACK_MODELS.get("gemini", "")
+    return _ordered(cfg.stt_provider, cfg.stt_model_name(), backup)
 
 
 async def _timed(chunks: AsyncIterator[str], provider: str) -> AsyncIterator[str]:
@@ -114,9 +128,9 @@ def tts_for(cfg: AIConfig, purpose: str) -> TTSProvider:
     )
 
 
-def stt_for(cfg: AIConfig) -> STTProvider:
+def stt_for(cfg: AIConfig, model: str | None = None) -> STTProvider:
     return make_stt(cfg.stt_provider, api_key=cfg.key_for(cfg.stt_provider, "stt"),
-                    base_url=cfg.stt_base_url, model=cfg.stt_model_name())
+                    base_url=cfg.stt_base_url, model=model or cfg.stt_model_name())
 
 
 async def spent_today(db: AsyncSession, user_id: int) -> float:
@@ -186,8 +200,11 @@ class AIService:
             if i and model == models[i - 1]:
                 await asyncio.sleep(RETRY_DELAY)
             started = time.monotonic()
+            limit = COMPLETE_TIMEOUTS.get(kind, 60.0)
             try:
-                result = await llm.complete(model=model, **kwargs)
+                result = await asyncio.wait_for(llm.complete(model=model, **kwargs), limit)
+            except TimeoutError:
+                error = ProviderError(f"{llm.name} didn't answer within {limit:.0f} s", retryable=True, status=504)
             except ProviderError as e:
                 error = e
             except httpx.HTTPError as e:
@@ -305,29 +322,55 @@ class AIService:
         return result.audio, result.mime, tts.name
 
     async def transcribe(self, audio: bytes, mime: str, lang: str, duration_s: float,
-                         feedback_instructions: str | None = None) -> STTResult:
+                         feedback_instructions: str | None = None,
+                         on_retry: Callable[[str], Awaitable[None]] | None = None) -> STTResult:
+        """Transcribe with a time limit; an overloaded or slow model moves on to
+        the backup (Gemini) or is retried once (other providers)."""
         await self.check_budget()
         cfg = await self.config()
-        stt = stt_for(cfg)
-        started = time.monotonic()
-        try:
-            if feedback_instructions and isinstance(stt, GeminiSTT):
-                result = await stt.transcribe_with_feedback(audio, mime, lang, feedback_instructions, duration_s)
+        models = stt_model_order(cfg)
+        self.failures = []
+        error: ProviderError | None = None
+        for i, model in enumerate(models):
+            if i and model == models[i - 1]:
+                await asyncio.sleep(RETRY_DELAY)
+            stt = stt_for(cfg, model)
+            combined = bool(feedback_instructions) and isinstance(stt, GeminiSTT)
+            limit = STT_TIMEOUT * (2 if combined else 1)
+            started = time.monotonic()
+            try:
+                if combined:
+                    call = stt.transcribe_with_feedback(audio, mime, lang, feedback_instructions or "", duration_s)
+                else:
+                    call = stt.transcribe(audio, mime, lang, duration_s)
+                result = await asyncio.wait_for(call, limit)
+            except TimeoutError:
+                error = ProviderError(f"{stt.name} took longer than {limit:.0f} s to transcribe", retryable=True,
+                                      status=504)
+            except ProviderError as e:
+                error = e
+            except httpx.HTTPError as e:
+                error = network_error(stt.name, e)
+            except ValueError as e:
+                error = ProviderError(f"{stt.name} returned an unreadable transcript: {e}", retryable=True)
             else:
-                result = await stt.transcribe(audio, mime, lang, duration_s)
-        except (ProviderError, httpx.HTTPError, ValueError) as e:
-            await self.log(task="stt", provider=stt.name, model=stt.model, audio_seconds=duration_s, ok=False)
-            if isinstance(e, httpx.HTTPError):
-                raise network_error(stt.name, e) from e
-            if isinstance(e, ValueError):
-                raise ProviderError(f"{stt.name} returned an unreadable transcript: {e}") from e
-            raise
-        if result.usage.input_tokens or result.usage.audio_input_tokens:
-            cost = pricing.llm_cost(stt.model, result.usage.input_tokens, result.usage.output_tokens,
-                                    result.usage.audio_input_tokens, cfg.pricing)
-        else:
-            cost = pricing.stt_cost(stt.name, result.audio_seconds or duration_s, cfg.pricing)
-        await self.log(task="stt", provider=stt.name, model=stt.model, usage=result.usage,
-                       audio_seconds=result.audio_seconds or duration_s, cost=cost,
-                       latency_ms=int((time.monotonic() - started) * 1000))
-        return result
+                if result.usage.input_tokens or result.usage.audio_input_tokens:
+                    cost = pricing.llm_cost(stt.model, result.usage.input_tokens, result.usage.output_tokens,
+                                            result.usage.audio_input_tokens, cfg.pricing)
+                else:
+                    cost = pricing.stt_cost(stt.name, result.audio_seconds or duration_s, cfg.pricing)
+                await self.log(task="stt", provider=stt.name, model=stt.model, usage=result.usage,
+                               audio_seconds=result.audio_seconds or duration_s, cost=cost,
+                               latency_ms=int((time.monotonic() - started) * 1000))
+                return result
+            await self.log(task="stt", provider=stt.name, model=stt.model, audio_seconds=duration_s, ok=False,
+                           latency_ms=int((time.monotonic() - started) * 1000))
+            self.failures.append(f"{model}: {error}")
+            if overloaded(error):
+                mark_overloaded(stt.name, model)
+            if not error.retryable or i == len(models) - 1:
+                break
+            log.warning("stt failed on %s (%s) — trying the next model", model, error)
+            if on_retry:
+                await on_retry(RETRY_NOTICE if models[i + 1] == model else BACKUP_NOTICE)
+        raise error  # type: ignore[misc]

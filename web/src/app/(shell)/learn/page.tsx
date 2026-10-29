@@ -114,7 +114,7 @@ function UnitGuide({ unit, lang, open, onOpenChange }: { unit: CourseUnit; lang:
         <div className="mt-6 space-y-2.5">
           {unit.done > 0 && (
             <Button asChild className="w-full">
-              <Link href={`/review-session?unit=${unit.id}`}>
+              <Link href={`/practice?unit=${unit.id}`}>
                 <Dumbbell /> {unit.theme === "writing" ? "Practise these characters" : "Practise this unit's words"}
               </Link>
             </Button>
@@ -211,7 +211,7 @@ function LevelHeader({ level, lang }: { level: CourseLevel; lang: Lang }) {
           <div className="flex gap-2">
             {level.completed > 0 && (
               <Button asChild variant="soft">
-                <Link href={`/review-session?level=${level.cefr}`}>
+                <Link href={`/practice?level=${level.cefr}`}>
                   <Dumbbell /> Practise
                 </Link>
               </Button>

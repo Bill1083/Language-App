@@ -6,11 +6,12 @@ import random
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import String, and_, case, cast, func, select, tuple_
+from sqlalchemy import String, and_, case, cast, func, or_, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from ..models import Lesson, LessonProgress, SrsCard, SrsReview, Unit, User, UserVocab, VocabItem
+from ..models import Lesson, LessonProgress, Level, SrsCard, SrsReview, Unit, User, UserVocab, VocabItem
 from .fsrs import CardState, Scheduler, format_interval
 from .kana import lesson_chars
 from .languages import CEFR
@@ -214,17 +215,27 @@ TYPE_PRIORITY = case((SrsCard.card_type.in_(["kana", "recognize"]), 0),
 
 
 async def practice(db: AsyncSession, user: User, lang: str, *, level: str | None = None,
-                   unit_id: int | None = None, limit: int = 30) -> list[SrsCard]:
-    """Cards from one level or unit regardless of due date, one card per word,
-    most overdue first. Ratings still go through FSRS, which accounts for
-    reviewing early, so practising never corrupts the schedule."""
-    q = select(SrsCard).where(SrsCard.user_id == user.id, SrsCard.language_code == lang,
-                              SrsCard.suspended.is_(False))
-    if unit_id:
-        q = q.where(SrsCard.unit_id == unit_id)
+                   unit_ids: list[int] | None = None, order: str = "shuffle", limit: int = 30,
+                   card_types: list[str] | None = None) -> list[SrsCard]:
+    """Cards from a level or a set of units regardless of due date, one card
+    per word. "course" keeps the course map's order (unit by unit, in the order
+    they were learnt); "shuffle" takes the most overdue and shuffles them.
+    Ratings still go through FSRS, which accounts for reviewing early, so
+    practising never corrupts the schedule."""
+    q = (select(SrsCard).outerjoin(Unit, Unit.id == SrsCard.unit_id).outerjoin(Level, Level.id == Unit.level_id)
+         .where(SrsCard.user_id == user.id, SrsCard.language_code == lang, SrsCard.suspended.is_(False)))
+    if unit_ids:
+        q = q.where(SrsCard.unit_id.in_(unit_ids))
     elif level:
         q = q.where(SrsCard.level == level)
-    cards = list(await db.scalars(q.order_by(SrsCard.due_at, TYPE_PRIORITY, SrsCard.id).limit(1000)))
+    if card_types:
+        q = q.where(SrsCard.card_type.in_(card_types))
+    if order == "course":
+        q = q.order_by(Level.order.nulls_last(), Unit.order.nulls_last(), SrsCard.created_at, TYPE_PRIORITY,
+                       SrsCard.id)
+    else:
+        q = q.order_by(SrsCard.due_at, TYPE_PRIORITY, SrsCard.id)
+    cards = list(await db.scalars(q.limit(2000)))
     seen: set[Any] = set()
     picked: list[SrsCard] = []
     for c in cards:
@@ -235,8 +246,118 @@ async def practice(db: AsyncSession, user: User, lang: str, *, level: str | None
         picked.append(c)
         if len(picked) >= limit:
             break
-    random.shuffle(picked)
+    if order != "course":
+        random.shuffle(picked)
     return picked
+
+
+async def learned_in(db: AsyncSession, user_id: int, lang: str) -> dict[int, list[int]]:
+    """Lesson id -> the words the user learnt in it (kept even if the lesson was regenerated since)."""
+    rows = await db.execute(
+        select(SrsCard.source_ref, SrsCard.vocab_item_id)
+        .where(SrsCard.user_id == user_id, SrsCard.language_code == lang, SrsCard.vocab_item_id.is_not(None),
+               SrsCard.source_ref.like("lesson:%"))
+        .order_by(SrsCard.created_at, SrsCard.id))
+    out: dict[int, list[int]] = {}
+    for ref, vocab_id in rows:
+        ids = out.setdefault(int(ref.split(":", 1)[1]), [])
+        if vocab_id not in ids:
+            ids.append(vocab_id)
+    return out
+
+
+async def lesson_keys(db: AsyncSession, lesson: Lesson, lang: str,
+                      learned: dict[int, list[int]] | None = None) -> list[tuple[str, Any]]:
+    """What a lesson taught, in teaching order: ("kana", "kana:の") and ("vocab", vocab_item_id),
+    plus any words `learned` says the user picked up in it."""
+    keys: list[tuple[str, Any]] = [("kana", f"kana:{c['char']}") for c in _kana_lesson_chars(lesson)]
+    taught = [(strip_ruby(str(v["word"]))[:160], str(v["meaning"])[:300])
+              for v in (lesson.content_json or {}).get("vocab", [])]
+    position = {key: i for i, key in enumerate(taught)}
+    words = sorted(await lesson_words(db, lesson, lang), key=lambda v: position.get((v.lemma, v.meaning), len(taught)))
+    keys += [("vocab", v.id) for v in words]
+    keys += [("vocab", vid) for vid in (learned or {}).get(lesson.id, []) if ("vocab", vid) not in keys]
+    return keys
+
+
+async def completed_lessons(db: AsyncSession, user_id: int, lang: str, *, lesson_ids: list[int] | None = None,
+                            unit_ids: list[int] | None = None, level: str | None = None) -> list[Lesson]:
+    """Finished lessons that teach something (not checkpoints, level or script tests), in course order."""
+    q = (select(Lesson).join(Unit, Unit.id == Lesson.unit_id).join(Level, Level.id == Unit.level_id)
+         .join(LessonProgress, and_(LessonProgress.lesson_id == Lesson.id, LessonProgress.user_id == user_id))
+         .where(Level.language_code == lang, LessonProgress.status == "completed",
+                Lesson.kind.in_(["lesson", "kana"]), Lesson.order != 100)
+         .options(selectinload(Lesson.unit).selectinload(Unit.level))
+         .order_by(Level.order, Unit.order, Lesson.order))
+    if lesson_ids:
+        q = q.where(Lesson.id.in_(lesson_ids))
+    elif unit_ids:
+        q = q.where(Lesson.unit_id.in_(unit_ids))
+    elif level:
+        q = q.where(Level.cefr == level)
+    return list(await db.scalars(q))
+
+
+def _card_key(card: SrsCard) -> tuple[str, Any]:
+    return ("kana", card.source_ref) if card.card_type == "kana" else ("vocab", card.vocab_item_id)
+
+
+async def practice_from_lessons(db: AsyncSession, user: User, lang: str, lessons: list[Lesson], *,
+                                order: str = "course", limit: int = 20,
+                                card_types: list[str] | None = None) -> list[SrsCard]:
+    """One card per word / kana the lessons taught. "course" keeps the lessons' order
+    (and each lesson's teaching order); "shuffle" picks at random from all of them."""
+    learned = await learned_in(db, user.id, lang)
+    keys: list[tuple[str, Any]] = []
+    for lesson in lessons:
+        keys += [k for k in await lesson_keys(db, lesson, lang, learned) if k not in keys]
+    refs = [k for kind, k in keys if kind == "kana"]
+    ids = [k for kind, k in keys if kind == "vocab"]
+    q = select(SrsCard).where(
+        SrsCard.user_id == user.id, SrsCard.language_code == lang, SrsCard.suspended.is_(False),
+        or_(and_(SrsCard.card_type == "kana", SrsCard.source_ref.in_(refs)), SrsCard.vocab_item_id.in_(ids)))
+    if card_types:
+        q = q.where(SrsCard.card_type.in_(card_types))
+    # Which of a word's cards to use: recognition-type first in course order, most overdue when shuffling.
+    q = q.order_by(TYPE_PRIORITY, SrsCard.id) if order == "course" else q.order_by(SrsCard.due_at, SrsCard.id)
+    by_key: dict[tuple[str, Any], SrsCard] = {}
+    for card in await db.scalars(q):
+        by_key.setdefault(_card_key(card), card)
+    available = [k for k in keys if k in by_key]
+    if order != "course":
+        random.shuffle(available)
+    return [by_key[k] for k in available[:limit]]
+
+
+async def practice_blocks(db: AsyncSession, user: User, lang: str) -> list[dict[str, Any]]:
+    """The course map's finished lessons, by level and unit, with how many items each has to practise."""
+    lessons = await completed_lessons(db, user.id, lang)
+    rows = await db.execute(select(SrsCard.card_type, SrsCard.source_ref, SrsCard.vocab_item_id).where(
+        SrsCard.user_id == user.id, SrsCard.language_code == lang, SrsCard.suspended.is_(False)))
+    have = {("kana", ref) if kind == "kana" else ("vocab", vid) for kind, ref, vid in rows}
+    learned = await learned_in(db, user.id, lang)
+    levels: dict[str, dict[str, Any]] = {}
+    for lesson in lessons:
+        items = sum(1 for k in await lesson_keys(db, lesson, lang, learned) if k in have)
+        if not items:
+            continue
+        lv = levels.setdefault(lesson.unit.level.cefr, {"level": lesson.unit.level.cefr, "units": {}})
+        unit = lv["units"].setdefault(lesson.unit_id, {"id": lesson.unit_id, "title": lesson.unit.title, "lessons": []})
+        unit["lessons"].append({"id": lesson.id, "title": lesson.title, "kind": lesson.kind, "items": items})
+    return [{**lv, "units": list(lv["units"].values())} for lv in levels.values()]
+
+
+def practice_item(card: SrsCard) -> dict[str, Any]:
+    """One word or kana for type-the-answer practice: a prompt and what counts as right."""
+    f, b = card.front_json or {}, card.back_json or {}
+    if card.card_type == "kana":
+        return {"card_id": card.id, "kind": "kana", "prompt": f.get("char"), "answer": b.get("romaji"),
+                "accepted": [b.get("romaji")], "audio_text": b.get("audio_text") or f.get("char"),
+                "hint": b.get("mnemonic")}
+    return {"card_id": card.id, "kind": "word", "prompt": f.get("prompt"), "answer": b.get("answer"),
+            "accepted": [a for a in [b.get("answer"), *(b.get("accepted") or [])] if a],
+            "audio_text": b.get("audio_text"), "pos": f.get("pos"), "gender": f.get("gender"),
+            "example": b.get("example"), "example_translation": b.get("example_translation")}
 
 
 LEVEL_ORDER = ["PRE", *CEFR]

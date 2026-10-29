@@ -402,9 +402,13 @@ class ConversationSocket:
                 cfg = await ai.config()
                 want_combined = (cfg.stt_combined_feedback and cfg.stt_provider == "gemini"
                                  and settings.get("feedback", True) and conv.mode != "tutor")
+                async def notice(message: str) -> None:  # e.g. switching to the backup model
+                    await self.send({"type": "transcribing", "client_id": msg.get("client_id"), "message": message})
+
                 result = await ai.transcribe(
                     audio, rec.mime, conv.language_code, rec.duration_ms / 1000,
-                    feedback_instructions=cs.feedback_system(conv, scenario, True) if want_combined else None)
+                    feedback_instructions=cs.feedback_system(conv, scenario, True) if want_combined else None,
+                    on_retry=notice)
                 text = result.text.strip()
                 stt_json = {"provider": result.provider, "model": result.model,
                             "words": [w.__dict__ for w in result.words] if result.words else None,

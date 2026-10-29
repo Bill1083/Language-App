@@ -25,7 +25,7 @@ from ..providers.stt import audio_ext
 from ..redis_client import get_redis
 from ..security import SESSION_COOKIE, allowed_ws_origin
 from ..services import conversation as cs
-from ..services.ai import AIService, BudgetExceeded
+from ..services.ai import AIService, BudgetExceeded, overloaded
 from ..services.audio_cache import audio_url, tts_key
 from ..services.jobs import enqueue, finish_conversation_rewards, store_feedback
 from ..services.languages import CEFR, level_index
@@ -357,12 +357,15 @@ class ConversationSocket:
                     if speakable(sentence) and voice_on and conv.mode != "tutor":
                         tts_tasks.append(asyncio.create_task(speak(sentence, len(tts_tasks))))
 
+            async def notice(message: str) -> None:  # e.g. switching to the backup model
+                await self.send({"type": "ai_status", "stream_id": stream_id, "message": message})
+
             temperature = 0.5 if conv.mode == "tutor" else 0.85
             max_tokens = 900 if conv.mode == "tutor" else 400
             async for delta in ai.llm_stream("conversation", "conversation",
                                              system=cs.system_prompt(conv, scenario, known),
                                              messages=cs.history_messages(conv.turns),
-                                             temperature=temperature, max_tokens=max_tokens):
+                                             temperature=temperature, max_tokens=max_tokens, on_retry=notice):
                 full += delta
                 buffer += delta
                 await self.send({"type": "ai_delta", "stream_id": stream_id, "delta": delta})
@@ -458,7 +461,10 @@ class ConversationSocket:
             await self.send({"type": "error", "message": str(e), "retryable": False, "client_id": msg.get("client_id")})
         except ProviderError as e:
             log.warning("provider error in conversation %s: %s", self.conv_id, e)
-            await self.send({"type": "error", "message": "AI provider unavailable — retry.", "detail": str(e)[:300],
+            busy = overloaded(e)
+            message = ("The AI service is overloaded right now — try again in a minute." if busy
+                       else "AI provider unavailable — retry.")
+            await self.send({"type": "error", "message": message, "detail": str(e)[:300],
                              "retryable": True, "client_id": msg.get("client_id")})
         except HTTPException as e:
             await self.send({"type": "error", "message": e.detail, "retryable": True, "client_id": msg.get("client_id")})

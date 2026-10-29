@@ -229,7 +229,9 @@ function ConversationScreen({ conv }: { conv: Conversation }) {
               localAudio={p.localAudio}
             />
           ))}
-          {socket.streaming && <StreamingBubble text={socket.streaming.text} lang={lang} settings={settings} />}
+          {socket.streaming && (
+            <StreamingBubble text={socket.streaming.text} lang={lang} settings={settings} status={socket.streaming.status} />
+          )}
           {socket.failure ? (
             <div className="mx-auto flex max-w-md flex-col items-center gap-3 py-12 text-center" role="alert">
               <span className="flex size-12 items-center justify-center rounded-2xl bg-danger-soft text-danger">

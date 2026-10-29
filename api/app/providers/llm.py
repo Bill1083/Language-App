@@ -336,6 +336,9 @@ DEFAULT_MODELS: dict[str, dict[str, str]] = {
     "openai_compatible": {"conversation": "llama3.1", "feedback": "llama3.1", "content": "llama3.1"},
 }
 
+# Tried when the main model is overloaded (Gemini answers 503 "high demand" during busy spells).
+DEFAULT_FALLBACK_MODELS: dict[str, str] = {"gemini": "gemini-3.5-flash-lite"}
+
 
 def make_llm(provider: str, api_key: str, base_url: str = "", client: httpx.AsyncClient | None = None) -> LLMProvider:
     try:

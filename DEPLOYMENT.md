@@ -123,6 +123,11 @@ If you changed `nginx.conf` in the repo, copy the changed lines into `/etc/nginx
   failed; the box under the message shows the provider's error. Run **Admin → Providers → Test
   conversation**. Usual causes: the Gemini key is restricted to other APIs (allow the **Generative
   Language API**, or remove the restriction), or the project isn't on a paid tier (429 quota errors).
+- **"Gemini error 503: This model is currently experiencing high demand"** — Google's side, and
+  usually temporary. Parlo switches to the backup model (`LLM_MODEL_FALLBACK`, default
+  `gemini-3.5-flash-lite`) when the main one is overloaded or hasn't started replying within 25 s,
+  and keeps using the backup first for two minutes. The admin test shows which model answered. If
+  it keeps happening, set a different main model in **Admin → Providers**.
 
 ## Resource use
 

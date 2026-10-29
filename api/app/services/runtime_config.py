@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import get_settings
 from ..models import AppSetting
-from ..providers.llm import DEFAULT_MODELS
+from ..providers.llm import DEFAULT_FALLBACK_MODELS, DEFAULT_MODELS
 from ..providers.stt import DEFAULT_STT_MODELS
 from ..providers.tts import DEFAULT_VOICES
 
@@ -24,7 +24,7 @@ LANGS = ("fr", "it", "ja")
 # Keys an admin may override (anything else in app_settings is internal).
 OVERRIDABLE = {
     "llm_provider", "llm_base_url", "llm_model_conversation", "llm_model_feedback", "llm_model_content",
-    "tts_provider_lesson", "tts_provider_conversation", "tts_base_url", "tts_azure_region",
+    "llm_model_fallback", "tts_provider_lesson", "tts_provider_conversation", "tts_base_url", "tts_azure_region",
     "stt_provider", "stt_base_url", "stt_model", "stt_combined_feedback",
     "daily_ai_budget_usd", "voices", "keys", "pricing",
 }
@@ -53,6 +53,13 @@ class AIConfig:
     voices: dict[str, dict[str, dict[str, str]]]  # provider -> lang -> gender -> voice
     keys: dict[str, str] = field(default_factory=dict)  # admin-entered keys
     pricing: dict[str, Any] = field(default_factory=dict)
+    llm_fallback_model: str = ""  # as configured; "off" disables it
+
+    @property
+    def backup_model(self) -> str:
+        """The model to try when the task's own model is overloaded ("" = none)."""
+        model = self.llm_fallback_model.strip()
+        return "" if model.lower() in ("off", "none") else model
 
     def key_for(self, provider: str, capability: str) -> str:
         env = get_settings()
@@ -160,6 +167,8 @@ async def get_ai_config(db: AsyncSession) -> AIConfig:
         voices=_merge_voices(_env_voices(), o.get("voices") or {}),
         keys={k: v for k, v in (o.get("keys") or {}).items() if v},
         pricing=o.get("pricing") or {},
+        llm_fallback_model=pick("llm_model_fallback", (env.llm_model_fallback if same_llm else "")
+                                or DEFAULT_FALLBACK_MODELS.get(llm_provider, "")),
     )
     _cache = (time.monotonic() + CACHE_SECONDS, cfg)
     return cfg

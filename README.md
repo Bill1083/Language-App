@@ -88,6 +88,7 @@ and compare voices side by side.
 | `LLM_API_KEY` | — | Key for the LLM provider. |
 | `LLM_BASE_URL` | — | For `openai_compatible` (e.g. Ollama `http://ollama:11434/v1`). |
 | `LLM_MODEL_CONVERSATION` / `_FEEDBACK` / `_CONTENT` | provider default | Model per task: fast for replies, stronger for feedback, strongest for lesson generation. Gemini defaults to `gemini-3.8-flash` for all three. |
+| `LLM_MODEL_FALLBACK` | provider default | Backup model used when the main one is overloaded (e.g. Gemini's 503 "high demand"). Gemini defaults to `gemini-3.5-flash-lite`; `off` disables it. |
 | `TTS_PROVIDER_LESSON` / `_CONVERSATION` | `google` | `google`, `openai`, `local`, `elevenlabs`, `azure` — can differ. |
 | `TTS_API_KEY` | — | Google Cloud API key restricted to Text-to-Speech… |
 | `GOOGLE_APPLICATION_CREDENTIALS` | — | …or a service-account JSON in `./secrets`, e.g. `/secrets/google-tts.json`. |

@@ -132,17 +132,26 @@ function SlowReplay({ text, lang }: { text: string; lang: Lang }) {
   );
 }
 
-export function StreamingBubble({ text, lang, settings }: { text: string; lang: Lang; settings: ConversationSettings }) {
+export function StreamingBubble({ text, lang, settings, status }: {
+  text: string; lang: Lang; settings: ConversationSettings; status?: string;
+}) {
   return (
     <div className="max-w-[88%] rounded-2xl rounded-tl-md border bg-card px-4 py-3 text-[17px] leading-relaxed shadow-sm sm:max-w-[78%]">
       {text ? (
         <RubyText text={text} lang={lang} streaming furigana={settings.furigana} />
       ) : (
-        <span className="flex gap-1 py-2" aria-label="Typing">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="size-2 animate-bounce rounded-full bg-muted-foreground/60" style={{ animationDelay: `${i * 0.15}s` }} />
-          ))}
-        </span>
+        <>
+          <span className="flex gap-1 py-2" aria-label="Typing">
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="size-2 animate-bounce rounded-full bg-muted-foreground/60" style={{ animationDelay: `${i * 0.15}s` }} />
+            ))}
+          </span>
+          {status && (
+            <span className="block text-sm text-muted-foreground" role="status">
+              {status}
+            </span>
+          )}
+        </>
       )}
     </div>
   );

@@ -22,14 +22,14 @@ from ..models import (
     User,
 )
 from ..providers.base import ChatMessage, ProviderError
-from ..providers.llm import DEFAULT_MODELS, LLM_PROVIDERS
+from ..providers.llm import DEFAULT_FALLBACK_MODELS, DEFAULT_MODELS, LLM_PROVIDERS
 from ..providers.stt import DEFAULT_STT_MODELS, STT_PROVIDERS
 from ..providers.tts import DEFAULT_VOICES, GOOGLE_CHIRP_VOICES, LOCALES, TTS_PROVIDERS
 from ..redis_client import get_redis
 from ..schemas.lesson import GrammarPoint, VocabEntry, validate_exercises
 from ..security import new_token
 from ..services import runtime_config
-from ..services.ai import AIService
+from ..services.ai import AIService, clear_overloaded
 from ..services.audio_cache import audio_url, tts_key
 from ..services.jobs import JOB_LOG, enqueue
 from ..services.lesson_gen import generate_placement_bank, save_content
@@ -138,7 +138,8 @@ async def get_config(admin: AdminUser, db: Db) -> dict[str, Any]:
         "effective": {
             "llm_provider": cfg.llm_provider, "llm_base_url": cfg.llm_base_url,
             "llm_model_conversation": cfg.llm_models["conversation"], "llm_model_feedback": cfg.llm_models["feedback"],
-            "llm_model_content": cfg.llm_models["content"], "tts_provider_lesson": cfg.tts_provider_lesson,
+            "llm_model_content": cfg.llm_models["content"], "llm_model_fallback": cfg.llm_fallback_model,
+            "tts_provider_lesson": cfg.tts_provider_lesson,
             "tts_provider_conversation": cfg.tts_provider_conversation, "tts_base_url": cfg.tts_base_url,
             "tts_azure_region": cfg.tts_azure_region, "stt_provider": cfg.stt_provider,
             "stt_base_url": cfg.stt_base_url, "stt_model": cfg.stt_model_name(),
@@ -151,6 +152,7 @@ async def get_config(admin: AdminUser, db: Db) -> dict[str, Any]:
         "options": {
             "llm_providers": list(LLM_PROVIDERS), "tts_providers": list(TTS_PROVIDERS),
             "stt_providers": list(STT_PROVIDERS), "default_models": DEFAULT_MODELS,
+            "default_fallback_models": DEFAULT_FALLBACK_MODELS,
             "default_stt_models": DEFAULT_STT_MODELS, "default_voices": DEFAULT_VOICES,
             "google_voices": {lang: [f"{loc}-Chirp3-HD-{v}" for v in GOOGLE_CHIRP_VOICES]
                               for lang, loc in LOCALES.items()},
@@ -198,16 +200,19 @@ async def test_llm(body: LLMTest, admin: AdminUser, db: Db) -> dict[str, Any]:
     runtime_config.invalidate()
     ai = AIService(db, admin.id, True)
     cfg = await ai.config()
+    main = cfg.llm_models[body.task]
+    clear_overloaded(cfg.llm_provider, main)  # a test should always try the main model first
     started = time.monotonic()
     try:
-        text = await ai.llm_text("admin_test", body.task, system="Reply in one short sentence.",
-                                 messages=[ChatMessage("user", "Say hello in French, Italian and Japanese.")],
-                                 max_tokens=200, thinking="minimal")
-        return {"ok": True, "latency_ms": int((time.monotonic() - started) * 1000), "sample": text,
-                "provider": cfg.llm_provider, "model": cfg.llm_models[body.task]}
+        result = await ai.llm_result("admin_test", body.task, system="Reply in one short sentence.",
+                                     messages=[ChatMessage("user", "Say hello in French, Italian and Japanese.")],
+                                     max_tokens=200, thinking="minimal")
+        return {"ok": True, "latency_ms": int((time.monotonic() - started) * 1000), "sample": result.text.strip(),
+                "provider": cfg.llm_provider, "model": result.model, "backup": result.model != main,
+                "failures": ai.failures}
     except ProviderError as e:
         return {"ok": False, "latency_ms": int((time.monotonic() - started) * 1000), "error": str(e),
-                "provider": cfg.llm_provider, "model": cfg.llm_models[body.task]}
+                "provider": cfg.llm_provider, "model": main, "failures": ai.failures}
 
 
 class TTSTest(BaseModel):

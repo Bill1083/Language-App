@@ -1,14 +1,15 @@
 """The one place the app calls AI providers.
 
 Every call goes through `AIService`, which resolves the effective provider
-config, enforces the per-user daily budget, retries transient failures,
-validates structured output with Pydantic and logs the call to `ai_usage`.
+config, enforces the per-user daily budget, retries transient failures (on
+the backup model when the main one is overloaded), validates structured
+output with Pydantic and logs the call to `ai_usage`.
 """
 
 import asyncio
 import logging
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import UTC, datetime, time as dtime
 from typing import TypeVar
 
@@ -31,13 +32,70 @@ log = logging.getLogger("parlo.ai")
 T = TypeVar("T", bound=BaseModel)
 
 
+FIRST_TOKEN_TIMEOUT = 25.0  # s for a streamed reply to start before moving on to the next model
+STALL_TIMEOUT = 30.0  # s without a token once a streamed reply has started
+OVERLOAD_COOLDOWN = 120.0  # s to try the backup model first after the main one was overloaded
+RETRY_DELAY = 1.5  # s before retrying the same model
+OVERLOAD_STATUSES = {429, 500, 502, 503, 504, 529}
+
+RETRY_NOTICE = "The AI is busy right now — trying again…"
+BACKUP_NOTICE = "The AI is busy right now — switching to the backup model…"
+
+_cooling: dict[str, float] = {}  # "provider:model" -> monotonic time until which it counts as overloaded
+
+
 class BudgetExceeded(Exception):
     pass
 
 
 def network_error(provider: str, e: Exception) -> ProviderError:
     """Timeouts, DNS failures, bad base URLs… surface as a retryable provider error."""
+    if isinstance(e, httpx.TimeoutException):
+        return ProviderError(f"{provider} timed out ({e.__class__.__name__})", retryable=True, status=504)
     return ProviderError(f"{provider} unreachable ({e.__class__.__name__}: {e})", retryable=True)
+
+
+def overloaded(e: ProviderError) -> bool:
+    return e.status in OVERLOAD_STATUSES
+
+
+def mark_overloaded(provider: str, model: str) -> None:
+    _cooling[f"{provider}:{model}"] = time.monotonic() + OVERLOAD_COOLDOWN
+
+
+def clear_overloaded(provider: str, model: str) -> None:
+    _cooling.pop(f"{provider}:{model}", None)
+
+
+def model_order(cfg: AIConfig, kind: str) -> list[str]:
+    """Models to try for one call: the task's own model, then the backup —
+    backup first while the main model is cooling down after an overload.
+    Without a backup the same model is tried twice."""
+    main, backup = cfg.llm_models[kind], cfg.backup_model
+    if not backup or backup == main:
+        return [main, main]
+    if _cooling.get(f"{cfg.llm_provider}:{main}", 0.0) > time.monotonic():
+        return [backup, main]
+    return [main, backup]
+
+
+async def _timed(chunks: AsyncIterator[str], provider: str) -> AsyncIterator[str]:
+    """Re-yield a provider stream, failing if it doesn't start or stalls (an
+    overloaded model can sit on the request for a minute before saying so)."""
+    limit = FIRST_TOKEN_TIMEOUT
+    try:
+        while True:
+            try:
+                chunk = await asyncio.wait_for(anext(chunks), limit)
+            except StopAsyncIteration:
+                return
+            except TimeoutError:
+                what = "didn't start replying" if limit == FIRST_TOKEN_TIMEOUT else "stopped replying"
+                raise ProviderError(f"{provider} {what} within {limit:.0f} s", retryable=True, status=504) from None
+            limit = STALL_TIMEOUT
+            yield chunk
+    finally:
+        await chunks.aclose()  # type: ignore[attr-defined]
 
 
 def llm_for(cfg: AIConfig) -> LLMProvider:
@@ -77,6 +135,7 @@ class AIService:
         self.user_id = user_id
         self.is_admin = is_admin
         self._cfg: AIConfig | None = None
+        self.failures: list[str] = []  # "model: error" for attempts of the last call that failed
 
     async def config(self) -> AIConfig:
         if self._cfg is None:
@@ -120,12 +179,20 @@ class AIService:
         await self.check_budget()
         cfg = await self.config()
         llm = llm_for(cfg)
-        model = cfg.llm_models[kind]
-        started = time.monotonic()
-        last_error: Exception | None = None
-        for attempt in range(2):
+        models = model_order(cfg, kind)
+        self.failures = []
+        error: ProviderError | None = None
+        for i, model in enumerate(models):
+            if i and model == models[i - 1]:
+                await asyncio.sleep(RETRY_DELAY)
+            started = time.monotonic()
             try:
                 result = await llm.complete(model=model, **kwargs)
+            except ProviderError as e:
+                error = e
+            except httpx.HTTPError as e:
+                error = network_error(llm.name, e)
+            else:
                 await self.log(
                     task=task, provider=llm.name, model=model, usage=result.usage,
                     cost=pricing.llm_cost(model, result.usage.input_tokens, result.usage.output_tokens,
@@ -133,19 +200,25 @@ class AIService:
                     latency_ms=int((time.monotonic() - started) * 1000),
                 )
                 return result
-            except (ProviderError, httpx.HTTPError) as e:
-                last_error = e if isinstance(e, ProviderError) else network_error(llm.name, e)
-                if not last_error.retryable or attempt == 1:
-                    break
-                await asyncio.sleep(1.5)
-        await self.log(task=task, provider=llm.name, model=model, ok=False,
-                       latency_ms=int((time.monotonic() - started) * 1000))
-        raise last_error  # type: ignore[misc]
+            await self.log(task=task, provider=llm.name, model=model, ok=False,
+                           latency_ms=int((time.monotonic() - started) * 1000))
+            self.failures.append(f"{model}: {error}")
+            if overloaded(error):
+                mark_overloaded(llm.name, model)
+            if not error.retryable:
+                break
+            log.warning("%s failed on %s (%s)", task, model, error)
+        raise error  # type: ignore[misc]
+
+    async def llm_result(self, task: str, kind: str, *, system: str, messages: list[ChatMessage],
+                         temperature: float = 0.7, max_tokens: int = 800, thinking: str | None = "low") -> LLMResult:
+        return await self._complete(task, kind, messages=messages, system=system, temperature=temperature,
+                                    max_tokens=max_tokens, thinking=thinking)
 
     async def llm_text(self, task: str, kind: str, *, system: str, messages: list[ChatMessage],
                        temperature: float = 0.7, max_tokens: int = 800, thinking: str | None = "low") -> str:
-        result = await self._complete(task, kind, messages=messages, system=system, temperature=temperature,
-                                      max_tokens=max_tokens, thinking=thinking)
+        result = await self.llm_result(task, kind, system=system, messages=messages, temperature=temperature,
+                                       max_tokens=max_tokens, thinking=thinking)
         return result.text.strip()
 
     async def llm_json(self, task: str, kind: str, schema: type[T], *, system: str, messages: list[ChatMessage],
@@ -166,29 +239,50 @@ class AIService:
         raise ProviderError(f"Model returned invalid JSON for {task}: {last_error}")
 
     async def llm_stream(self, task: str, kind: str, *, system: str, messages: list[ChatMessage],
-                         temperature: float = 0.8, max_tokens: int = 600) -> AsyncIterator[str]:
+                         temperature: float = 0.8, max_tokens: int = 600,
+                         on_retry: Callable[[str], Awaitable[None]] | None = None) -> AsyncIterator[str]:
+        """Stream a reply. Until the first token arrives a failure or a slow start
+        moves on to the next model (`on_retry` hears about it); after that an
+        error ends the reply."""
         await self.check_budget()
         cfg = await self.config()
         llm = llm_for(cfg)
-        model = cfg.llm_models[kind]
-        usage = Usage()
-        started = time.monotonic()
-        produced = 0
-        ok = False
-        try:
-            async for delta in llm.stream(model=model, messages=messages, system=system, usage=usage,
-                                          temperature=temperature, max_tokens=max_tokens, thinking="minimal"):
-                produced += len(delta)
-                yield delta
-            ok = True
-        except httpx.HTTPError as e:
-            raise network_error(llm.name, e) from e
-        finally:
-            if not usage.output_tokens and produced:
-                usage.output_tokens = produced // 3  # rough fallback when a provider omits stream usage
-            await self.log(task=task, provider=llm.name, model=model, usage=usage, ok=ok,
-                           cost=pricing.llm_cost(model, usage.input_tokens, usage.output_tokens, 0, cfg.pricing),
-                           latency_ms=int((time.monotonic() - started) * 1000))
+        models = model_order(cfg, kind)
+        self.failures = []
+        for i, model in enumerate(models):
+            usage = Usage()
+            started = time.monotonic()
+            produced = 0
+            error: ProviderError | None = None
+            try:
+                async for delta in _timed(llm.stream(model=model, messages=messages, system=system, usage=usage,
+                                                     temperature=temperature, max_tokens=max_tokens,
+                                                     thinking="minimal"), llm.name):
+                    produced += len(delta)
+                    yield delta
+            except ProviderError as e:
+                error = e
+            except httpx.HTTPError as e:
+                error = network_error(llm.name, e)
+            finally:
+                if not usage.output_tokens and produced:
+                    usage.output_tokens = produced // 3  # rough fallback when a provider omits stream usage
+                await self.log(task=task, provider=llm.name, model=model, usage=usage, ok=error is None,
+                               cost=pricing.llm_cost(model, usage.input_tokens, usage.output_tokens, 0, cfg.pricing),
+                               latency_ms=int((time.monotonic() - started) * 1000))
+            if error is None:
+                return
+            self.failures.append(f"{model}: {error}")
+            if overloaded(error):
+                mark_overloaded(llm.name, model)
+            if produced or not error.retryable or i == len(models) - 1:
+                raise error
+            log.warning("%s failed on %s (%s) — trying the next model", task, model, error)
+            same = models[i + 1] == model
+            if on_retry:
+                await on_retry(RETRY_NOTICE if same else BACKUP_NOTICE)
+            if same:
+                await asyncio.sleep(RETRY_DELAY)
 
     # ------------------------------------------------------------------ TTS / STT
 

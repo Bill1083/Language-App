@@ -7,7 +7,7 @@ import { AudioQueue } from "@/lib/audio";
 import type { Feedback, PronunciationFlag, Turn } from "@/lib/types";
 
 export type PendingTurn = { client_id: string; text: string; localAudio?: string; status: "sending" | "transcribing" };
-export type Streaming = { stream_id: string; text: string } | null;
+export type Streaming = { stream_id: string; text: string; status?: string } | null;
 type Status = "connecting" | "open" | "reconnecting" | "closed";
 
 /** Why the socket can't be used: shown instead of an endless "reconnecting". */
@@ -19,6 +19,7 @@ type ServerEvent =
   | { type: "transcribing"; client_id?: string }
   | { type: "user_turn"; client_id?: string; turn: Turn }
   | { type: "ai_start"; stream_id: string }
+  | { type: "ai_status"; stream_id: string; message: string }
   | { type: "ai_delta"; stream_id: string; delta: string }
   | { type: "ai_audio"; stream_id: string; index: number; url: string }
   | { type: "ai_done"; stream_id: string; turn: Turn }
@@ -27,6 +28,10 @@ type ServerEvent =
   | { type: "goal"; achieved: boolean }
   | { type: "summary" }
   | { type: "error"; message: string; detail?: string; client_id?: string; retryable?: boolean };
+
+/** No word from the server this long after the AI started its turn: give up
+ *  waiting (the server itself tries two models for at most ~25 s each). */
+const SILENT_REPLY_MS = 70_000;
 
 const FAILURES: Record<number, SocketFailure> = {
   4401: { kind: "auth", message: "Your session has expired. Sign in again to continue this conversation." },
@@ -62,10 +67,31 @@ export function useConversationSocket(
   const attempts = React.useRef(0);
   const everOpened = React.useRef(false);
   const started = React.useRef(false);
+  const silence = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
     if (initialTurns) setTurns(initialTurns);
   }, [initialTurns]);
+
+  const stopWaiting = React.useCallback(() => {
+    if (silence.current) clearTimeout(silence.current);
+    silence.current = null;
+  }, []);
+
+  /** (Re)start the clock on a reply that hasn't produced any text yet. */
+  const waitForReply = React.useCallback(() => {
+    stopWaiting();
+    silence.current = setTimeout(() => {
+      silence.current = null;
+      setStreaming(null);
+      const message = "The AI didn't answer in time.";
+      const detail = "No reply after a minute — the AI service may be overloaded. Try again in a moment.";
+      if (turnsRef.current.length === 0) setStartError({ message, detail });
+      else toast.error(message, { description: detail });
+    }, SILENT_REPLY_MS);
+  }, [stopWaiting]);
+
+  React.useEffect(() => stopWaiting, [stopWaiting]);
 
   const handle = React.useCallback((ev: ServerEvent) => {
     switch (ev.type) {
@@ -81,14 +107,22 @@ export function useConversationSocket(
         queue.current?.stop();
         queue.current = optsRef.current.voice ? new AudioQueue(`stream-${ev.stream_id}`, 1) : null;
         setStreaming({ stream_id: ev.stream_id, text: "" });
+        waitForReply();
+        break;
+      case "ai_status":
+        setStreaming((s) => (s && s.stream_id === ev.stream_id ? { ...s, status: ev.message } : s));
+        waitForReply();
         break;
       case "ai_delta":
-        setStreaming((s) => (s && s.stream_id === ev.stream_id ? { ...s, text: s.text + ev.delta } : s));
+        stopWaiting();
+        setStreaming((s) => (s && s.stream_id === ev.stream_id ? { ...s, text: s.text + ev.delta, status: undefined } : s));
         break;
       case "ai_audio":
         queue.current?.add(ev.index, ev.url);
         break;
       case "ai_done":
+        stopWaiting();
+        setStartError(null);
         setStreaming(null);
         setTurns((t) => (t.some((x) => x.id === ev.turn.id) ? t : [...t, ev.turn]));
         break;
@@ -108,13 +142,14 @@ export function useConversationSocket(
         if (ev.achieved) optsRef.current.onGoal();
         break;
       case "error":
+        stopWaiting();
         setStreaming(null);
         if (ev.client_id) setPending((p) => p.filter((x) => x.client_id !== ev.client_id));
         if (turnsRef.current.length === 0) setStartError({ message: ev.message, detail: ev.detail });
         else toast.error(ev.message, { description: ev.detail });
         break;
     }
-  }, []);
+  }, [waitForReply, stopWaiting]);
 
   const connect = React.useCallback(() => {
     const proto = window.location.protocol === "https:" ? "wss" : "ws";

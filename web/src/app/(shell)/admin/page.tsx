@@ -25,11 +25,15 @@ type Config = {
   options: {
     llm_providers: string[]; tts_providers: string[]; stt_providers: string[];
     default_models: Record<string, Record<string, string>>; default_stt_models: Record<string, string>;
+    default_fallback_models: Record<string, string>;
     google_voices: Record<string, string[]>;
   };
   registration_mode: string;
 };
-type TestResult = { ok: boolean; latency_ms?: number; error?: string; sample?: string; url?: string; transcript?: string; expected?: string; model?: string };
+type TestResult = {
+  ok: boolean; latency_ms?: number; error?: string; sample?: string; url?: string; transcript?: string; expected?: string; model?: string;
+  backup?: boolean; failures?: string[];
+};
 
 const money = (n: number) => `$${n.toFixed(n < 1 ? 4 : 2)}`;
 
@@ -40,9 +44,16 @@ function TestBadge({ r }: { r?: TestResult | null }) {
       {r.ok ? "✓ OK" : "✗ Failed"}
       {r.latency_ms != null && <span className="opacity-80"> · {r.latency_ms} ms</span>}
       {r.model && <span className="opacity-80"> · {r.model}</span>}
+      {r.backup && <span className="opacity-80"> (backup model)</span>}
       {r.sample && <span className="block text-foreground/80">{r.sample}</span>}
       {r.transcript != null && <span className="block text-foreground/80">Heard: “{r.transcript}” (expected “{r.expected}”)</span>}
-      {r.error && <span className="block">{r.error}</span>}
+      {r.failures?.length
+        ? r.failures.map((f, i) => (
+            <span key={i} className={cn("block", r.ok && "text-xs text-muted-foreground")}>
+              {f}
+            </span>
+          ))
+        : r.error && <span className="block">{r.error}</span>}
     </p>
   );
 }
@@ -178,6 +189,8 @@ function ProvidersTab() {
           {field("llm_model_conversation", "Conversation model (fast)", llmDefaults.conversation)}
           {field("llm_model_feedback", "Feedback model", llmDefaults.feedback)}
           {field("llm_model_content", "Lesson content model (strongest)", llmDefaults.content)}
+          {field("llm_model_fallback", "Backup model when busy (“off” = none)",
+            cfg.options.default_fallback_models[String(form.llm_provider)] ?? "off")}
           {field("daily_ai_budget_usd", "Daily budget per user (USD)")}
         </div>
         <div className="flex flex-wrap gap-2">

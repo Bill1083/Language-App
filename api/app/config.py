@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     llm_model_conversation: str = ""
     llm_model_feedback: str = ""
     llm_model_content: str = ""
+    llm_model_fallback: str = ""  # empty = provider default, "off" = no backup model
 
     # --- TTS ---
     tts_provider_lesson: str = "google"

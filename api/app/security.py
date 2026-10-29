@@ -78,9 +78,19 @@ def csrf_ok(request: Request) -> bool:
     return bool(cookie and header and hmac.compare_digest(cookie, header))
 
 
-def same_origin(request_origin: str | None, host: str | None) -> bool:
-    """Used for the WebSocket handshake, which can't carry the CSRF header."""
-    if not request_origin or not host:
+def allowed_ws_origin(request_origin: str | None, host: str | None, forwarded_host: str | None = None) -> bool:
+    """CSRF check for the WebSocket handshake, which can't carry the CSRF header.
+
+    The page's origin must be this site: the Host the request arrived with, the
+    X-Forwarded-Host a proxy passed on, or the configured DOMAIN. The DOMAIN
+    fallback matters behind proxies that rewrite Host (an Nginx location with
+    its own proxy_set_header lines sends the upstream name instead).
+    """
+    if not request_origin:
         return False
-    origin_host = request_origin.split("://", 1)[-1].rstrip("/")
-    return origin_host == host
+    origin_host = request_origin.split("://", 1)[-1].rstrip("/").lower()
+    allowed = {h.strip().lower() for h in (host, *(forwarded_host or "").split(",")) if h and h.strip()}
+    domain = get_settings().domain.strip().lower()
+    if domain:
+        allowed.add(domain)
+    return origin_host in allowed or origin_host.split(":")[0] == domain

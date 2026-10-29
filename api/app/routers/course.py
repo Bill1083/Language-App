@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile
 from pydantic import BaseModel, Field
-from sqlalchemy import select, tuple_, update
+from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 
 from ..config import get_settings
@@ -19,7 +19,6 @@ from ..models import (
     LessonProgress,
     LlmJudgement,
     Unit,
-    VocabItem,
 )
 from ..providers.base import ChatMessage
 from ..services import prompts
@@ -29,7 +28,7 @@ from ..services.course import course_map, lesson_unlocked, next_cefr
 from ..services.jobs import enqueue
 from ..services.languages import level_index
 from ..services.progress import XP, award_xp, check_achievements, grant_and_describe
-from ..services.srs import add_mistake_card, learn_vocab
+from ..services.srs import add_mistake_card, learn_kana, learn_vocab, lesson_words
 from ..services.text import strip_ruby
 
 router = APIRouter(tags=["course"])
@@ -210,12 +209,12 @@ async def answer_exercise(exercise_id: int, body: AnswerIn, user: CurrentUser, d
     result["is_correct"] = result["verdict"] != "wrong"
     db.add(ExerciseAttempt(user_id=user.id, exercise_id=ex.id, answer=given[:2000],
                            is_correct=result["is_correct"], verdict=result["verdict"]))
-    if not result["is_correct"] and ex.type not in ("speak", "match_pairs", "reading", "kana_intro", "vocab_intro",
-                                                    "grammar_note"):
-        await add_mistake_card(db, user.id, lang, prompt=_mistake_prompt(ex), answer=result["correct_answer"] or "",
+    if not result["is_correct"] and result["correct_answer"] and ex.type not in (
+            "speak", "match_pairs", "reading", "kana_intro", "vocab_intro", "grammar_note"):
+        await add_mistake_card(db, user.id, lang, prompt=_mistake_prompt(ex), answer=result["correct_answer"],
                                explanation=result.get("ai_explanation") or p.get("explanation"), source="lesson",
                                source_ref=f"exercise:{ex.id}", wrong=given or None,
-                               context=p.get("translation"))
+                               context=p.get("translation"), level=cefr, unit_id=ex.lesson.unit_id)
     await db.commit()
     return result
 
@@ -294,13 +293,11 @@ async def complete_lesson(lesson_id: int, body: CompleteIn, user: CurrentUser, d
         if accuracy >= 0.999:
             xp += XP["lesson_perfect"]
         # Learn this lesson's words: they join the vocabulary list and the review deck.
-        if lesson.kind == "lesson":
-            # Look words up by the lesson's own list: a word taught in several lessons
-            # belongs to all of them, not just the one that generated it first.
-            keys = [(strip_ruby(v["word"])[:160], v["meaning"][:300]) for v in content.get("vocab", [])]
-            items = list(await db.scalars(select(VocabItem).where(
-                VocabItem.language_code == lang, tuple_(VocabItem.lemma, VocabItem.meaning).in_(keys)))) if keys else []
-            for item in items:
+        # Kana lessons also add their characters to the review deck.
+        if lesson.kind in ("lesson", "kana") and lesson.order != 100:
+            if lesson.kind == "kana":
+                await learn_kana(db, user.id, lesson)
+            for item in await lesson_words(db, lesson, lang):
                 if await learn_vocab(db, user.id, item, "lesson", f"lesson:{lesson.id}"):
                     response["new_words"].append({"id": item.id, "lemma": item.lemma, "reading": item.reading,
                                                   "meaning": item.meaning, "ruby": (item.extra_json or {}).get("ruby")})

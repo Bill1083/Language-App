@@ -10,6 +10,10 @@ export type PendingTurn = { client_id: string; text: string; localAudio?: string
 export type Streaming = { stream_id: string; text: string } | null;
 type Status = "connecting" | "open" | "reconnecting" | "closed";
 
+/** Why the socket can't be used: shown instead of an endless "reconnecting". */
+export type SocketFailure = { kind: "auth" | "origin" | "network"; message: string } | null;
+export type StartError = { message: string; detail?: string } | null;
+
 type ServerEvent =
   | { type: "pong" }
   | { type: "transcribing"; client_id?: string }
@@ -22,7 +26,16 @@ type ServerEvent =
   | { type: "feedback_error"; turn_id: number; message: string }
   | { type: "goal"; achieved: boolean }
   | { type: "summary" }
-  | { type: "error"; message: string; client_id?: string; retryable?: boolean };
+  | { type: "error"; message: string; detail?: string; client_id?: string; retryable?: boolean };
+
+const FAILURES: Record<number, SocketFailure> = {
+  4401: { kind: "auth", message: "Your session has expired. Sign in again to continue this conversation." },
+  4403: {
+    kind: "origin",
+    message:
+      "The server refused the live connection because the page's address didn't match it. Check DOMAIN in .env and the WebSocket block in the Nginx site (see DEPLOYMENT.md).",
+  },
+};
 
 /** WebSocket client for a conversation: streams AI replies token-by-token,
  *  plays reply audio sentence-by-sentence as it arrives, and merges feedback
@@ -36,6 +49,8 @@ export function useConversationSocket(
   const [pending, setPending] = React.useState<PendingTurn[]>([]);
   const [streaming, setStreaming] = React.useState<Streaming>(null);
   const [status, setStatus] = React.useState<Status>("connecting");
+  const [failure, setFailure] = React.useState<SocketFailure>(null);
+  const [startError, setStartError] = React.useState<StartError>(null);
   const [feedbackErrors, setFeedbackErrors] = React.useState<Record<number, string>>({});
   const ws = React.useRef<WebSocket | null>(null);
   const queue = React.useRef<AudioQueue | null>(null);
@@ -45,6 +60,7 @@ export function useConversationSocket(
   turnsRef.current = turns;
   const closedByUs = React.useRef(false);
   const attempts = React.useRef(0);
+  const everOpened = React.useRef(false);
   const started = React.useRef(false);
 
   React.useEffect(() => {
@@ -61,6 +77,7 @@ export function useConversationSocket(
         setTurns((t) => (t.some((x) => x.id === ev.turn.id) ? t : [...t, ev.turn]));
         break;
       case "ai_start":
+        setStartError(null);
         queue.current?.stop();
         queue.current = optsRef.current.voice ? new AudioQueue(`stream-${ev.stream_id}`, 1) : null;
         setStreaming({ stream_id: ev.stream_id, text: "" });
@@ -93,7 +110,8 @@ export function useConversationSocket(
       case "error":
         setStreaming(null);
         if (ev.client_id) setPending((p) => p.filter((x) => x.client_id !== ev.client_id));
-        toast.error(ev.message);
+        if (turnsRef.current.length === 0) setStartError({ message: ev.message, detail: ev.detail });
+        else toast.error(ev.message, { description: ev.detail });
         break;
     }
   }, []);
@@ -104,6 +122,8 @@ export function useConversationSocket(
     ws.current = sock;
     sock.onopen = () => {
       attempts.current = 0;
+      everOpened.current = true;
+      setFailure(null);
       setStatus("open");
       if (!started.current && turnsRef.current.length === 0) {
         started.current = true;
@@ -120,12 +140,21 @@ export function useConversationSocket(
     sock.onclose = (e) => {
       ws.current = null;
       if (closedByUs.current) return setStatus("closed");
-      if (e.code === 4401) {
+      const known = FAILURES[e.code];
+      if (known) {
+        // the server said no on purpose: retrying won't help
         setStatus("closed");
-        toast.error("Session expired — sign in again.");
+        setFailure(known);
         return;
       }
       setStatus("reconnecting");
+      if (!everOpened.current && attempts.current >= 2) {
+        setFailure({
+          kind: "network",
+          message:
+            "Can't open the live connection to the server. If Parlo runs behind Nginx, the WebSocket location must pass the Upgrade header (see nginx.conf). Still retrying…",
+        });
+      }
       const delay = Math.min(10_000, 1000 * 2 ** attempts.current++);
       setTimeout(() => !closedByUs.current && connect(), delay);
     };
@@ -172,9 +201,17 @@ export function useConversationSocket(
     [send],
   );
 
+  /** Ask the AI for its opening line again (after a provider error). */
+  const retryStart = React.useCallback(() => {
+    if (send({ type: "start" })) setStartError(null);
+  }, [send]);
+
   const stopAudio = React.useCallback(() => queue.current?.stop(), []);
 
-  return { turns, setTurns, pending, streaming, status, sendText, sendAudio, stopAudio, feedbackErrors };
+  return {
+    turns, setTurns, pending, streaming, status, failure, startError, retryStart, sendText, sendAudio, stopAudio,
+    feedbackErrors,
+  };
 }
 
 function uid() {

@@ -1,15 +1,100 @@
 "use client";
 
-import { Brain, CircleAlert, Layers, Sparkles } from "lucide-react";
+import { Brain, ChevronDown, CircleAlert, Dumbbell, Layers, Play, Sparkles } from "lucide-react";
 import Link from "next/link";
+import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, Skeleton } from "@/components/ui/primitives";
-import { useDeckStats } from "@/hooks/queries";
+import { useDeckStats, usePracticeLevels } from "@/hooks/queries";
 import { useActiveLang } from "@/hooks/use-language";
-import { LANGS } from "@/lib/languages";
+import { CEFR_LABEL, LANGS } from "@/lib/languages";
+import type { Lang } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const DAYS = ["Today", "Tomorrow"];
+
+/** Everything learnt so far, per level and unit, practisable whether or not it's due. */
+function PracticeByLevel({ lang }: { lang: Lang }) {
+  const { data } = usePracticeLevels(lang);
+  const [open, setOpen] = React.useState<string | null>(null);
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center gap-4 p-5">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary-strong">
+          <Dumbbell className="size-6" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold">Practise what you&apos;ve learnt</p>
+          <p className="text-sm text-muted-foreground">Go over a whole level or a single unit any time, due or not.</p>
+        </div>
+      </div>
+      {!data ? (
+        <div className="space-y-2 border-t p-5">
+          <Skeleton className="h-11" />
+          <Skeleton className="h-11" />
+        </div>
+      ) : !data.length ? (
+        <p className="border-t px-5 py-4 text-sm text-muted-foreground">Finish your first lesson and what it taught shows up here.</p>
+      ) : (
+        <ul className="divide-y border-t">
+          {data.map((lv) => {
+            const expanded = open === lv.level;
+            return (
+              <li key={lv.level}>
+                <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
+                  <button
+                    type="button"
+                    onClick={() => setOpen(expanded ? null : lv.level)}
+                    aria-expanded={expanded}
+                    aria-controls={`practice-units-${lv.level}`}
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left"
+                  >
+                    <span className="flex h-10 min-w-14 shrink-0 items-center justify-center rounded-xl bg-muted px-2 text-sm font-black">
+                      {lv.label}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">
+                        {lv.level === "PRE" ? "Hiragana & katakana" : CEFR_LABEL[lv.level]}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {lv.items} learnt · {lv.due ? `${lv.due} due` : "none due"}
+                      </span>
+                    </span>
+                    <ChevronDown className={cn("ml-auto size-4 shrink-0 text-muted-foreground transition-transform", expanded && "rotate-180")} />
+                  </button>
+                  <Button asChild size="sm">
+                    <Link href={`/review-session?level=${lv.level}`}>Practise</Link>
+                  </Button>
+                </div>
+                {expanded && (
+                  <ul id={`practice-units-${lv.level}`} className="space-y-0.5 bg-muted/40 p-2 sm:px-3">
+                    {lv.units.map((u) => (
+                      <li key={u.id}>
+                        <Link
+                          href={`/review-session?unit=${u.id}`}
+                          className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-muted"
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold">{u.title}</span>
+                            <span className="block text-xs text-muted-foreground">
+                              {u.items} learnt{u.due ? ` · ${u.due} due` : ""}
+                            </span>
+                          </span>
+                          <Play className="size-4 shrink-0 fill-current text-primary" aria-label="Practise this unit" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Card>
+  );
+}
 
 export default function ReviewPage() {
   const lang = useActiveLang();
@@ -71,6 +156,8 @@ export default function ReviewPage() {
           <Link href="/review-session?mistakes=1">Drill</Link>
         </Button>
       </Card>
+
+      <PracticeByLevel lang={lang} />
 
       <Card className="p-5">
         <p className="flex items-center gap-2 font-bold">

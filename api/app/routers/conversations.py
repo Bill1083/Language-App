@@ -23,7 +23,7 @@ from ..models import Conversation, ConversationTurn, Enrolment, Recording, Scena
 from ..providers.base import ChatMessage, ProviderError
 from ..providers.stt import audio_ext
 from ..redis_client import get_redis
-from ..security import SESSION_COOKIE, same_origin
+from ..security import SESSION_COOKIE, allowed_ws_origin
 from ..services import conversation as cs
 from ..services.ai import AIService, BudgetExceeded
 from ..services.audio_cache import audio_url, tts_key
@@ -471,9 +471,19 @@ async def conversation_ws(ws: WebSocket, conv_id: int) -> None:
     async with SessionLocal() as db:
         user = await user_from_token(db, ws.cookies.get(SESSION_COOKIE))
         conv = await db.get(Conversation, conv_id) if user else None
-    origin_ok = same_origin(ws.headers.get("origin"), ws.headers.get("host"))
-    if user is None or conv is None or conv.user_id != user.id or not origin_ok:
-        await ws.close(code=4401)
+    origin = ws.headers.get("origin")
+    origin_ok = allowed_ws_origin(origin, ws.headers.get("host"), ws.headers.get("x-forwarded-host"))
+    # Accept before closing so the browser receives the close code; closing
+    # during the handshake only shows up as an anonymous network error (1006).
+    if user is None or conv is None or conv.user_id != user.id:
+        await ws.accept()
+        await ws.close(code=4401, reason="not signed in")
+        return
+    if not origin_ok:
+        log.warning("websocket origin %s rejected (host %s, forwarded host %s)", origin,
+                    ws.headers.get("host"), ws.headers.get("x-forwarded-host"))
+        await ws.accept()
+        await ws.close(code=4403, reason="origin not allowed")
         return
     await ws.accept()
     sock = ConversationSocket(ws, user, conv_id)

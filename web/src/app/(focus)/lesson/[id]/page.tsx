@@ -117,8 +117,9 @@ function mistakePrompt(ex: Exercise): string {
   if (ex.type === "fill_blank") return ex.sentence;
   if (ex.type === "word_bank") return ex.prompt;
   if (ex.type === "multiple_choice") return `${ex.prompt} ${ex.question}`;
-  if (ex.type === "kana_choice") return ex.mode === "char_to_romaji" ? ex.char : ex.romaji;
-  if (ex.type === "dictation") return "Dictation";
+  if (ex.type === "kana_choice") return ex.mode === "char_to_romaji" ? `Read: ${ex.char}` : `Which is “${ex.romaji}”?`;
+  if (ex.type === "listening_choice") return "What did you hear?";
+  if (ex.type === "dictation") return "Write what you hear";
   return ex.type.replace("_", " ");
 }
 
@@ -382,10 +383,10 @@ function Player({ lesson, onRestart }: { lesson: LessonPayload; onRestart: () =>
       <Dialog open={quit} onOpenChange={setQuit}>
         <DialogContent title="Quit this lesson?" description="Your progress in this lesson won't be saved." side="bottom">
           <div className="flex flex-col gap-2.5 sm:flex-row">
-            <Button className="flex-1" size="lg" onClick={() => setQuit(false)}>
+            <Button className="sm:flex-1" size="lg" onClick={() => setQuit(false)}>
               Keep learning
             </Button>
-            <Button className="flex-1" size="lg" variant="outline" onClick={() => router.push("/learn")}>
+            <Button className="sm:flex-1" size="lg" variant="outline" onClick={() => router.push("/learn")}>
               Quit
             </Button>
           </div>

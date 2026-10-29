@@ -10,14 +10,14 @@ import json
 import logging
 from typing import Any
 
-import yaml
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import get_settings
 from ..models import Language, Lesson, Level, Scenario, Unit
-from .kana import SCRIPTS, kana_data
+from .kana import BUILDER_VERSION, SCRIPTS, kana_data
 from .languages import CEFR, LANGUAGES
+from .yaml_loader import load_yaml_file
 
 log = logging.getLogger("parlo.curriculum")
 COURSE_FILES = ("fr", "it", "ja")
@@ -28,8 +28,7 @@ def skeleton_hash(skeleton: dict[str, Any]) -> str:
 
 
 def load_course(lang: str) -> dict[str, Any]:
-    path = get_settings().curriculum_dir / f"{lang}.yaml"
-    return yaml.safe_load(path.read_text(encoding="utf-8"))
+    return load_yaml_file(get_settings().curriculum_dir / f"{lang}.yaml")
 
 
 class _Upserter:
@@ -133,16 +132,19 @@ async def _seed_kana(up: _Upserter) -> None:
     for u_order, script in enumerate(SCRIPTS, start=1):
         s = data[script]
         unit = await up.unit(f"ja-pre-{script}", level, u_order, s["title"], "writing", s.get("objectives", []))
+        # The whole lesson definition (and the builder version) goes into the
+        # skeleton, so editing ja_kana.yaml or the builder rebuilds the lesson.
         for i, lesson in enumerate(s["lessons"]):
             up.lesson(f"ja-pre-{script}-l{i + 1}", unit, i + 1, "kana", lesson["title"],
-                      {"script": script, "index": i, "chars": [c[0] for c in lesson["chars"]]})
+                      {"script": script, "index": i, "chars": lesson["chars"], "words": lesson.get("words", []),
+                       "builder": BUILDER_VERSION})
         up.lesson(f"ja-pre-{script}-test", unit, 100, "kana", s["test"]["title"],
-                  {"script": script, "index": -1, "test": True})
+                  {"script": script, "index": -1, "test": True, "chars": [c for les in s["lessons"] for c in les["chars"]],
+                   "builder": BUILDER_VERSION})
 
 
 async def seed_scenarios(db: AsyncSession) -> None:
-    path = get_settings().curriculum_dir / "scenarios.yaml"
-    items = yaml.safe_load(path.read_text(encoding="utf-8")) or []
+    items = load_yaml_file(get_settings().curriculum_dir / "scenarios.yaml") or []
     existing = {s.slug: s for s in (await db.execute(select(Scenario).where(Scenario.unit_id.is_(None)))).scalars()}
     for item in items:
         s = existing.get(item["slug"]) or Scenario(slug=item["slug"])

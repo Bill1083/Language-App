@@ -6,9 +6,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
 from ..deps import CurrentUser, Db
-from ..models import SrsCard
+from ..models import SrsCard, Unit
+from ..services.languages import CEFR
 from ..services.progress import award_xp, check_achievements
-from ..services.srs import card_json, forecast, queue, review
+from ..services.srs import card_json, ensure_kana_cards, forecast, level_summary, practice, queue, review
+
+LEVEL_LABELS = {"PRE": "Kana", **{c: c for c in CEFR}}
 
 router = APIRouter(prefix="/srs", tags=["srs"])
 
@@ -34,12 +37,39 @@ async def get_queue(lang: str, user: CurrentUser, db: Db, mistakes: bool = False
 
 @router.get("/{lang}/stats")
 async def deck_stats(lang: str, user: CurrentUser, db: Db) -> dict[str, Any]:
+    if lang == "ja":
+        await ensure_kana_cards(db, user.id)
     _, counts = await queue(db, user, lang, limit=0)
     total = await db.scalar(select(func.count()).select_from(SrsCard).where(
         SrsCard.user_id == user.id, SrsCard.language_code == lang)) or 0
     mistakes = await db.scalar(select(func.count()).select_from(SrsCard).where(
         SrsCard.user_id == user.id, SrsCard.language_code == lang, SrsCard.card_type == "mistake")) or 0
     return {"counts": counts, "total": total, "mistakes": mistakes, "forecast": await forecast(db, user, lang)}
+
+
+@router.get("/{lang}/levels")
+async def practice_levels(lang: str, user: CurrentUser, db: Db) -> list[dict[str, Any]]:
+    """Everything learnt so far, grouped by level and unit, for "practise A1 / kana"."""
+    if lang == "ja":
+        await ensure_kana_cards(db, user.id)
+    return [lv | {"label": LEVEL_LABELS.get(lv["level"], lv["level"])} for lv in await level_summary(db, user, lang)]
+
+
+@router.get("/{lang}/practice")
+async def practice_session(lang: str, user: CurrentUser, db: Db, level: str | None = None, unit_id: int | None = None,
+                           limit: int = 30) -> dict[str, Any]:
+    if not level and not unit_id:
+        raise HTTPException(400, "Pick a level or a unit to practise")
+    if lang == "ja":
+        await ensure_kana_cards(db, user.id)
+    cards = await practice(db, user, lang, level=level, unit_id=unit_id, limit=min(max(limit, 5), 100))
+    if unit_id:
+        unit = await db.get(Unit, unit_id)
+        title = unit.title if unit else "Unit"
+    else:
+        title = LEVEL_LABELS.get(level or "", level or "")
+    return {"cards": [card_json(c) for c in cards], "title": title,
+            "counts": {"due": len(cards), "new": 0, "mistakes_new": 0}}
 
 
 @router.post("/review")

@@ -109,20 +109,20 @@ export function LessonEnd({
         </p>
       </div>
 
-      <div className="mt-8 grid grid-cols-3 gap-3">
-        <Card className="flex flex-col items-center gap-1 p-4">
+      <div className="mt-8 grid grid-cols-3 gap-2.5 sm:gap-3">
+        <Card className="flex flex-col items-center gap-1 px-2 py-4 sm:p-4">
           <Zap className="size-5 text-gold" />
-          <span className="text-2xl font-black tabular-nums">+{xp}</span>
+          <span className="whitespace-nowrap text-xl font-black tabular-nums sm:text-2xl">+{xp}</span>
           <span className="text-xs font-semibold text-muted-foreground">XP</span>
         </Card>
-        <Card className="flex flex-col items-center gap-1 p-4">
+        <Card className="flex flex-col items-center gap-1 px-2 py-4 sm:p-4">
           <Target className="size-5 text-success" />
-          <span className="text-2xl font-black tabular-nums">{Math.round(result.accuracy * 100)}%</span>
+          <span className="whitespace-nowrap text-xl font-black tabular-nums sm:text-2xl">{Math.round(result.accuracy * 100)}%</span>
           <span className="text-xs font-semibold text-muted-foreground">Accuracy</span>
         </Card>
-        <Card className="flex flex-col items-center gap-1 p-4">
+        <Card className="flex flex-col items-center gap-1 px-2 py-4 sm:p-4">
           <Clock className="size-5 text-primary" />
-          <span className="text-2xl font-black tabular-nums">{formatDuration(seconds)}</span>
+          <span className="whitespace-nowrap text-xl font-black tabular-nums sm:text-2xl">{formatDuration(seconds)}</span>
           <span className="text-xs font-semibold text-muted-foreground">Time</span>
         </Card>
       </div>
@@ -183,19 +183,20 @@ export function LessonEnd({
         </div>
       )}
 
-      <div className="mt-auto flex flex-col gap-2.5 pt-10 sm:flex-row">
+      {/* sm:flex-1 only: flex-1 (basis 0) in the mobile column would squash the buttons to their text height. */}
+      <div className="safe-bottom mt-auto flex flex-col gap-3 pt-10 sm:flex-row">
         {passed && nextHref ? (
-          <Button asChild size="xl" className="flex-1">
+          <Button asChild size="xl" className="sm:flex-1">
             <Link href={nextHref}>
               Next lesson <ArrowRight />
             </Link>
           </Button>
         ) : !passed ? (
-          <Button size="xl" className="flex-1" onClick={onRetry}>
+          <Button size="xl" className="sm:flex-1" onClick={onRetry}>
             <RotateCcw /> Try again
           </Button>
         ) : null}
-        <Button asChild size="xl" variant="outline" className="flex-1">
+        <Button asChild size="xl" variant="outline" className="sm:flex-1">
           <Link href="/learn">Back to course</Link>
         </Button>
       </div>

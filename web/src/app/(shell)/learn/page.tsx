@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Check, Crown, Lock, MessageCircle, Play, Shield, Star, Trophy } from "lucide-react";
+import { BookOpen, Check, Crown, Dumbbell, Lock, MessageCircle, Play, Shield, Star, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -111,13 +111,22 @@ function UnitGuide({ unit, lang, open, onOpenChange }: { unit: CourseUnit; lang:
             </div>
           </>
         )}
-        {unit.theme !== "writing" && (
-          <Button asChild variant="soft" className="mt-6 w-full">
-            <Link href={`/talk?unit=${unit.id}`}>
-              <MessageCircle /> Practise this unit in a conversation
-            </Link>
-          </Button>
-        )}
+        <div className="mt-6 space-y-2.5">
+          {unit.done > 0 && (
+            <Button asChild className="w-full">
+              <Link href={`/review-session?unit=${unit.id}`}>
+                <Dumbbell /> {unit.theme === "writing" ? "Practise these characters" : "Practise this unit's words"}
+              </Link>
+            </Button>
+          )}
+          {unit.theme !== "writing" && (
+            <Button asChild variant="soft" className="w-full">
+              <Link href={`/talk?unit=${unit.id}`}>
+                <MessageCircle /> Practise this unit in a conversation
+              </Link>
+            </Button>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -198,12 +207,23 @@ function LevelHeader({ level, lang }: { level: CourseLevel; lang: Lang }) {
             {level.cefr === "PRE" ? "Hiragana & katakana" : `${level.cefr} · ${CEFR_LABEL[level.cefr]}`}
           </h1>
         </div>
-        {test && level.unlocked && (
-          <Button asChild variant={level.test_passed ? "secondary" : "outline"}>
-            <Link href={`/lesson/${test.id}`}>
-              <Trophy /> {level.test_passed ? "Test passed" : "Test out"}
-            </Link>
-          </Button>
+        {(level.completed > 0 || (test && level.unlocked)) && (
+          <div className="flex gap-2">
+            {level.completed > 0 && (
+              <Button asChild variant="soft">
+                <Link href={`/review-session?level=${level.cefr}`}>
+                  <Dumbbell /> Practise
+                </Link>
+              </Button>
+            )}
+            {test && level.unlocked && (
+              <Button asChild variant={level.test_passed ? "secondary" : "outline"}>
+                <Link href={`/lesson/${test.id}`}>
+                  <Trophy /> {level.test_passed ? "Test passed" : "Test out"}
+                </Link>
+              </Button>
+            )}
+          </div>
         )}
       </div>
       <div className="mt-4 flex items-center gap-3">

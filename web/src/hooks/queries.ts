@@ -29,12 +29,37 @@ export function useDeckStats(lang: Lang | null) {
   });
 }
 
-export function useQueue(lang: Lang, mistakes: boolean) {
+export type SessionScope = { mistakes?: boolean; level?: string | null; unit?: string | null };
+
+/** Cards for a review session: the daily queue, the mistakes deck, or practice of one level / unit. */
+export function useQueue(lang: Lang, scope: SessionScope) {
+  const practice = !!(scope.level || scope.unit);
+  const path = practice
+    ? `/srs/${lang}/practice?${new URLSearchParams(scope.unit ? { unit_id: scope.unit } : { level: scope.level! })}`
+    : `/srs/${lang}/queue?limit=100${scope.mistakes ? "&mistakes=true" : ""}`;
   return useQuery({
-    queryKey: ["queue", lang, mistakes],
-    queryFn: () => get<{ cards: SrsCard[]; counts: DeckStats["counts"] }>(`/srs/${lang}/queue?limit=100${mistakes ? "&mistakes=true" : ""}`),
+    queryKey: ["queue", lang, scope.mistakes ?? false, scope.level ?? null, scope.unit ?? null],
+    queryFn: () => get<{ cards: SrsCard[]; counts: DeckStats["counts"]; title?: string }>(path),
     staleTime: Infinity,
     gcTime: 0,
+  });
+}
+
+export type PracticeLevel = {
+  level: string;
+  label: string;
+  items: number;
+  cards: number;
+  due: number;
+  units: { id: number; title: string; items: number; due: number }[];
+};
+
+export function usePracticeLevels(lang: Lang | null) {
+  return useQuery({
+    queryKey: ["practice-levels", lang],
+    queryFn: () => get<PracticeLevel[]>(`/srs/${lang}/levels`),
+    enabled: !!lang,
+    staleTime: 30_000,
   });
 }
 

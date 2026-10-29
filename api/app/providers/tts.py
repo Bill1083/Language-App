@@ -33,6 +33,13 @@ DEFAULT_VOICES: dict[str, dict[str, dict[str, str]]] = {
     },
 }
 
+# Chirp 3 HD voices read sentences beautifully but often produce silence or
+# garbled sound for a lone kana or a two-kana word. Short Japanese clips use
+# these Neural2 voices instead (see services/audio_cache.py).
+SHORT_TEXT_VOICES: dict[str, dict[str, dict[str, str]]] = {
+    "google": {"ja": {"female": "ja-JP-Neural2-B", "male": "ja-JP-Neural2-C"}},
+}
+
 # Extra voices offered in the admin "compare" dropdown (Google Chirp 3 HD).
 GOOGLE_CHIRP_VOICES = ["Aoede", "Kore", "Leda", "Zephyr", "Callirrhoe", "Despina", "Charon", "Puck", "Fenrir",
                        "Orus", "Iapetus", "Algenib"]

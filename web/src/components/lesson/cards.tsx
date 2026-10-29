@@ -181,7 +181,7 @@ export function KanaCard({ ex }: { ex: Exercise }) {
       </div>
       <div className="mt-5 flex items-center gap-3">
         <p className="text-4xl font-black tracking-tight">{ex.romaji}</p>
-        <AudioButton text={ex.char} lang="ja" autoPlay />
+        <AudioButton text={ex.audio_text ?? ex.char} lang="ja" autoPlay />
       </div>
       <p className="mt-5 max-w-sm text-[16px] text-muted-foreground">{ex.mnemonic}</p>
     </div>

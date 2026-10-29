@@ -23,7 +23,7 @@ dig +short lang.wharveytech.com
 ## 2. Get the code onto the server
 
 ```bash
-git clone https://github.com/<you>/Language_App.git /home/deploy/parlo
+git clone https://github.com/Bill1083/Language-App.git /home/deploy/parlo
 ```
 
 ```bash
@@ -76,14 +76,16 @@ sudo nginx -t && sudo systemctl reload nginx
 ```
 
 The WebSocket location in `nginx.conf` passes the `Upgrade` header and disables buffering for
-conversations — without it replies arrive all at once (or not at all).
+conversations — without it replies arrive all at once (or not at all). It also repeats the `Host` and
+`X-Forwarded-*` headers: a location with its own `proxy_set_header` lines inherits none of the server's,
+and without `Host` the API can't match the browser's origin. Keep those lines if you edit the file by hand.
 
 ## 5. First login
 
 Open `https://lang.wharveytech.com`, create the first account (it becomes the admin), then:
 
-1. **Admin → Providers**: press each **Test** button (LLM, STT round-trip) and play a voice per
-   language. Swap voices with **Compare voices** if you prefer another.
+1. **Admin → Providers**: press each **Test** button (**Test conversation**, feedback, content, the STT
+   round-trip) and play a voice per language. Swap voices with **Compare voices** if you prefer another.
 2. **Admin → Users**: create invite links for family or friends.
 3. In AI Studio, confirm the Gemini project shows **Paid**; set a monthly budget alert in Google Cloud
    billing.
@@ -107,6 +109,20 @@ cd /home/deploy/parlo && git pull && docker compose up -d --build
 ```
 
 Migrations run automatically. Lessons whose YAML skeleton changed are regenerated on their next visit.
+
+If you changed `nginx.conf` in the repo, copy the changed lines into `/etc/nginx/sites-available/parlo`
+(not the whole file — Certbot edited yours), then `sudo nginx -t && sudo systemctl reload nginx`.
+
+## Troubleshooting conversations
+
+- **"Can't connect" / "Connection refused"** — the WebSocket was rejected before it opened. Check the
+  WebSocket location in `/etc/nginx/sites-available/parlo` has the four `proxy_set_header Host … /
+  X-Real-IP / X-Forwarded-For / X-Forwarded-Proto` lines, and that `DOMAIN` in `.env` is the address
+  you open in the browser. `docker compose logs api | grep -i origin` shows the origin it refused.
+- **"The AI couldn't start the conversation"** — the connection is fine but the language model call
+  failed; the box under the message shows the provider's error. Run **Admin → Providers → Test
+  conversation**. Usual causes: the Gemini key is restricted to other APIs (allow the **Generative
+  Language API**, or remove the restriction), or the project isn't on a paid tier (429 quota errors).
 
 ## Resource use
 

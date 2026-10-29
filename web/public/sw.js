@@ -12,7 +12,7 @@ const AUDIO = `${VERSION}-audio`;
 
 const OFFLINE_API = [
   /^\/api\/v1\/lessons\/\d+$/,
-  /^\/api\/v1\/srs\/[a-z]{2}\/(queue|stats)/,
+  /^\/api\/v1\/srs\/[a-z]{2}\/(queue|stats|levels|practice)/,
   /^\/api\/v1\/course\/[a-z]{2}$/,
   /^\/api\/v1\/auth\/me$/,
   /^\/api\/v1\/dashboard/,

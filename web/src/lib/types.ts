@@ -258,7 +258,7 @@ export type Conversation = {
 
 export type SrsCard = {
   id: number;
-  card_type: "recognize" | "produce" | "listen" | "kanji" | "mistake";
+  card_type: "recognize" | "produce" | "listen" | "kanji" | "kana" | "mistake";
   front: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   back: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   source: string;

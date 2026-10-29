@@ -253,3 +253,23 @@ def test_extract_json_handles_fences_and_chatter():
     assert extract_json('Sure! Here it is: {"a": [1, 2]} hope that helps') == {"a": [1, 2]}
     with pytest.raises(ValueError):
         extract_json("no json here")
+
+
+# --------------------------------------------------------------------------- short Japanese clips
+
+
+def test_short_japanese_is_padded_and_uses_neural2():
+    from app.services.audio_cache import prepare_short_japanese
+
+    assert prepare_short_japanese("い", "ja", "google", "female") == ("い。", "ja-JP-Neural2-B")
+    assert prepare_short_japanese("いえ", "ja", "google", "male") == ("いえ。", "ja-JP-Neural2-C")
+    assert prepare_short_japanese("えき？", "ja", "google", "female") == ("えき？", "ja-JP-Neural2-B")
+
+
+def test_longer_or_other_language_text_is_untouched():
+    from app.services.audio_cache import prepare_short_japanese
+
+    assert prepare_short_japanese("おはようございます", "ja", "google", "female") == ("おはようございます", None)
+    assert prepare_short_japanese("un", "fr", "google", "female") == ("un", None)
+    # other providers keep their own voice, but still get the padding
+    assert prepare_short_japanese("う", "ja", "openai", "female") == ("う。", None)

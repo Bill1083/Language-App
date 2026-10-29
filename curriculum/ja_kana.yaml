@@ -2,7 +2,8 @@
 # LLM: each lesson introduces its characters with a mnemonic, then drills
 # recognition, reverse recognition, listening and matching.
 #
-# chars:  [kana, romaji, mnemonic]
+# chars:  [kana, romaji, mnemonic, optional example word to play — for signs
+#          like っ and ー that have no sound of their own]
 # words:  [word, romaji, meaning] — only uses kana taught up to that lesson
 
 hiragana:
@@ -69,7 +70,7 @@ hiragana:
         - [に, ni, "A needle and two threads — ni"]
         - [ぬ, nu, "A bowl of noodles with chopsticks — nu"]
         - [ね, ne, "A cat (neko) curling its tail — ne"]
-        - [の, no, "A 'no entry' sign — no"]
+        - [の, "no", "A 'no entry' sign — no"]
       words:
         - [ねこ, neko, cat]
         - [いぬ, inu, dog]
@@ -168,7 +169,7 @@ hiragana:
         - [にゃ, nya, "に + small ゃ — the cat's 'nya'"]
         - [りょ, ryo, "り + small ょ — ryo"]
         - [じゃ, ja, "じ + small ゃ — ja"]
-        - [っ, (pause), "Small っ doubles the next consonant: a tiny pause, like the gap in 'bookcase'"]
+        - [っ, (pause), "Small っ doubles the next consonant: a tiny pause, like the gap in 'bookcase'", きって]
       words:
         - [きっぷ, kippu, ticket]
         - [しゃしん, shashin, photo]
@@ -192,7 +193,7 @@ katakana:
         - [ウ, u, "う with a hat on — u"]
         - [エ, e, "An elevator going between two floors — e"]
         - [オ, o, "An opera singer with arms spread — o"]
-        - [ー, (long), "The long-vowel bar used in loanwords: stretch the previous vowel (ケーキ = ke-e-ki)"]
+        - [ー, (long), "The long-vowel bar used in loanwords: stretch the previous vowel (ケーキ = ke-e-ki)", ケーキ]
       words:
         - [アイ, ai, "AI / eye (loan)"]
     - title: K-row カキクケコ
@@ -231,7 +232,7 @@ katakana:
         - [ニ, ni, "Two lines — 'ni' means two"]
         - [ヌ, nu, "Noodles on chopsticks — nu"]
         - [ネ, ne, "A necklace with a pendant — ne"]
-        - [ノ, no, "A single 'no' slash — no"]
+        - [ノ, "no", "A single 'no' slash — no"]
       words:
         - [テニス, tenisu, tennis]
         - [ネクタイ, nekutai, necktie]
@@ -311,7 +312,7 @@ katakana:
         - [キャ, kya, "キ + small ャ — kya"]
         - [シャ, sha, "シ + small ャ — sha"]
         - [チョ, cho, "チ + small ョ — cho"]
-        - [ッ, (pause), "Small ッ doubles the next consonant"]
+        - [ッ, (pause), "Small ッ doubles the next consonant", カップ]
         - [ファ, fa, "フ + small ァ — fa (foreign sound)"]
         - [ティ, ti, "テ + small ィ — ti (foreign sound)"]
         - [ウィ, wi, "ウ + small ィ — wi (foreign sound)"]

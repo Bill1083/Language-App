@@ -199,10 +199,10 @@ export default function SummaryPage() {
       </section>
 
       <div className="mt-10 flex flex-col gap-2.5 sm:flex-row">
-        <Button size="lg" className="flex-1" loading={again.isPending} onClick={() => again.mutate()}>
+        <Button size="lg" className="sm:flex-1" loading={again.isPending} onClick={() => again.mutate()}>
           <RefreshCw /> Practise again
         </Button>
-        <Button size="lg" variant="outline" className="flex-1" asChild>
+        <Button size="lg" variant="outline" className="sm:flex-1" asChild>
           <Link href="/talk">Back to Talk</Link>
         </Button>
       </div>

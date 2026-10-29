@@ -36,6 +36,7 @@ const TYPE_LABEL: Record<string, string> = {
   produce: "Say it in the language",
   listen: "What do you hear?",
   kanji: "How is it read?",
+  kana: "How is it read?",
   mistake: "Fix your mistake",
 };
 
@@ -60,6 +61,12 @@ function Front({ card, lang, typed, setTyped, onSubmit, revealed }: {
       );
     case "kanji":
       return <p className="font-jp text-6xl font-bold" lang="ja">{f.text}</p>;
+    case "kana":
+      return (
+        <p className="font-jp text-[96px] font-medium leading-none" lang="ja">
+          {f.char}
+        </p>
+      );
     case "produce":
       return (
         <div className="flex w-full flex-col items-center gap-4">
@@ -88,6 +95,17 @@ function Front({ card, lang, typed, setTyped, onSubmit, revealed }: {
 
 function Back({ card, lang, verdict }: { card: SrsCard; lang: Lang; verdict: string | null }) {
   const b = card.back;
+  if (card.card_type === "kana") {
+    return (
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex items-center gap-3">
+          <p className="text-4xl font-black">{b.romaji}</p>
+          <AudioButton text={b.audio_text ?? card.front.char} lang="ja" autoPlay />
+        </div>
+        {b.mnemonic && <p className="max-w-sm text-center text-sm text-muted-foreground">{b.mnemonic}</p>}
+      </div>
+    );
+  }
   if (card.card_type === "produce" || card.card_type === "mistake") {
     return (
       <div className="flex flex-col items-center gap-3">
@@ -137,10 +155,14 @@ function Back({ card, lang, verdict }: { card: SrsCard; lang: Lang; verdict: str
 
 function Session() {
   const lang = useActiveLang();
-  const mistakes = useSearchParams().get("mistakes") === "1";
+  const params = useSearchParams();
+  const mistakes = params.get("mistakes") === "1";
+  const level = params.get("level");
+  const unit = params.get("unit");
+  const practice = !!(level || unit);
   const router = useRouter();
   const qc = useQueryClient();
-  const { data, isLoading } = useQueue(lang, mistakes);
+  const { data, isLoading, refetch } = useQueue(lang, { mistakes, level, unit });
   const [queue, setQueue] = React.useState<SrsCard[] | null>(null);
   const [pos, setPos] = React.useState(0);
   const [revealed, setRevealed] = React.useState(false);
@@ -170,7 +192,22 @@ function Session() {
     }
     void qc.invalidateQueries({ queryKey: ["deck"] });
     void qc.invalidateQueries({ queryKey: ["dashboard"] });
+    void qc.invalidateQueries({ queryKey: ["practice-levels"] });
   }, [lang, qc]);
+
+  /** Practice only: a fresh shuffle of the same level or unit. */
+  const again = React.useCallback(async () => {
+    const { data: next } = await refetch();
+    setQueue(next?.cards ?? []);
+    setPos(0);
+    setRevealed(false);
+    setTyped("");
+    setVerdict(null);
+    setStats({ reviewed: 0, good: 0 });
+    setFinished(false);
+    repeats.current.clear();
+    startedAt.current = shownAt.current = Date.now();
+  }, [refetch]);
 
   const reveal = React.useCallback(() => {
     if (!card || revealed) return;
@@ -246,10 +283,20 @@ function Session() {
             {stats.reviewed ? Math.round((stats.good / stats.reviewed) * 100) : 0}% remembered · +{stats.reviewed} XP
           </p>
         ) : (
-          <p className="text-muted-foreground">{mistakes ? "No mistake cards right now." : "You're all caught up. Come back later!"}</p>
+          <p className="text-muted-foreground">
+            {practice
+              ? "Nothing to practise here yet — finish a lesson in this part of the course first."
+              : mistakes
+                ? "No mistake cards right now."
+                : "You're all caught up. Come back later!"}
+          </p>
         )}
         <div className="mt-4 flex w-full flex-col gap-2.5">
-          <Button size="lg" asChild><Link href="/">Home</Link></Button>
+          {practice && queue.length > 0 ? (
+            <Button size="lg" onClick={() => void again()}>Practise again</Button>
+          ) : (
+            <Button size="lg" asChild><Link href="/">Home</Link></Button>
+          )}
           <Button size="lg" variant="outline" asChild><Link href="/review">Review overview</Link></Button>
         </div>
       </div>
@@ -268,7 +315,10 @@ function Session() {
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pb-6 sm:px-6">
         <div className="flex items-center justify-between py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          <span>{TYPE_LABEL[card!.card_type]}</span>
+          <span>
+            {practice && data?.title && <span className="text-primary-strong">Practice · {data.title} · </span>}
+            {TYPE_LABEL[card!.card_type]}
+          </span>
           {card!.is_new && <Badge tone="primary">New</Badge>}
         </div>
         <div className="flex-1 [perspective:1400px]" key={`${card!.id}-${pos}`}>

@@ -4,6 +4,7 @@ sha256(provider + voice + lang + speed + text), so a sentence is paid for once."
 import asyncio
 import hashlib
 import os
+import re
 from pathlib import Path
 
 from sqlalchemy import select
@@ -11,11 +12,28 @@ from sqlalchemy.dialects.postgresql import insert
 
 from ..config import get_settings
 from ..models import AudioCache
+from ..providers.tts import SHORT_TEXT_VOICES
 from .ai import AIService, tts_for
 from .text import speakable
 
 _locks: dict[str, asyncio.Lock] = {}
 SPEEDS = (0.75, 1.0, 1.25)
+
+# A lone kana or a two-kana word is too little context for a neural voice:
+# pad it into a "sentence" and use a voice that copes with very short input.
+SHORT_JA_CHARS = 4
+_JA_PUNCT = re.compile(r"[\s。、，．・！？!?…「」『』（）()\[\].,~〜]")
+_SENTENCE_END = ("。", "！", "？", "!", "?")
+
+
+def prepare_short_japanese(text: str, lang: str, provider: str, gender: str) -> tuple[str, str | None]:
+    """Return (text to synthesise, voice to use instead of the default or None)."""
+    if lang != "ja" or len(_JA_PUNCT.sub("", text)) > SHORT_JA_CHARS:
+        return text, None
+    if not text.endswith(_SENTENCE_END):
+        text = f"{text}。"
+    voice = SHORT_TEXT_VOICES.get(provider, {}).get(lang, {}).get("male" if gender == "male" else "female")
+    return text, voice
 
 
 def clamp_speed(speed: float) -> float:
@@ -43,7 +61,9 @@ async def tts_key(ai: AIService, text: str, lang: str, *, purpose: str = "lesson
         raise ValueError("Nothing to say")
     cfg = await ai.config()
     provider = tts_for(cfg, purpose).name
-    voice = voice or cfg.voice_for(provider, lang, gender)
+    text, short_voice = prepare_short_japanese(text, lang, provider, gender)
+    # an explicitly chosen voice (admin voice comparison) always wins
+    voice = voice or short_voice or cfg.voice_for(provider, lang, gender)
     speed = clamp_speed(speed)
     key = cache_key(provider, voice, lang, speed, text)
     path = path_for(key)

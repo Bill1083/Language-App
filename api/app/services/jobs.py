@@ -93,7 +93,7 @@ def lesson_audio_texts(exercises: list[dict[str, Any]], lang: str) -> list[str]:
         elif t == "grammar_note":
             texts += [e["target"] for e in ex["grammar"].get("examples", [])]
         elif t == "kana_intro":
-            texts.append(ex["char"])
+            texts.append(ex.get("audio_text") or ex["char"])
         elif t == "listening_choice":
             texts.append(ex["audio_text"])
             if ex.get("options_lang") == "target":

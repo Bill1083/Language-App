@@ -230,11 +230,46 @@ function ConversationScreen({ conv }: { conv: Conversation }) {
             />
           ))}
           {socket.streaming && <StreamingBubble text={socket.streaming.text} lang={lang} settings={settings} />}
-          {socket.turns.length === 0 && !socket.streaming && (
-            <div className="flex flex-col items-center gap-2 py-16 text-muted-foreground">
-              <LoaderCircle className="size-6 animate-spin" />
-              <p className="text-sm">Starting the conversation…</p>
+          {socket.failure ? (
+            <div className="mx-auto flex max-w-md flex-col items-center gap-3 py-12 text-center" role="alert">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-danger-soft text-danger">
+                <WifiOff className="size-6" />
+              </span>
+              <p className="font-bold">
+                {socket.failure.kind === "auth" ? "Signed out" : socket.failure.kind === "origin" ? "Connection refused" : "Can't connect"}
+              </p>
+              <p className="text-sm text-muted-foreground">{socket.failure.message}</p>
+              {socket.failure.kind === "auth" ? (
+                <Button asChild>
+                  <Link href={`/login?next=/conversation/${conv.id}`}>Sign in</Link>
+                </Button>
+              ) : (
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                  Try again
+                </Button>
+              )}
             </div>
+          ) : socket.startError && socket.turns.length === 0 ? (
+            <div className="mx-auto flex max-w-md flex-col items-center gap-3 py-12 text-center" role="alert">
+              <p className="font-bold">The AI couldn&apos;t start the conversation</p>
+              <p className="text-sm text-muted-foreground">{socket.startError.message}</p>
+              {socket.startError.detail && (
+                <p className="w-full break-words rounded-xl bg-muted px-3 py-2 text-left font-mono text-xs text-muted-foreground">
+                  {socket.startError.detail}
+                </p>
+              )}
+              <Button variant="outline" onClick={socket.retryStart}>
+                Try again
+              </Button>
+            </div>
+          ) : (
+            socket.turns.length === 0 &&
+            !socket.streaming && (
+              <div className="flex flex-col items-center gap-2 py-16 text-muted-foreground">
+                <LoaderCircle className="size-6 animate-spin" />
+                <p className="text-sm">Starting the conversation…</p>
+              </div>
+            )
           )}
           <div ref={bottom} />
         </div>
@@ -398,10 +433,10 @@ function ConversationScreen({ conv }: { conv: Conversation }) {
       <Dialog open={endOpen} onOpenChange={setEndOpen}>
         <DialogContent side="bottom" title="End this conversation?" description="You'll get a summary with your recurring mistakes and new words.">
           <div className="flex flex-col gap-2.5 sm:flex-row">
-            <Button className="flex-1" size="lg" loading={end.isPending} onClick={() => end.mutate()}>
+            <Button className="sm:flex-1" size="lg" loading={end.isPending} onClick={() => end.mutate()}>
               End & see summary
             </Button>
-            <Button className="flex-1" size="lg" variant="outline" onClick={() => setEndOpen(false)}>
+            <Button className="sm:flex-1" size="lg" variant="outline" onClick={() => setEndOpen(false)}>
               Keep talking
             </Button>
           </div>

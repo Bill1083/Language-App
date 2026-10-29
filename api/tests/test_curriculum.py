@@ -1,13 +1,13 @@
 """The authored skeletons and the kana module must stay well-formed."""
 
 import pytest
-import yaml
 
 from app.config import get_settings
 from app.services.curriculum import COURSE_FILES, load_course
 from app.services.jobs import lesson_audio_texts
 from app.services.kana import SCRIPTS, build_kana_lesson, kana_data
 from app.services.languages import CEFR
+from app.services.yaml_loader import load_yaml, load_yaml_file
 
 LEVEL_FIELDS = {"unit", "theme", "objectives", "lessons"}
 
@@ -32,7 +32,7 @@ def test_course_skeleton_is_complete(lang):
 
 
 def test_scenarios_file():
-    items = yaml.safe_load((get_settings().curriculum_dir / "scenarios.yaml").read_text(encoding="utf-8"))
+    items = load_yaml_file(get_settings().curriculum_dir / "scenarios.yaml")
     slugs = [i["slug"] for i in items]
     assert len(slugs) == len(set(slugs)) >= 10
     for i in items:
@@ -70,3 +70,33 @@ def test_audio_texts_for_precache():
     content = build_kana_lesson("hiragana", 0, seed=3)
     texts = lesson_audio_texts(content["exercises"], "ja")
     assert "あ" in texts and len(texts) == len(set(texts))
+
+
+def test_yaml_loader_keeps_words_that_yaml_1_1_reads_as_booleans():
+    data = load_yaml("[no, yes, on, off, No, true, false]")
+    assert data == ["no", "yes", "on", "off", "No", True, False]
+
+
+def _strings(node, path=""):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            yield from _strings(v, f"{path}.{k}")
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            yield from _strings(v, f"{path}[{i}]")
+    else:
+        yield path, node
+
+
+@pytest.mark.parametrize("name", ["fr.yaml", "it.yaml", "ja.yaml", "ja_kana.yaml", "scenarios.yaml"])
+def test_curriculum_values_are_never_booleans(name):
+    data = load_yaml_file(get_settings().curriculum_dir / name)
+    bad = [path for path, value in _strings(data) if isinstance(value, bool)]
+    assert not bad, f"{name}: boolean values at {bad[:5]}"
+
+
+def test_kana_romaji_no_is_a_string():
+    no = [c for c in kana_data()["hiragana"]["lessons"][4]["chars"] if c[0] == "の"][0]
+    assert no[1] == "no"
+    content = build_kana_lesson("hiragana", 4, seed=1)
+    assert all("False" not in str(ex) for ex in content["exercises"])

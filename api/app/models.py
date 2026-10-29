@@ -179,7 +179,8 @@ class ExerciseAttempt(Base):
     __tablename__ = "exercise_attempts"
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id", ondelete="CASCADE"), index=True)
+    # SET NULL: regenerating a lesson replaces its exercises but keeps answer history (accuracy stats)
+    exercise_id: Mapped[int | None] = mapped_column(ForeignKey("exercises.id", ondelete="SET NULL"), index=True)
     answer: Mapped[str] = mapped_column(Text)
     is_correct: Mapped[bool] = mapped_column(Boolean)
     verdict: Mapped[str] = mapped_column(String(16))  # correct | typo | accent | ai_accepted | wrong
@@ -232,6 +233,7 @@ class SrsCard(Base):
     __tablename__ = "srs_cards"
     __table_args__ = (
         Index("ix_srs_due", "user_id", "language_code", "due_at"),
+        Index("ix_srs_level", "user_id", "language_code", "level"),
         Index("uq_srs_vocab_card", "user_id", "vocab_item_id", "card_type", unique=True,
               postgresql_where="vocab_item_id IS NOT NULL"),
     )
@@ -246,6 +248,9 @@ class SrsCard(Base):
     source: Mapped[str] = mapped_column(String(16))  # lesson | mistake | conversation | manual
     source_ref: Mapped[str | None] = mapped_column(String(80))
     vocab_item_id: Mapped[int | None] = mapped_column(ForeignKey("vocab_items.id", ondelete="CASCADE"))
+    # Where the card's content was taught, for "practise A1 / this unit / kana"
+    level: Mapped[str | None] = mapped_column(String(8))
+    unit_id: Mapped[int | None] = mapped_column(ForeignKey("units.id", ondelete="SET NULL"), index=True)
     fsrs_state_json: Mapped[Json] = mapped_column(JSONB, default=dict)
     due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     suspended: Mapped[bool] = mapped_column(Boolean, default=False)

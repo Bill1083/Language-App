@@ -5,25 +5,33 @@ import random
 from functools import lru_cache
 from typing import Any
 
-import yaml
-
 from ..config import get_settings
+from .yaml_loader import load_yaml_file
 
 SCRIPTS = ("hiragana", "katakana")
+# Bump when the builder's output changes: it is part of each kana lesson's
+# skeleton, so a new version makes existing kana lessons rebuild on next visit.
+BUILDER_VERSION = 2
 
 
 @lru_cache
 def kana_data() -> dict[str, Any]:
-    path = get_settings().curriculum_dir / "ja_kana.yaml"
-    return yaml.safe_load(path.read_text(encoding="utf-8"))
+    return load_yaml_file(get_settings().curriculum_dir / "ja_kana.yaml")
 
 
 def _chars(lesson: dict[str, Any]) -> list[dict[str, str]]:
-    return [{"char": c[0], "romaji": str(c[1]), "mnemonic": c[2]} for c in lesson["chars"]]
+    """[kana, romaji, mnemonic, optional example to play instead of the bare sign]"""
+    return [{"char": str(c[0]), "romaji": str(c[1]), "mnemonic": str(c[2]),
+             "audio_text": str(c[3]) if len(c) > 3 else str(c[0])} for c in lesson["chars"]]
 
 
 def _words(lesson: dict[str, Any]) -> list[dict[str, str]]:
-    return [{"word": w[0], "romaji": w[1], "meaning": str(w[2])} for w in lesson.get("words", [])]
+    return [{"word": str(w[0]), "romaji": str(w[1]), "meaning": str(w[2])} for w in lesson.get("words", [])]
+
+
+def lesson_chars(script: str, index: int) -> list[dict[str, str]]:
+    """Characters a kana lesson teaches that make sense as review cards."""
+    return _drillable(_chars(kana_data()[script]["lessons"][index]))
 
 
 def all_chars(script: str, upto: int | None = None) -> list[dict[str, str]]:
@@ -91,7 +99,7 @@ def build_kana_lesson(script: str, index: int, seed: int) -> dict[str, Any]:
         group = chars[start : start + 2]
         for c in group:
             exercises.append({"type": "kana_intro", "char": c["char"], "romaji": c["romaji"],
-                              "mnemonic": c["mnemonic"], "script": script})
+                              "mnemonic": c["mnemonic"], "script": script, "audio_text": c["audio_text"]})
         for c in _drillable(group):
             exercises.append(_choice(rng, c, pool, "char_to_romaji"))
     drill = _drillable(chars)

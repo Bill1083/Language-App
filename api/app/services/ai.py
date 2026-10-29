@@ -11,7 +11,7 @@ import logging
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import UTC, datetime, time as dtime
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import httpx
 from pydantic import BaseModel, ValidationError
@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import get_settings
 from ..db import SessionLocal
+from ..redis_client import get_redis
 from ..models import AiUsage
 from ..providers.base import ChatMessage, LLMResult, ProviderError, STTResult, Usage, extract_json
 from ..providers.llm import DEFAULT_FALLBACK_MODELS, LLMProvider, make_llm
@@ -39,7 +40,7 @@ OVERLOAD_COOLDOWN = 300.0  # s to try the backup model first after the main one 
 RETRY_DELAY = 1.5  # s before retrying the same model
 OVERLOAD_STATUSES = {429, 500, 502, 503, 504, 529}
 # Non-streamed calls: an overloaded Gemini can sit on a request for a minute and then hang up.
-COMPLETE_TIMEOUTS = {"conversation": 20.0, "feedback": 45.0, "content": 150.0}
+COMPLETE_TIMEOUTS = {"conversation": 20.0, "feedback": 25.0, "content": 150.0}
 
 RETRY_NOTICE = "The AI is busy right now — trying again…"
 BACKUP_NOTICE = "The AI is busy right now — switching to the backup model…"
@@ -62,12 +63,42 @@ def overloaded(e: ProviderError) -> bool:
     return e.status in OVERLOAD_STATUSES
 
 
-def mark_overloaded(provider: str, model: str) -> None:
-    _cooling[f"{provider}:{model}"] = time.monotonic() + OVERLOAD_COOLDOWN
+def _shared():
+    """Redis, where the cooldown is shared between the API and the worker (None in tests)."""
+    return get_redis()
 
 
-def clear_overloaded(provider: str, model: str) -> None:
-    _cooling.pop(f"{provider}:{model}", None)
+async def _redis_call(fn) -> Any:
+    """Best effort: the cooldown is an optimisation, so Redis trouble never fails a call."""
+    r = _shared()
+    if r is None:
+        return None
+    try:
+        return await asyncio.wait_for(fn(r), 0.5)
+    except Exception:  # pragma: no cover - Redis down or slow
+        return None
+
+
+async def mark_overloaded(provider: str, model: str) -> None:
+    key = f"{provider}:{model}"
+    _cooling[key] = time.monotonic() + OVERLOAD_COOLDOWN
+    await _redis_call(lambda r: r.set(f"overloaded:{key}", "1", ex=int(OVERLOAD_COOLDOWN)))
+
+
+async def clear_overloaded(provider: str, model: str) -> None:
+    key = f"{provider}:{model}"
+    _cooling.pop(key, None)
+    await _redis_call(lambda r: r.delete(f"overloaded:{key}"))
+
+
+async def sync_overloaded(provider: str, model: str) -> None:
+    """Pick up an overload another process (API or worker) noticed, so it isn't waited out twice."""
+    key = f"{provider}:{model}"
+    if _cooling.get(key, 0.0) > time.monotonic():
+        return
+    ttl = await _redis_call(lambda r: r.pttl(f"overloaded:{key}"))
+    if isinstance(ttl, int) and ttl > 0:
+        _cooling[key] = time.monotonic() + ttl / 1000
 
 
 def _ordered(provider: str, main: str, backup: str) -> list[str]:
@@ -193,6 +224,7 @@ class AIService:
         await self.check_budget()
         cfg = await self.config()
         llm = llm_for(cfg)
+        await sync_overloaded(cfg.llm_provider, cfg.llm_models[kind])
         models = model_order(cfg, kind)
         self.failures = []
         error: ProviderError | None = None
@@ -221,7 +253,7 @@ class AIService:
                            latency_ms=int((time.monotonic() - started) * 1000))
             self.failures.append(f"{model}: {error}")
             if overloaded(error):
-                mark_overloaded(llm.name, model)
+                await mark_overloaded(llm.name, model)
             if not error.retryable:
                 break
             log.warning("%s failed on %s (%s)", task, model, error)
@@ -264,6 +296,7 @@ class AIService:
         await self.check_budget()
         cfg = await self.config()
         llm = llm_for(cfg)
+        await sync_overloaded(cfg.llm_provider, cfg.llm_models[kind])
         models = model_order(cfg, kind)
         self.failures = []
         for i, model in enumerate(models):
@@ -291,7 +324,7 @@ class AIService:
                 return
             self.failures.append(f"{model}: {error}")
             if overloaded(error):
-                mark_overloaded(llm.name, model)
+                await mark_overloaded(llm.name, model)
             if produced or not error.retryable or i == len(models) - 1:
                 raise error
             log.warning("%s failed on %s (%s) — trying the next model", task, model, error)
@@ -328,6 +361,7 @@ class AIService:
         the backup (Gemini) or is retried once (other providers)."""
         await self.check_budget()
         cfg = await self.config()
+        await sync_overloaded(cfg.stt_provider, cfg.stt_model_name())
         models = stt_model_order(cfg)
         self.failures = []
         error: ProviderError | None = None
@@ -367,7 +401,7 @@ class AIService:
                            latency_ms=int((time.monotonic() - started) * 1000))
             self.failures.append(f"{model}: {error}")
             if overloaded(error):
-                mark_overloaded(stt.name, model)
+                await mark_overloaded(stt.name, model)
             if not error.retryable or i == len(models) - 1:
                 break
             log.warning("stt failed on %s (%s) — trying the next model", model, error)

@@ -159,6 +159,12 @@ export function StreamingBubble({ text, lang, settings, status }: {
 
 export function UserBubble({ turn, lang, pendingLabel, localAudio }: { turn?: Turn; lang: Lang; pendingLabel?: string; localAudio?: string }) {
   const [deleted, setDeleted] = React.useState(false);
+  const [showTranslation, setShowTranslation] = React.useState(false);
+  const translate = useMutation({
+    mutationFn: () => post<{ translation: string }>(`/turns/${turn!.id}/translate`),
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+  const translation = turn?.translation ?? translate.data?.translation;
   const rec = deleted ? undefined : turn?.recording_url ?? localAudio;
   const playRec = () => rec && void player.play(rec, rec);
   const remove = async () => {
@@ -171,6 +177,7 @@ export function UserBubble({ turn, lang, pendingLabel, localAudio }: { turn?: Tu
       toast.error(errorMessage(e));
     }
   };
+  const saved = turn?.id != null && !pendingLabel;
   return (
     <div className="flex max-w-[88%] flex-col items-end gap-1 self-end sm:max-w-[78%]">
       <div className="rounded-2xl rounded-tr-md bg-primary px-4 py-3 text-[17px] leading-relaxed text-primary-foreground shadow-sm">
@@ -182,15 +189,39 @@ export function UserBubble({ turn, lang, pendingLabel, localAudio }: { turn?: Tu
         ) : (
           <span lang={lang}>{turn?.text}</span>
         )}
+        {saved && showTranslation && (
+          <p className="mt-2 border-t border-white/25 pt-2 text-[15px] text-white/85">
+            {translation ?? (
+              <span className="flex items-center gap-1.5">
+                <LoaderCircle className="size-3.5 animate-spin" /> Translating…
+              </span>
+            )}
+          </p>
+        )}
       </div>
-      {(turn?.voice || localAudio) && rec && (
-        <span className="flex items-center gap-2 pr-1 text-xs font-medium text-muted-foreground">
-          <button type="button" onClick={playRec} className="flex items-center gap-1 hover:text-foreground">
-            <Play className="size-3" /> My recording
-          </button>
-          {turn?.recording_url && (
+      {(saved || ((turn?.voice || localAudio) && rec)) && (
+        <span className="flex items-center gap-3 pr-1 text-xs font-medium text-muted-foreground">
+          {(turn?.voice || localAudio) && rec && (
+            <button type="button" onClick={playRec} className="flex items-center gap-1 hover:text-foreground">
+              <Play className="size-3" /> My recording
+            </button>
+          )}
+          {turn?.recording_url && rec && (
             <button type="button" onClick={remove} className="flex items-center gap-1 hover:text-danger" aria-label="Delete this recording">
               <Trash className="size-3" />
+            </button>
+          )}
+          {saved && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowTranslation(!showTranslation);
+                if (!translation && !translate.isPending) translate.mutate();
+              }}
+              aria-pressed={showTranslation}
+              className="flex items-center gap-1 hover:text-foreground"
+            >
+              <Languages className="size-3" /> {showTranslation ? "Hide" : "Translate"}
             </button>
           )}
         </span>

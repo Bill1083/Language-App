@@ -55,7 +55,7 @@ class WorkerSettings:
     ]
     redis_settings = jobs.redis_settings()
     on_startup = startup
-    max_jobs = 4
+    max_jobs = 8  # mostly waiting on AI APIs; keeps feedback from queueing behind lesson generation
     job_timeout = 300
     keep_result = 3600
     max_tries = 2

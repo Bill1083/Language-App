@@ -248,7 +248,8 @@ async def practice(db: AsyncSession, user: User, lang: str, *, level: str | None
             break
     if order != "course":
         random.shuffle(picked)
-    return picked
+        return picked
+    return loosely_ordered(picked)
 
 
 async def learned_in(db: AsyncSession, user_id: int, lang: str) -> dict[int, list[int]]:
@@ -326,7 +327,8 @@ async def practice_from_lessons(db: AsyncSession, user: User, lang: str, lessons
     available = [k for k in keys if k in by_key]
     if order != "course":
         random.shuffle(available)
-    return [by_key[k] for k in available[:limit]]
+        return [by_key[k] for k in available[:limit]]
+    return loosely_ordered([by_key[k] for k in available[:limit]])
 
 
 async def practice_blocks(db: AsyncSession, user: User, lang: str) -> list[dict[str, Any]]:
@@ -345,6 +347,16 @@ async def practice_blocks(db: AsyncSession, user: User, lang: str) -> list[dict[
         unit = lv["units"].setdefault(lesson.unit_id, {"id": lesson.unit_id, "title": lesson.unit.title, "lessons": []})
         unit["lessons"].append({"id": lesson.id, "title": lesson.title, "kind": lesson.kind, "items": items})
     return [{**lv, "units": list(lv["units"].values())} for lv in levels.values()]
+
+
+COURSE_JITTER = 3.0  # how far (in places) an item may drift from its course position
+
+
+def loosely_ordered(items: list[Any], spread: float = COURSE_JITTER) -> list[Any]:
+    """Course order with a little randomness: each item moves a few places at most,
+    so a session follows the course without being the same sequence every time."""
+    keyed = [(i + random.uniform(0, spread), item) for i, item in enumerate(items)]
+    return [item for _, item in sorted(keyed, key=lambda pair: pair[0])]
 
 
 def practice_item(card: SrsCard) -> dict[str, Any]:

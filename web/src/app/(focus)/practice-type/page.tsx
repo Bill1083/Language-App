@@ -24,9 +24,11 @@ import { cn, formatDuration } from "@/lib/utils";
 
 /** Right this many times in a row and the word leaves the list. */
 const TO_MASTER = 2;
-/** Where a word goes back into the list: soon after a miss, a little later after a first hit. */
-const AGAIN_AFTER_MISS = 2;
-const AGAIN_AFTER_HIT = 4;
+/** Where a word goes back into the list (a range, so repeats don't land in a fixed rhythm):
+ *  soon after a miss, a little later after a first hit. */
+const AGAIN_AFTER_MISS = [2, 3] as const;
+const AGAIN_AFTER_HIT = [3, 5] as const;
+const between = ([lo, hi]: readonly [number, number]) => lo + Math.floor(Math.random() * (hi - lo + 1));
 
 type Entry = { item: PracticeItem; streak: number; misses: number; rated: boolean };
 type Phase = "answer" | "close" | "result";
@@ -117,7 +119,7 @@ function Session() {
     const rest = queue.slice(1);
     const done = correct && entry.streak >= TO_MASTER;
     if (!done) {
-      const at = Math.min(correct ? AGAIN_AFTER_HIT : AGAIN_AFTER_MISS, rest.length);
+      const at = Math.min(between(correct ? AGAIN_AFTER_HIT : AGAIN_AFTER_MISS), rest.length);
       rest.splice(at, 0, index);
     }
     setQueue(rest);

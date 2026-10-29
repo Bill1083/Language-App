@@ -201,7 +201,7 @@ async def test_llm(body: LLMTest, admin: AdminUser, db: Db) -> dict[str, Any]:
     ai = AIService(db, admin.id, True)
     cfg = await ai.config()
     main = cfg.llm_models[body.task]
-    clear_overloaded(cfg.llm_provider, main)  # a test should always try the main model first
+    await clear_overloaded(cfg.llm_provider, main)  # a test should always try the main model first
     started = time.monotonic()
     try:
         result = await ai.llm_result("admin_test", body.task, system="Reply in one short sentence.",

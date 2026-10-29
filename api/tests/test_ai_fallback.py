@@ -56,6 +56,7 @@ class ScriptedLLM(LLMProvider):
 def make(monkeypatch):
     ai_mod._cooling.clear()
     monkeypatch.setattr(ai_mod, "RETRY_DELAY", 0)
+    monkeypatch.setattr(ai_mod, "_shared", lambda: None)
 
     async def no_log(self, **kwargs):
         return None
@@ -223,3 +224,13 @@ async def test_an_overloaded_reply_model_sends_transcription_to_the_backup_too(m
     calls = scripted_stt(monkeypatch, {MAIN: "ok", BACKUP: "ok"})
     await service.transcribe(b"audio", "audio/webm", "ja", 2.0)
     assert calls == [BACKUP]
+
+
+def test_course_order_only_drifts_a_few_places():
+    from app.services.srs import COURSE_JITTER, loosely_ordered
+
+    items = list(range(20))
+    runs = [loosely_ordered(items) for _ in range(200)]
+    assert all(sorted(r) == items for r in runs)
+    assert all(abs(r.index(i) - i) <= COURSE_JITTER for r in runs for i in items)
+    assert any(r != items for r in runs)  # not the same sequence every time

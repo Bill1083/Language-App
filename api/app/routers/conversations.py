@@ -261,22 +261,56 @@ async def how_do_i_say(conv_id: int, body: SayIn, user: CurrentUser, db: Db) -> 
     return result.model_dump()
 
 
+# Translations of AI replies are started as soon as a reply is saved, so the
+# Translate button usually finds one ready; a click mid-flight joins the same task.
+_translations: dict[int, asyncio.Task] = {}
+_background: set[asyncio.Task] = set()
+
+
+async def _translate(turn_id: int, user: User) -> str | None:
+    async with SessionLocal() as db:
+        turn = await db.get(ConversationTurn, turn_id)
+        if turn is None:
+            return None
+        if not turn.translation:
+            conv = await db.get(Conversation, turn.conversation_id)
+            assert conv is not None
+            turn.translation = await AIService(db, user.id, user.role == "admin").llm_text(
+                "translate", "conversation",
+                system=f"Translate this {cs.LANGUAGES[conv.language_code]['name']} message into natural English. "
+                       "Output only the translation.",
+                messages=[ChatMessage("user", cs.strip_ruby(turn.text))], temperature=0.1, max_tokens=500,
+                thinking="minimal")
+            await db.commit()
+        return turn.translation
+
+
+def translation_task(turn_id: int, user: User) -> asyncio.Task:
+    task = _translations.get(turn_id)
+    if task is None:
+        task = asyncio.create_task(_translate(turn_id, user))
+        _translations[turn_id] = task
+
+        def done(t: asyncio.Task) -> None:
+            _translations.pop(turn_id, None)
+            if not t.cancelled() and t.exception():
+                log.warning("translation of turn %s failed: %s", turn_id, t.exception())
+
+        task.add_done_callback(done)
+    return task
+
+
 @router.post("/turns/{turn_id}/translate")
 async def translate_turn(turn_id: int, user: CurrentUser, db: Db) -> dict[str, Any]:
     turn = await db.get(ConversationTurn, turn_id)
     if turn is None:
         raise HTTPException(404, "Message not found")
-    conv = await _own_conversation(db, user, turn.conversation_id)
-    if not turn.translation:
+    await _own_conversation(db, user, turn.conversation_id)
+    if turn.translation:
+        return {"translation": turn.translation}
+    if turn_id not in _translations:
         await rate_limit(f"ai:{user.id}", get_settings().rate_limit_per_min)
-        turn.translation = await AIService(db, user.id, user.role == "admin").llm_text(
-            "translate", "conversation",
-            system=f"Translate this {cs.LANGUAGES[conv.language_code]['name']} message into natural English. "
-                   "Output only the translation.",
-            messages=[ChatMessage("user", cs.strip_ruby(turn.text))], temperature=0.1, max_tokens=500,
-            thinking="minimal")
-        await db.commit()
-    return {"translation": turn.translation}
+    return {"translation": await asyncio.shield(translation_task(turn_id, user))}
 
 
 @router.post("/turns/{turn_id}/feedback/retry")
@@ -378,6 +412,21 @@ class ConversationSocket:
             db.add(turn)
             await db.commit()
             await self.send({"type": "ai_done", "stream_id": stream_id, "turn": turn_json(turn)})
+            if conv.mode != "tutor" and turn.text:
+                self.translate_soon(turn.id)
+
+    def translate_soon(self, turn_id: int) -> None:
+        pending = asyncio.create_task(self.push_translation(turn_id))
+        _background.add(pending)
+        pending.add_done_callback(_background.discard)
+
+    async def push_translation(self, turn_id: int) -> None:
+        try:
+            text = await translation_task(turn_id, self.user)
+        except Exception:  # logged by the task; the Translate button can try again
+            return
+        if text:
+            await self.send({"type": "translation", "turn_id": turn_id, "translation": text})
 
     async def user_turn(self, msg: dict[str, Any]) -> None:
         env = get_settings()
@@ -433,6 +482,7 @@ class ConversationSocket:
             db.add(turn)
             await db.commit()
             await self.send({"type": "user_turn", "client_id": msg.get("client_id"), "turn": turn_json(turn)})
+            self.translate_soon(turn.id)
             if settings.get("feedback", True) and conv.mode != "tutor":
                 if combined_feedback is not None:
                     await store_feedback(db, conv, turn, combined_feedback.model_dump(), self.user)

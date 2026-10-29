@@ -27,6 +27,7 @@ type ServerEvent =
   | { type: "ai_done"; stream_id: string; turn: Turn }
   | { type: "feedback"; turn_id: number; feedback: Feedback; pronunciation: PronunciationFlag[]; pronunciation_notes: string[] }
   | { type: "feedback_error"; turn_id: number; message: string }
+  | { type: "translation"; turn_id: number; translation: string }
   | { type: "goal"; achieved: boolean }
   | { type: "summary" }
   | { type: "error"; message: string; detail?: string; client_id?: string; retryable?: boolean };
@@ -138,6 +139,9 @@ export function useConversationSocket(
               : x,
           ),
         );
+        break;
+      case "translation": // done in the background so Translate shows it at once
+        setTurns((t) => t.map((x) => (x.id === ev.turn_id ? { ...x, translation: ev.translation } : x)));
         break;
       case "feedback_error":
         setFeedbackErrors((f) => ({ ...f, [ev.turn_id]: ev.message }));

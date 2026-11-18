@@ -19,3 +19,24 @@ def test_origin_matching_domain_survives_a_rewritten_host(monkeypatch):
     finally:
         monkeypatch.delenv("DOMAIN", raising=False)
         get_settings.cache_clear()
+
+
+async def test_last_seen_is_refreshed_but_not_on_every_request():
+    from datetime import UTC, datetime, timedelta
+    from types import SimpleNamespace
+
+    from app.deps import LAST_SEEN_EVERY, touch_last_seen
+
+    class FakeDb:
+        commits = 0
+
+        async def commit(self):
+            self.commits += 1
+
+    db, now = FakeDb(), datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
+    user = SimpleNamespace(last_seen_at=now - timedelta(days=2))  # signed in days ago, still using the app
+    assert await touch_last_seen(db, user, now) is True and user.last_seen_at == now
+    assert await touch_last_seen(db, user, now + timedelta(minutes=1)) is False  # throttled
+    assert await touch_last_seen(db, user, now + LAST_SEEN_EVERY) is True
+    assert db.commits == 2
+    assert await touch_last_seen(db, SimpleNamespace(last_seen_at=None), now) is True  # never seen

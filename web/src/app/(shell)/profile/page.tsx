@@ -26,6 +26,7 @@ import { useMe, useUpdateSettings } from "@/hooks/use-me";
 import { del, errorMessage, get, patch, post } from "@/lib/api";
 import { CEFR_LABEL, CEFR_LEVELS, LANGS } from "@/lib/languages";
 import type { UserSettings } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
@@ -37,14 +38,18 @@ function Section({ title, description, children }: { title: string; description?
   );
 }
 
-function Row({ label, hint, children, htmlFor }: { label: string; hint?: string; children: React.ReactNode; htmlFor?: string }) {
+/** One setting. `inline` (switches) keeps the control beside its label on phones; other
+ *  controls drop below the label and use the full width there. */
+function Row({ label, hint, children, htmlFor, inline }: {
+  label: string; hint?: string; children: React.ReactNode; htmlFor?: string; inline?: boolean;
+}) {
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+    <div className={cn("flex gap-x-6 gap-y-2.5", inline ? "items-center justify-between" : "flex-col sm:flex-row sm:items-center sm:justify-between")}>
       <div className="min-w-0">
         <Label htmlFor={htmlFor}>{label}</Label>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+        {hint && <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{hint}</p>}
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className={cn(inline ? "shrink-0" : "w-full sm:w-auto sm:shrink-0")}>{children}</div>
     </div>
   );
 }
@@ -86,13 +91,13 @@ function Reminders({ settings, set }: { settings: UserSettings; set: (s: Partial
   };
   return (
     <>
-      <Row label="Daily reminder" hint={supported ? "A nudge if you haven't practised yet that day." : "Install the app (or use a browser with push support) to get reminders."}>
+      <Row inline label="Daily reminder" hint={supported ? "A nudge if you haven't practised yet that day." : "Install the app (or use a browser with push support) to get reminders."}>
         <Switch checked={settings.reminders} disabled={!supported || busy} onCheckedChange={(c) => void enable(c)} aria-label="Daily reminder" />
       </Row>
       {settings.reminders && (
         <Row label="Remind me at" htmlFor="reminder-hour">
           <div className="flex gap-2">
-            <Select id="reminder-hour" className="w-32" value={settings.reminder_hour} onChange={(e) => set({ reminder_hour: Number(e.target.value) })}>
+            <Select id="reminder-hour" className="flex-1 sm:w-32 sm:flex-none" value={settings.reminder_hour} onChange={(e) => set({ reminder_hour: Number(e.target.value) })}>
               {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{`${h.toString().padStart(2, "0")}:00`}</option>)}
             </Select>
             <Button variant="outline" onClick={() => post("/push/test").then(() => toast.success("Test sent")).catch((e) => toast.error(errorMessage(e)))}>
@@ -172,9 +177,9 @@ export default function ProfilePage() {
 
       <Section title="Languages" description="Your courses. Changing a level unlocks everything up to it.">
         {me.enrolments.map((e) => (
-          <div key={e.language_code} className="flex flex-wrap items-center gap-3" data-lang={e.language_code}>
+          <div key={e.language_code} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2.5 sm:grid-cols-[auto_1fr_auto_auto]" data-lang={e.language_code}>
             <span className="text-2xl"><Flag lang={e.language_code} /></span>
-            <span className="min-w-0 flex-1">
+            <span className="min-w-0">
               <span className="block font-semibold">{LANGS[e.language_code].name}</span>
               <span className="block text-xs text-muted-foreground">{CEFR_LABEL[e.current_level]}</span>
             </span>
@@ -191,8 +196,8 @@ export default function ProfilePage() {
             >
               {CEFR_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
             </Select>
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/placement/${e.language_code}`}><Compass /> Placement</Link>
+            <Button asChild variant="outline" size="sm" className="col-span-3 h-10 sm:col-span-1 sm:h-9">
+              <Link href={`/placement/${e.language_code}`}><Compass /> Placement test</Link>
             </Button>
           </div>
         ))}
@@ -204,16 +209,16 @@ export default function ProfilePage() {
       <Section title="Goals">
         <Row label="Daily goal" hint="Counts XP or minutes across all your languages.">
           <div className="flex gap-2">
-            <Segmented size="sm" value={s.daily_goal_type} ariaLabel="Goal type"
+            <Segmented size="sm" className="flex-1 sm:flex-none" value={s.daily_goal_type} ariaLabel="Goal type"
               onChange={(v) => set({ daily_goal_type: v, daily_goal_value: v === "xp" ? 30 : 10 })}
               options={[{ value: "xp", label: "XP" }, { value: "minutes", label: "Minutes" }]} />
-            <Select className="w-28" value={s.daily_goal_value} aria-label="Goal amount" onChange={(e) => set({ daily_goal_value: Number(e.target.value) })}>
+            <Select className="w-28 shrink-0" value={s.daily_goal_value} aria-label="Goal amount" onChange={(e) => set({ daily_goal_value: Number(e.target.value) })}>
               {(s.daily_goal_type === "xp" ? [10, 20, 30, 50, 80, 120] : [5, 10, 15, 20, 30, 45, 60]).map((v) => <option key={v} value={v}>{v}</option>)}
             </Select>
           </div>
         </Row>
         <Row label="New review cards per day" hint="How many new words enter your daily reviews.">
-          <Select className="w-28" value={s.new_cards_per_day} aria-label="New cards per day" onChange={(e) => set({ new_cards_per_day: Number(e.target.value) })}>
+          <Select className="sm:w-28" value={s.new_cards_per_day} aria-label="New cards per day" onChange={(e) => set({ new_cards_per_day: Number(e.target.value) })}>
             {[5, 10, 15, 20, 30, 50].map((v) => <option key={v} value={v}>{v}</option>)}
           </Select>
         </Row>
@@ -221,39 +226,39 @@ export default function ProfilePage() {
 
       <Section title="Voice & sound">
         <Row label="Voice">
-          <Segmented size="sm" value={s.voice_gender} onChange={(v) => set({ voice_gender: v })} ariaLabel="Voice"
+          <Segmented size="sm" className="w-full sm:w-auto" value={s.voice_gender} onChange={(v) => set({ voice_gender: v })} ariaLabel="Voice"
             options={[{ value: "female", label: "Female" }, { value: "male", label: "Male" }]} />
         </Row>
         <Row label="Speech speed">
-          <Segmented size="sm" value={s.speech_speed} onChange={(v) => set({ speech_speed: v })} ariaLabel="Speech speed"
+          <Segmented size="sm" className="w-full sm:w-auto" value={s.speech_speed} onChange={(v) => set({ speech_speed: v })} ariaLabel="Speech speed"
             options={[{ value: 0.75, label: "0.75×" }, { value: 1, label: "1×" }, { value: 1.25, label: "1.25×" }]} />
         </Row>
-        <Row label="Sound effects" hint="Chimes for right and wrong answers." htmlFor="sound">
+        <Row inline label="Sound effects" hint="Chimes for right and wrong answers." htmlFor="sound">
           <Switch id="sound" checked={s.sound} onCheckedChange={(c) => set({ sound: c })} />
         </Row>
         <Row label="Conversation feedback" hint="How picky the per-message feedback is.">
-          <Segmented size="sm" value={s.strictness} onChange={(v) => set({ strictness: v })} ariaLabel="Feedback strictness"
+          <Segmented size="sm" className="w-full sm:w-auto" value={s.strictness} onChange={(v) => set({ strictness: v })} ariaLabel="Feedback strictness"
             options={[{ value: "gentle", label: "Gentle" }, { value: "normal", label: "Normal" }, { value: "strict", label: "Strict" }]} />
         </Row>
       </Section>
 
       <Section title="Display">
         <Row label="Theme">
-          <Segmented size="sm" value={s.theme} ariaLabel="Theme"
+          <Segmented size="sm" className="w-full sm:w-auto" value={s.theme} ariaLabel="Theme"
             onChange={(v) => { setTheme(v); set({ theme: v }); }}
             options={[{ value: "dark", label: "Dark" }, { value: "light", label: "Light" }, { value: "system", label: "System" }]} />
         </Row>
-        <Row label="Colour-code noun gender" hint="Masculine in blue, feminine in pink (French and Italian)." htmlFor="gender-colors">
+        <Row inline label="Colour-code noun gender" hint="Masculine in blue, feminine in pink (French and Italian)." htmlFor="gender-colors">
           <Switch id="gender-colors" checked={s.gender_colors} onCheckedChange={(c) => set({ gender_colors: c })} />
         </Row>
         {hasJa && (
           <>
             <Row label="Furigana" hint="Readings above kanji.">
-              <Segmented size="sm" value={s.furigana} onChange={(v) => set({ furigana: v })} ariaLabel="Furigana"
+              <Segmented size="sm" className="w-full sm:w-auto" value={s.furigana} onChange={(v) => set({ furigana: v })} ariaLabel="Furigana"
                 options={[{ value: "always", label: "Always" }, { value: "new", label: "New kanji" }, { value: "never", label: "Never" }]} />
             </Row>
             <Row label="Romaji" hint="Auto shows it for your first units, then hides it.">
-              <Segmented size="sm" value={s.romaji} onChange={(v) => set({ romaji: v })} ariaLabel="Romaji"
+              <Segmented size="sm" className="w-full sm:w-auto" value={s.romaji} onChange={(v) => set({ romaji: v })} ariaLabel="Romaji"
                 options={[{ value: "auto", label: "Auto" }, { value: "on", label: "On" }, { value: "off", label: "Off" }]} />
             </Row>
           </>
@@ -270,7 +275,7 @@ export default function ProfilePage() {
             <Label htmlFor="display-name">Display name</Label>
             <Input id="display-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
-          <Button type="submit" variant="outline" disabled={!name.trim() || name === me.display_name} loading={saveName.isPending}>Save</Button>
+          <Button type="submit" variant="outline" className="w-full sm:w-auto" disabled={!name.trim() || name === me.display_name} loading={saveName.isPending}>Save</Button>
         </form>
         <form className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end" onSubmit={(e) => { e.preventDefault(); changePw.mutate(); }}>
           <div className="space-y-1.5">
@@ -281,7 +286,7 @@ export default function ProfilePage() {
             <Label htmlFor="pw-new">New password</Label>
             <Input id="pw-new" type="password" autoComplete="new-password" minLength={8} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
           </div>
-          <Button type="submit" variant="outline" disabled={!pw.current || pw.next.length < 8} loading={changePw.isPending}>Change</Button>
+          <Button type="submit" variant="outline" className="w-full sm:w-auto" disabled={!pw.current || pw.next.length < 8} loading={changePw.isPending}>Change password</Button>
         </form>
       </Section>
 
@@ -296,15 +301,15 @@ export default function ProfilePage() {
           </p>
         </div>
         <Row label="Delete all my recordings" hint="Transcripts and feedback are kept.">
-          <Button variant="outline" loading={wipe.isPending} onClick={() => confirm("Delete all of your voice recordings?") && wipe.mutate()}>
+          <Button variant="outline" className="w-full sm:w-auto" loading={wipe.isPending} onClick={() => confirm("Delete all of your voice recordings?") && wipe.mutate()}>
             <Trash /> Delete
           </Button>
         </Row>
         <Row label="Export your data" hint="Progress, vocabulary, reviews and conversations.">
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" size="sm"><a href="/api/v1/export/json" download><Download /> JSON</a></Button>
-            <Button asChild variant="outline" size="sm"><a href="/api/v1/export/vocab.csv" download><Download /> Vocab CSV</a></Button>
-            <Button asChild variant="outline" size="sm"><a href="/api/v1/export/anki.csv" download><Download /> Anki</a></Button>
+          <div className="grid grid-cols-3 gap-2 sm:flex">
+            <Button asChild variant="outline" size="sm" className="h-10 sm:h-9"><a href="/api/v1/export/json" download><Download /> JSON</a></Button>
+            <Button asChild variant="outline" size="sm" className="h-10 sm:h-9"><a href="/api/v1/export/vocab.csv" download><Download /> Vocab</a></Button>
+            <Button asChild variant="outline" size="sm" className="h-10 sm:h-9"><a href="/api/v1/export/anki.csv" download><Download /> Anki</a></Button>
           </div>
         </Row>
       </Section>

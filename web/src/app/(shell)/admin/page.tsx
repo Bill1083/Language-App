@@ -74,16 +74,41 @@ function UsageTab() {
   if (!data) return <Skeleton className="h-64" />;
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="p-4"><p className="text-xs font-semibold text-muted-foreground">Today</p><p className="mt-1 text-2xl font-black">{money(data.today)}</p></Card>
-        <Card className="p-4"><p className="text-xs font-semibold text-muted-foreground">This month</p><p className="mt-1 text-2xl font-black">{money(data.month)}</p></Card>
-        <Card className="p-4"><p className="text-xs font-semibold text-muted-foreground">Daily budget / user</p><p className="mt-1 text-2xl font-black">{money(data.daily_budget_per_user)}</p></Card>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <Card className="p-4"><p className="text-xs font-semibold text-muted-foreground">Today</p><p className="mt-1 text-2xl font-black tabular-nums">{money(data.today)}</p></Card>
+        <Card className="p-4"><p className="text-xs font-semibold text-muted-foreground">This month</p><p className="mt-1 text-2xl font-black tabular-nums">{money(data.month)}</p></Card>
+        <Card className="col-span-2 p-4 sm:col-span-1"><p className="text-xs font-semibold text-muted-foreground">Daily budget / user</p><p className="mt-1 text-2xl font-black tabular-nums">{money(data.daily_budget_per_user)}</p></Card>
       </div>
       <ChartCard title="Estimated cost per day" subtitle="Last 30 days, all users" columns={["Day", "Cost", "Calls"]}
         rows={data.by_day.map((d) => [d.day, money(d.cost), d.calls])}>
         <SimpleBars data={data.by_day} x="day" y="cost" unit=" $" labelFormat={(d) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short" })} />
       </ChartCard>
-      <Card className="overflow-x-auto p-0">
+      <div className="space-y-2.5 md:hidden">
+        {data.by_model.map((m) => (
+          <Card key={`${m.provider}${m.model}`} className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <p className="min-w-0 break-words"><span className="font-semibold">{m.provider}</span> <span className="text-sm text-muted-foreground">{m.model}</span></p>
+              <p className="shrink-0 font-bold tabular-nums">{money(m.cost)}</p>
+            </div>
+            <dl className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+              {[
+                ["Calls", m.calls],
+                ["Latency", `${m.avg_latency_ms} ms`],
+                ["Tokens in / out", `${m.input_tokens.toLocaleString()} / ${m.output_tokens.toLocaleString()}`],
+                ["Failures", m.failures],
+                ...(m.chars ? [["Characters", m.chars.toLocaleString()]] : []),
+                ...(m.audio_seconds ? [["Audio", `${m.audio_seconds}s`]] : []),
+              ].map(([k, v]) => (
+                <div key={k as string} className="flex justify-between gap-2">
+                  <dt className="text-muted-foreground">{k}</dt>
+                  <dd className={cn("tabular-nums", k === "Failures" && !!v && "font-semibold text-danger")}>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </Card>
+        ))}
+      </div>
+      <Card className="hidden overflow-x-auto p-0 md:block">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-muted text-xs text-muted-foreground">
             <tr>{["Provider / model", "Calls", "Tokens in/out", "Chars", "Audio", "Latency", "Fails", "Cost"].map((h) => <th key={h} className="px-3 py-2 text-left font-semibold">{h}</th>)}</tr>
@@ -111,7 +136,7 @@ function UsageTab() {
         </Card>
         <Card className="p-4">
           <h3 className="mb-2 font-bold">By user</h3>
-          {data.by_user.map((u) => <p key={u.email} className="flex justify-between border-t py-1.5 text-sm first-of-type:border-0"><span className="truncate">{u.email}</span><span className="tabular-nums text-muted-foreground">{u.calls} · {money(u.cost)}</span></p>)}
+          {data.by_user.map((u) => <p key={u.email} className="flex justify-between border-t py-1.5 text-sm first-of-type:border-0"><span className="min-w-0 truncate">{u.email}</span><span className="shrink-0 pl-3 tabular-nums text-muted-foreground">{u.calls} · {money(u.cost)}</span></p>)}
         </Card>
       </div>
       <p className="text-xs text-muted-foreground">Costs are estimates from the pricing table — also set a hard spend limit in each provider&apos;s billing console.</p>
@@ -178,9 +203,9 @@ function ProvidersTab() {
     </div>
   );
   const llmDefaults = cfg.options.default_models[String(form.llm_provider)] ?? {};
-
+  const dirty = Object.entries(form).some(([k, v]) => v !== cfg.effective[k]) || Object.values(keys).some((v) => v.trim());
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", dirty && "pb-20")}>
       <Card className="space-y-4 p-5">
         <h3 className="font-bold">Language model</h3>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -256,11 +281,18 @@ function ProvidersTab() {
         </div>
       </Card>
 
-      <div className="sticky bottom-20 z-10 flex justify-end lg:bottom-4">
-        <Button size="lg" loading={save.isPending} onClick={() => save.mutate()} className="shadow-lg">
-          <Settings2 /> Save provider settings
-        </Button>
-      </div>
+      {dirty && (
+        // above the mobile tab bar (h-16), beside the desktop sidebar (w-60)
+        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 border-t bg-background/95 backdrop-blur lg:bottom-0 lg:left-60">
+          <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
+            <p className="min-w-0 flex-1 text-sm font-medium text-muted-foreground"><span className="sm:hidden">Unsaved</span><span className="hidden sm:inline">Unsaved changes</span></p>
+            <Button variant="ghost" onClick={() => { setForm(cfg.effective); setKeys({}); }}>Discard</Button>
+            <Button size="lg" loading={save.isPending} onClick={() => save.mutate()}>
+              <Settings2 /> Save
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -308,7 +340,7 @@ function VoiceCompare({ lang, cfg, provider }: { lang: (typeof LANG_CODES)[numbe
       ) : (
         <Input value={value} onChange={(e) => set(e.target.value)} aria-label="Voice" />
       )}
-      <div className="flex gap-1.5">
+      <div className="flex flex-wrap gap-1.5">
         <Button size="sm" variant="soft" loading={busy === value} onClick={() => play(value)}><Play /> Play</Button>
         <Button size="sm" variant="ghost" onClick={() => use(value, "female")}>Female default</Button>
         <Button size="sm" variant="ghost" onClick={() => use(value, "male")}>Male default</Button>
@@ -394,7 +426,7 @@ function ContentTab() {
         <details key={lv.cefr} className="rounded-2xl border bg-card" open={lv.cefr === "A1"}>
           <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 font-bold">
             {lv.cefr === "PRE" ? "Writing systems" : lv.cefr}
-            <Button size="sm" variant="ghost" onClick={(e) => { e.preventDefault(); pregen.mutate({ cefr: lv.cefr }); }}><Wand /> Pre-generate level</Button>
+            <Button size="sm" variant="ghost" className="h-10 sm:h-9" onClick={(e) => { e.preventDefault(); pregen.mutate({ cefr: lv.cefr }); }}><Wand /> Pre-generate</Button>
           </summary>
           <div className="divide-y border-t">
             {lv.units.map((u) => (
@@ -408,7 +440,7 @@ function ContentTab() {
                       {le.edited && <Badge tone="primary">edited</Badge>}
                       {le.flags > 0 && <Badge tone="danger"><Flag className="size-3" /> {le.flags}</Badge>}
                       {le.version > 0 && <span className="hidden text-xs text-muted-foreground sm:inline">v{le.version}</span>}
-                      <Button size="icon-sm" variant="ghost" onClick={() => setEditing(le.id)} aria-label={`Open ${le.title}`}><Settings2 /></Button>
+                      <Button size="icon-sm" variant="ghost" className="size-10 sm:size-8" onClick={() => setEditing(le.id)} aria-label={`Open ${le.title}`}><Settings2 /></Button>
                     </div>
                   ))}
                 </div>
@@ -488,15 +520,41 @@ function UsersTab() {
               <span className="min-w-0 flex-1 truncate">{i.note ?? "Invite"}{i.used_by && ` → ${i.used_by}`}</span>
               {i.status === "active" && (
                 <>
-                  <Button size="icon-sm" variant="ghost" aria-label="Copy link" onClick={() => { void navigator.clipboard?.writeText(`${window.location.origin}${i.url}`); toast.success("Copied"); }}><Copy /></Button>
-                  <Button size="icon-sm" variant="ghost" aria-label="Revoke" onClick={() => revoke.mutate(i.id)}><Trash /></Button>
+                  <Button size="icon-sm" variant="ghost" className="size-10 sm:size-8" aria-label="Copy link" onClick={() => { void navigator.clipboard?.writeText(`${window.location.origin}${i.url}`); toast.success("Copied"); }}><Copy /></Button>
+                  <Button size="icon-sm" variant="ghost" className="size-10 sm:size-8" aria-label="Revoke" onClick={() => revoke.mutate(i.id)}><Trash /></Button>
                 </>
               )}
             </div>
           ))}
         </div>
       </Card>
-      <Card className="overflow-x-auto p-0">
+      <div className="space-y-2.5 md:hidden">
+        {users?.map((u) => (
+          <Card key={u.id} className={cn("p-4", !u.is_active && "opacity-60")}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{u.display_name}</p>
+                <p className="truncate text-sm text-muted-foreground">{u.email}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {!u.is_active && <Badge tone="danger">disabled</Badge>}
+                <Badge tone={u.role === "admin" ? "primary" : "neutral"}>{u.role}</Badge>
+              </div>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Seen {u.last_seen_at ? timeAgo(u.last_seen_at) : "never"} · AI cost (30d) <span className="tabular-nums">{money(u.cost_30d)}</span>
+            </p>
+            {u.id !== me?.id && (
+              <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2">
+                <Button size="sm" variant="outline" className="h-10" onClick={() => patchUser.mutate({ id: u.id, body: { role: u.role === "admin" ? "user" : "admin" } })}>{u.role === "admin" ? "Make user" : "Make admin"}</Button>
+                <Button size="sm" variant="outline" className="h-10" onClick={() => patchUser.mutate({ id: u.id, body: { is_active: !u.is_active } })}>{u.is_active ? "Disable" : "Enable"}</Button>
+                <Button size="icon-sm" variant="outline" className="size-10 text-danger" aria-label={`Delete ${u.email}`} onClick={() => confirm(`Delete ${u.email} and all their data?`) && removeUser.mutate(u.id)}><Trash /></Button>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+      <Card className="hidden overflow-x-auto p-0 md:block">
         <table className="w-full min-w-[560px] text-sm">
           <thead className="bg-muted text-xs text-muted-foreground"><tr>{["User", "Role", "Last seen", "AI cost (30d)", ""].map((h) => <th key={h} className="px-3 py-2 text-left font-semibold">{h}</th>)}</tr></thead>
           <tbody>
@@ -548,10 +606,10 @@ function JobsTab() {
             {data.recent.map((e, i) => {
               const { at, event, ...rest } = e;
               return (
-                <li key={i} className="flex gap-3 px-4 py-2">
+                <li key={i} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 px-4 py-2.5">
                   <span className="w-20 shrink-0 text-xs text-muted-foreground">{timeAgo(at)}</span>
-                  <span className={cn("font-semibold", event.includes("failed") && "text-danger")}>{event}</span>
-                  <span className="min-w-0 flex-1 truncate text-muted-foreground">{Object.entries(rest).map(([k, v]) => `${k}=${String(v)}`).join(" ")}</span>
+                  <span className={cn("min-w-0 font-semibold", event.includes("failed") && "text-danger")}>{event}</span>
+                  <span className="w-full break-all text-xs text-muted-foreground sm:min-w-0 sm:flex-1 sm:truncate sm:text-sm">{Object.entries(rest).map(([k, v]) => `${k}=${String(v)}`).join(" ")}</span>
                 </li>
               );
             })}
@@ -574,8 +632,8 @@ export default function AdminPage() {
         <p className="mt-1 text-muted-foreground">Providers, costs, content and people on this server.</p>
       </div>
       <Tabs defaultValue="usage">
-        <div className="-mx-4 overflow-x-auto px-4 scrollbar-none sm:mx-0 sm:px-0">
-          <TabsList>
+        <div className="overflow-x-auto scrollbar-none">
+          <TabsList className="grid w-full grid-cols-3 sm:inline-flex sm:w-auto">
             <TabsTrigger value="usage"><Activity className="size-4" /> Usage</TabsTrigger>
             <TabsTrigger value="providers"><Settings2 className="size-4" /> Providers</TabsTrigger>
             <TabsTrigger value="content"><Wand className="size-4" /> Content</TabsTrigger>

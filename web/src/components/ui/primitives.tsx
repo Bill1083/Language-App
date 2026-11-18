@@ -144,7 +144,7 @@ export function TabsTrigger({ className, ...props }: React.ComponentProps<typeof
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+        "inline-flex h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm font-medium transition sm:h-8 sm:px-3 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm",
         className,
       )}
       {...props}
@@ -181,7 +181,7 @@ export function Segmented<T extends string | number>({
           onClick={() => onChange(o.value)}
           className={cn(
             "flex-1 whitespace-nowrap rounded-lg font-medium text-muted-foreground transition",
-            size === "sm" ? "h-7 px-2.5 text-xs" : "h-9 px-3 text-sm",
+            size === "sm" ? "h-9 px-3 text-sm sm:h-7 sm:px-2.5 sm:text-xs" : "h-10 px-3 text-sm sm:h-9",
             o.value === value && "bg-card text-foreground shadow-sm",
           )}
         >

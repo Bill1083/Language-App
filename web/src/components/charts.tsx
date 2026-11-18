@@ -47,7 +47,7 @@ export function ChartCard({
             type="button"
             onClick={() => setTable(!table)}
             aria-pressed={table}
-            className={cn("rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground", table && "bg-muted text-foreground")}
+            className={cn("-m-1.5 rounded-lg p-3 text-muted-foreground transition hover:bg-muted hover:text-foreground sm:m-0 sm:p-1.5", table && "bg-muted text-foreground")}
             aria-label={table ? "Show chart" : "Show as table"}
             title={table ? "Show chart" : "Show as table"}
           >

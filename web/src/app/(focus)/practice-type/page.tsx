@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 
 import { AudioButton } from "@/components/audio-button";
+import { KanjiWords } from "@/components/lesson/cards";
 import { RubyText } from "@/components/ruby-text";
 import { TargetInput } from "@/components/target-input";
 import { Button } from "@/components/ui/button";
@@ -94,7 +95,9 @@ function Session() {
 
   const check = React.useCallback(() => {
     if (!entry || index == null || phase === "result" || !typed.trim()) return;
-    const verdict = practiceCheck(typed, entry.item.accepted, lang, entry.item.kind);
+    const k = entry.item.kind;
+    // kanji: the answer is an English meaning
+    const verdict = practiceCheck(typed, entry.item.accepted, k === "kanji" ? "en" : lang, k === "kanji" ? "word" : k);
     if (verdict === "close" && phase === "answer") {
       setPhase("close"); // one more go
       sounds.wrong();
@@ -177,8 +180,8 @@ function Session() {
               {tricky.map(({ item: it, misses }) => (
                 <li key={it.card_id} className="flex items-center gap-3 rounded-xl border bg-card px-3.5 py-2.5 text-sm">
                   <span className="min-w-0 flex-1 truncate text-muted-foreground">{it.prompt}</span>
-                  <span className="font-semibold" lang={it.kind === "kana" ? undefined : lang}>
-                    {it.kind === "kana" ? it.answer : <RubyText text={it.answer} lang={lang} showRomaji={false} />}
+                  <span className="font-semibold" lang={it.kind === "word" ? lang : undefined}>
+                    {it.kind === "word" ? <RubyText text={it.answer} lang={lang} showRomaji={false} /> : it.answer}
                   </span>
                   <Badge tone="danger">{misses}×</Badge>
                 </li>
@@ -195,6 +198,8 @@ function Session() {
   }
 
   const kana = item!.kind === "kana";
+  const kanji = item!.kind === "kanji";
+  const symbol = kana || kanji; // a single character as the prompt, answered in Latin letters
   const languageName = LANGS[lang].name;
   return (
     <div className="flex min-h-dvh flex-col">
@@ -212,7 +217,7 @@ function Session() {
         <div className="flex items-center justify-between py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           <span>
             {data?.title && <span className="text-primary-strong">{data.title} · </span>}
-            {kana ? "Type the romaji" : `Type it in ${languageName}`}
+            {kana ? "Type the romaji" : kanji ? "Type the meaning" : `Type it in ${languageName}`}
           </span>
           <span className="flex items-center gap-1" aria-label={`${entry!.streak} of ${TO_MASTER} in a row`}>
             {Array.from({ length: TO_MASTER }, (_, i) => (
@@ -222,7 +227,7 @@ function Session() {
         </div>
 
         <Card key={`${index}-${queue.length}`} className="flex min-h-[15rem] animate-rise flex-col items-center justify-center gap-3 p-6 text-center shadow-lg sm:p-10">
-          {kana ? (
+          {symbol ? (
             <p className="font-jp text-[96px] font-medium leading-none" lang="ja">{item!.prompt}</p>
           ) : (
             <>
@@ -240,12 +245,12 @@ function Session() {
             <>
               <TargetInput
                 ref={input}
-                lang={kana ? "en" : lang}
+                lang={symbol ? "en" : lang}
                 value={typed}
                 onChange={setTyped}
                 onSubmit={check}
                 autoFocus
-                placeholder={kana ? "Romaji, e.g. ka" : lang === "ja" ? "In kana, kanji or romaji" : `The ${languageName} word`}
+                placeholder={kana ? "Romaji, e.g. ka" : kanji ? "Meaning in English, e.g. sun" : lang === "ja" ? "In kana, kanji or romaji" : `The ${languageName} word`}
                 className={cn(phase === "close" && "border-warning focus:border-warning")}
               />
               {phase === "close" && (
@@ -266,14 +271,22 @@ function Session() {
                   : "Not quite — it'll come back soon."}
               </p>
               <div className="flex items-center gap-3">
-                <p className="text-2xl font-extrabold" lang={kana ? undefined : lang}>
-                  {kana ? item!.answer : <RubyText text={item!.answer} lang={lang} />}
+                <p className="text-2xl font-extrabold" lang={symbol ? undefined : lang}>
+                  {symbol ? item!.answer : <RubyText text={item!.answer} lang={lang} />}
                 </p>
                 {item!.audio_text && <AudioButton text={stripRuby(item!.audio_text)} lang={lang} autoPlay />}
               </div>
               {!correct && <p className="text-sm text-muted-foreground">You typed: <span className="line-through">{typed}</span></p>}
-              {kana && item!.hint && <p className="text-sm text-muted-foreground">{item!.hint}</p>}
-              {!kana && item!.example && (
+              {symbol && item!.hint && <p className="text-sm text-muted-foreground">{item!.hint}</p>}
+              {kanji && (
+                <div className="flex flex-col items-start gap-2">
+                  {!!item!.readings?.length && (
+                    <p className="font-jp text-sm" lang="ja">{item!.readings.join("・")}</p>
+                  )}
+                  <KanjiWords words={item!.words} />
+                </div>
+              )}
+              {!symbol && item!.example && (
                 <p className="text-sm">
                   <RubyText text={item!.example} lang={lang} showRomaji={false} />
                   {item!.example_translation && <span className="block text-muted-foreground">{item!.example_translation}</span>}

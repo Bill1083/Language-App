@@ -19,6 +19,10 @@ async def generate_lesson(ctx, lesson_id: int, force: bool = False) -> str:
     return await jobs.run_generate_lesson(lesson_id, force)
 
 
+async def kanji_hooks(ctx, chars: list[str]) -> int:
+    return await jobs.run_kanji_hooks(chars)
+
+
 async def precache_lesson_audio(ctx, lesson_id: int) -> int:
     return await jobs.run_precache_lesson_audio(lesson_id)
 
@@ -48,7 +52,8 @@ async def startup(ctx) -> None:
 
 
 class WorkerSettings:
-    functions = [generate_lesson, precache_lesson_audio, pregenerate, analyze_turn, summarize_conversation]
+    functions = [generate_lesson, precache_lesson_audio, pregenerate, analyze_turn, summarize_conversation,
+                 kanji_hooks]
     cron_jobs = [
         cron(cleanup_recordings, hour={3}, minute={17}),
         cron(push_reminders, minute={0}),

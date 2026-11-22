@@ -76,7 +76,9 @@ export type PracticeLevel = {
 
 export type PracticeItem = {
   card_id: number;
-  kind: "word" | "kana";
+  kind: "word" | "kana" | "kanji";
+  readings?: string[];
+  words?: { word: string; reading?: string | null; meaning?: string | null }[];
   prompt: string;
   answer: string;
   accepted: string[];
@@ -144,7 +146,7 @@ export function useAchievements() {
 export function useKnownKanji(lang: Lang | null) {
   return useQuery({
     queryKey: ["kanji", lang],
-    queryFn: () => get<{ kanji: string; count: number }>(`/kanji/${lang}`),
+    queryFn: () => get<{ kanji: string; count: number; met: string; met_count: number }>(`/kanji/${lang}`),
     enabled: lang === "ja",
     staleTime: 300_000,
   });

@@ -6,14 +6,15 @@ import random
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import String, and_, case, cast, func, or_, select, tuple_
+from sqlalchemy import Float, String, and_, case, cast, func, or_, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from ..models import Lesson, LessonProgress, Level, SrsCard, SrsReview, Unit, User, UserVocab, VocabItem
+from ..models import Kanji, Lesson, LessonProgress, Level, SrsCard, SrsReview, Unit, User, UserVocab, VocabItem
 from .fsrs import CardState, Scheduler, format_interval
 from .kana import lesson_chars
+from .kanji import kanji_info, lesson_kanji
 from .languages import CEFR
 from .progress import local_day_start_utc, local_today
 from .text import has_japanese, strip_ruby
@@ -151,6 +152,71 @@ async def ensure_kana_cards(db: AsyncSession, user_id: int) -> int:
     return added
 
 
+def _kanji_words(lesson: Lesson, char: str) -> list[dict[str, Any]]:
+    return [{"word": v.get("word"), "reading": v.get("reading"), "meaning": v.get("meaning")}
+            for v in (lesson.content_json or {}).get("vocab", []) if char in strip_ruby(str(v.get("word", "")))][:2]
+
+
+async def learn_kanji(db: AsyncSession, user_id: int, lesson: Lesson, existing: set[str] | None = None
+                      ) -> list[dict[str, str]]:
+    """Review cards for the kanji in a finished lesson's words (one per kanji, ever).
+    `lesson.unit.level` must be loaded. Returns the kanji that were new to the user."""
+    if existing is None:
+        existing = set(await db.scalars(select(SrsCard.source_ref).where(
+            SrsCard.user_id == user_id, SrsCard.card_type == "kanji_char")))
+    missing = [c for c in lesson_kanji(lesson) if f"kanji:{c}" not in existing]
+    if not missing:
+        return []
+    rows = {k.char: k for k in await db.scalars(select(Kanji).where(Kanji.char.in_(missing)))}
+    added = []
+    for char in missing:
+        k = rows.get(char)
+        if k is None:
+            continue
+        info = kanji_info(k)
+        db.add(SrsCard(
+            user_id=user_id, language_code="ja", card_type="kanji_char", source="lesson", source_ref=f"kanji:{char}",
+            front_json={"char": char},
+            back_json={"meanings": info["meanings"], "on": info["on"], "kun": info["kun"], "hook": info["hook"],
+                       "parts": info["parts"], "words": _kanji_words(lesson, char)},
+            level=lesson.unit.level.cefr, unit_id=lesson.unit_id, fsrs_state_json={}, due_at=datetime.now(UTC),
+        ))
+        existing.add(f"kanji:{char}")
+        added.append({"char": char, "meaning": ", ".join(k.meanings[:2])})
+    return added
+
+
+KNOWN_KANJI_STABILITY = 3.0  # days: right a few times over a few days, not just seen once
+
+
+async def known_kanji_chars(db: AsyncSession, user_id: int) -> list[str]:
+    """Kanji the user can actually read: their kanji card has reached a few days' stability."""
+    refs = await db.scalars(select(SrsCard.source_ref).where(
+        SrsCard.user_id == user_id, SrsCard.card_type == "kanji_char",
+        cast(SrsCard.fsrs_state_json["stability"].astext, Float) >= KNOWN_KANJI_STABILITY))
+    return sorted(ref.split(":", 1)[1] for ref in refs if ref)
+
+
+async def ensure_kanji_cards(db: AsyncSession, user_id: int) -> int:
+    """Backfill kanji cards for Japanese lessons finished before kanji cards existed."""
+    lessons = list(await db.scalars(
+        select(Lesson).join(LessonProgress, LessonProgress.lesson_id == Lesson.id)
+        .join(Unit, Unit.id == Lesson.unit_id).join(Level, Level.id == Unit.level_id)
+        .where(LessonProgress.user_id == user_id, LessonProgress.status == "completed", Lesson.kind == "lesson",
+               Level.language_code == "ja")
+        .options(selectinload(Lesson.unit).selectinload(Unit.level))))
+    if not lessons:
+        return 0
+    existing = set(await db.scalars(select(SrsCard.source_ref).where(
+        SrsCard.user_id == user_id, SrsCard.card_type == "kanji_char")))
+    added = 0
+    for lesson in lessons:
+        added += len(await learn_kanji(db, user_id, lesson, existing))
+    if added:
+        await db.commit()
+    return added
+
+
 def _is_new(card: SrsCard) -> bool:
     return not (card.fsrs_state_json or {}).get("reps")
 
@@ -211,7 +277,7 @@ def card_json(card: SrsCard, with_preview: bool = True) -> dict[str, Any]:
 
 
 TYPE_PRIORITY = case((SrsCard.card_type.in_(["kana", "recognize"]), 0),
-                     (SrsCard.card_type.in_(["listen", "kanji", "mistake"]), 1), else_=2)
+                     (SrsCard.card_type.in_(["listen", "kanji", "kanji_char", "mistake"]), 1), else_=2)
 
 
 async def practice(db: AsyncSession, user: User, lang: str, *, level: str | None = None,
@@ -276,6 +342,7 @@ async def lesson_keys(db: AsyncSession, lesson: Lesson, lang: str,
               for v in (lesson.content_json or {}).get("vocab", [])]
     position = {key: i for i, key in enumerate(taught)}
     words = sorted(await lesson_words(db, lesson, lang), key=lambda v: position.get((v.lemma, v.meaning), len(taught)))
+    keys += [("kanji", f"kanji:{c}") for c in lesson_kanji(lesson)]
     keys += [("vocab", v.id) for v in words]
     keys += [("vocab", vid) for vid in (learned or {}).get(lesson.id, []) if ("vocab", vid) not in keys]
     return keys
@@ -299,8 +366,16 @@ async def completed_lessons(db: AsyncSession, user_id: int, lang: str, *, lesson
     return list(await db.scalars(q))
 
 
+def _key(card_type: str, source_ref: str | None, vocab_item_id: int | None) -> tuple[str, Any]:
+    if card_type == "kana":
+        return ("kana", source_ref)
+    if card_type == "kanji_char":
+        return ("kanji", source_ref)
+    return ("vocab", vocab_item_id)
+
+
 def _card_key(card: SrsCard) -> tuple[str, Any]:
-    return ("kana", card.source_ref) if card.card_type == "kana" else ("vocab", card.vocab_item_id)
+    return _key(card.card_type, card.source_ref, card.vocab_item_id)
 
 
 async def practice_from_lessons(db: AsyncSession, user: User, lang: str, lessons: list[Lesson], *,
@@ -312,11 +387,12 @@ async def practice_from_lessons(db: AsyncSession, user: User, lang: str, lessons
     keys: list[tuple[str, Any]] = []
     for lesson in lessons:
         keys += [k for k in await lesson_keys(db, lesson, lang, learned) if k not in keys]
-    refs = [k for kind, k in keys if kind == "kana"]
+    refs = [k for kind, k in keys if kind in ("kana", "kanji")]
     ids = [k for kind, k in keys if kind == "vocab"]
     q = select(SrsCard).where(
         SrsCard.user_id == user.id, SrsCard.language_code == lang, SrsCard.suspended.is_(False),
-        or_(and_(SrsCard.card_type == "kana", SrsCard.source_ref.in_(refs)), SrsCard.vocab_item_id.in_(ids)))
+        or_(and_(SrsCard.card_type.in_(["kana", "kanji_char"]), SrsCard.source_ref.in_(refs)),
+            SrsCard.vocab_item_id.in_(ids)))
     if card_types:
         q = q.where(SrsCard.card_type.in_(card_types))
     # Which of a word's cards to use: recognition-type first in course order, most overdue when shuffling.
@@ -336,7 +412,7 @@ async def practice_blocks(db: AsyncSession, user: User, lang: str) -> list[dict[
     lessons = await completed_lessons(db, user.id, lang)
     rows = await db.execute(select(SrsCard.card_type, SrsCard.source_ref, SrsCard.vocab_item_id).where(
         SrsCard.user_id == user.id, SrsCard.language_code == lang, SrsCard.suspended.is_(False)))
-    have = {("kana", ref) if kind == "kana" else ("vocab", vid) for kind, ref, vid in rows}
+    have = {_key(kind, ref, vid) for kind, ref, vid in rows}
     learned = await learned_in(db, user.id, lang)
     levels: dict[str, dict[str, Any]] = {}
     for lesson in lessons:
@@ -362,6 +438,11 @@ def loosely_ordered(items: list[Any], spread: float = COURSE_JITTER) -> list[Any
 def practice_item(card: SrsCard) -> dict[str, Any]:
     """One word or kana for type-the-answer practice: a prompt and what counts as right."""
     f, b = card.front_json or {}, card.back_json or {}
+    if card.card_type == "kanji_char":
+        meanings = b.get("meanings") or []
+        return {"card_id": card.id, "kind": "kanji", "prompt": f.get("char"), "answer": ", ".join(meanings),
+                "accepted": meanings, "hint": b.get("hook"), "readings": [*(b.get("on") or []), *(b.get("kun") or [])],
+                "words": b.get("words") or []}
     if card.card_type == "kana":
         return {"card_id": card.id, "kind": "kana", "prompt": f.get("char"), "answer": b.get("romaji"),
                 "accepted": [b.get("romaji")], "audio_text": b.get("audio_text") or f.get("char"),

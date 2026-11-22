@@ -31,7 +31,7 @@ export function useJapaneseDisplay(override?: { furigana?: FuriganaMode; romaji?
   const romajiPref = override?.romaji ?? me?.settings.romaji ?? "auto";
   const ja = me?.enrolments.find((e) => e.language_code === "ja");
   // "auto": on while the learner is in the first units of A1, then off.
-  const romaji = romajiPref === "on" || (romajiPref === "auto" && (!ja || ja.current_level === "A1") && (kanji?.count ?? 0) < 25);
+  const romaji = romajiPref === "on" || (romajiPref === "auto" && (!ja || ja.current_level === "A1") && (kanji?.met_count ?? 0) < 25);
   return { furigana, romaji, known: kanji?.kanji ?? "" };
 }
 

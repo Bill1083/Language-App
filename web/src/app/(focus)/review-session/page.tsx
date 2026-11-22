@@ -8,6 +8,7 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { AudioButton } from "@/components/audio-button";
+import { KanjiReadings, KanjiWords } from "@/components/lesson/cards";
 import { RubyText } from "@/components/ruby-text";
 import { TargetInput } from "@/components/target-input";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const TYPE_LABEL: Record<string, string> = {
   listen: "What do you hear?",
   kanji: "How is it read?",
   kana: "How is it read?",
+  kanji_char: "What does this kanji mean?",
   mistake: "Fix your mistake",
 };
 
@@ -61,6 +63,7 @@ function Front({ card, lang, typed, setTyped, onSubmit, revealed }: {
       );
     case "kanji":
       return <p className="font-jp text-6xl font-bold" lang="ja">{f.text}</p>;
+    case "kanji_char":
     case "kana":
       return (
         <p className="font-jp text-[96px] font-medium leading-none" lang="ja">
@@ -95,6 +98,16 @@ function Front({ card, lang, typed, setTyped, onSubmit, revealed }: {
 
 function Back({ card, lang, verdict }: { card: SrsCard; lang: Lang; verdict: string | null }) {
   const b = card.back;
+  if (card.card_type === "kanji_char") {
+    return (
+      <div className="flex flex-col items-center gap-3">
+        <p className="text-3xl font-black">{(b.meanings ?? []).join(", ")}</p>
+        <KanjiReadings on={b.on} kun={b.kun} />
+        {b.hook && <p className="max-w-sm text-center text-sm text-muted-foreground">{b.hook}</p>}
+        <KanjiWords words={b.words} />
+      </div>
+    );
+  }
   if (card.card_type === "kana") {
     return (
       <div className="flex flex-col items-center gap-3">

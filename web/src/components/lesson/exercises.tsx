@@ -597,5 +597,5 @@ export function ExerciseView(props: ExerciseProps) {
   return <Comp {...props} />;
 }
 
-export const INFO_TYPES = new Set(["vocab_intro", "grammar_note", "kana_intro"]);
+export const INFO_TYPES = new Set(["vocab_intro", "grammar_note", "kana_intro", "kanji_intro", "kanji_more"]);
 export const SELF_SUBMITTING = new Set(["match_pairs", "speak"]);

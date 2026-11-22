@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import get_settings
 from ..models import Language, Lesson, Level, Scenario, Unit
 from .kana import BUILDER_VERSION, SCRIPTS, kana_data
+from .kanji import seed_kanji
 from .languages import CEFR, LANGUAGES
 from .yaml_loader import load_yaml_file
 
@@ -123,6 +124,7 @@ async def seed_curriculum(db: AsyncSession) -> None:
                           {"level": cefr})
         log.info("seeded %s: %d lessons", code, lessons_count)
     await seed_scenarios(db)
+    await seed_kanji(db)
     await db.commit()
 
 

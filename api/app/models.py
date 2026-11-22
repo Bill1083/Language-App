@@ -200,6 +200,23 @@ class LlmJudgement(Base):
 # --------------------------------------------------------------------------- vocab & SRS
 
 
+class Kanji(Base):
+    """One kanji character: KANJIDIC2 data loaded from curriculum/kanji.json, plus
+    an LLM-written memory hook generated the first time a lesson introduces it."""
+
+    __tablename__ = "kanji"
+    char: Mapped[str] = mapped_column(String(4), primary_key=True)
+    meanings: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    on_readings: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    kun_readings: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    strokes: Mapped[int | None] = mapped_column(Integer)
+    grade: Mapped[int | None] = mapped_column(Integer)
+    jlpt: Mapped[int | None] = mapped_column(Integer)  # old JLPT levels: 4 easiest … 1 hardest
+    freq: Mapped[int | None] = mapped_column(Integer)
+    parts: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    hook: Mapped[str | None] = mapped_column(Text)
+
+
 class VocabItem(Base):
     __tablename__ = "vocab_items"
     __table_args__ = (UniqueConstraint("language_code", "lemma", "meaning", name="uq_vocab_lemma_meaning"),)

@@ -148,6 +148,20 @@ export function LessonEnd({
         </div>
       )}
 
+      {!!result.new_kanji?.length && (
+        <div className="mt-6">
+          <h2 className="mb-2 text-sm font-semibold text-muted-foreground">New kanji added to your review deck</h2>
+          <div className="flex flex-wrap gap-2">
+            {result.new_kanji.map((k) => (
+              <span key={k.char} className="flex items-center gap-2 rounded-xl border bg-card px-3 py-1.5 text-sm">
+                <span className="font-jp text-xl font-semibold" lang="ja">{k.char}</span>
+                <span className="text-muted-foreground">{k.meaning}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {result.new_words.length > 0 && (
         <div className="mt-6">
           <h2 className="mb-2 text-sm font-semibold text-muted-foreground">New words added to your review deck</h2>

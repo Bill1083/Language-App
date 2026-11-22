@@ -21,7 +21,7 @@ from ..models import (
 from ..services.course import course_map
 from ..services.languages import level_index
 from ..services.progress import ACHIEVEMENTS, daily_status, local_today
-from ..services.srs import due_count, has_kanji
+from ..services.srs import due_count, has_kanji, known_kanji_chars
 
 router = APIRouter(tags=["stats"])
 
@@ -100,7 +100,8 @@ async def summary(user: CurrentUser, db: Db, lang: str | None = None) -> dict[st
     reviews = await db.scalar(select(func.count()).select_from(SrsReview).where(SrsReview.user_id == user.id)) or 0
     kanji = {ch for lemma in lemmas for ch in lemma if has_kanji(ch)} if lang in (None, "ja") else set()
     return {"xp_total": int(xp_total), "minutes_total": int(seconds) // 60, "words": len(lemmas),
-            "kanji": len(kanji), "lessons": lessons, "conversations": convs, "reviews": reviews,
+            "kanji": len(kanji), "kanji_known": len(await known_kanji_chars(db, user.id)) if kanji else 0,
+            "lessons": lessons, "conversations": convs, "reviews": reviews,
             "daily": await daily_status(db, user)}
 
 

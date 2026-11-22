@@ -28,7 +28,8 @@ from ..services.course import course_map, lesson_unlocked, next_cefr
 from ..services.jobs import enqueue
 from ..services.languages import level_index
 from ..services.progress import XP, award_xp, check_achievements, grant_and_describe
-from ..services.srs import add_mistake_card, learn_kana, learn_vocab, lesson_words
+from ..services.kanji import intro_cards, place_intro_cards
+from ..services.srs import add_mistake_card, learn_kana, learn_kanji, learn_vocab, lesson_words
 from ..services.text import strip_ruby
 
 router = APIRouter(tags=["course"])
@@ -100,9 +101,16 @@ async def get_lesson(lesson_id: int, user: CurrentUser, db: Db, response: Respon
     progress = await db.get(LessonProgress, (user.id, lesson.id))
     # Keep the learner's path warm: generate what's next while they work on this one.
     await enqueue("pregenerate", user.id, lang, job_id=f"pregen-{user.id}-{lang}")
+    exercises = [{"id": ex.id, "type": ex.type, **ex.payload_json} for ex in lesson.exercises]
+    if lang == "ja" and lesson.kind == "lesson":
+        # "New kanji" cards (not stored: worked out from course order on every visit)
+        cards, need_hooks = await intro_cards(db, lesson)
+        exercises = place_intro_cards(exercises, cards)
+        if need_hooks:
+            await enqueue("kanji_hooks", need_hooks, job_id=f"kanji-hooks-{lesson.id}")
     return meta | {
         "content": lesson.content_json,
-        "exercises": [{"id": ex.id, "type": ex.type, **ex.payload_json} for ex in lesson.exercises],
+        "exercises": exercises,
         "progress": {"status": progress.status, "best_accuracy": progress.best_accuracy} if progress else None,
     }
 
@@ -272,7 +280,8 @@ async def complete_lesson(lesson_id: int, body: CompleteIn, user: CurrentUser, d
     pass_mark = float(content.get("pass_mark", 0.8)) if is_test else 0.0
     passed = accuracy >= pass_mark
     response: dict[str, Any] = {"accuracy": round(accuracy, 3), "passed": passed, "is_test": is_test,
-                                "pass_mark": pass_mark, "new_words": [], "achievements": [], "level_up": None}
+                                "pass_mark": pass_mark, "new_words": [], "new_kanji": [], "achievements": [],
+                                "level_up": None}
 
     prog = await db.get(LessonProgress, (user.id, lesson.id))
     if prog is None:
@@ -297,6 +306,8 @@ async def complete_lesson(lesson_id: int, body: CompleteIn, user: CurrentUser, d
         if lesson.kind in ("lesson", "kana") and lesson.order != 100:
             if lesson.kind == "kana":
                 await learn_kana(db, user.id, lesson)
+            elif lang == "ja":
+                response["new_kanji"] = await learn_kanji(db, user.id, lesson)
             for item in await lesson_words(db, lesson, lang):
                 if await learn_vocab(db, user.id, item, "lesson", f"lesson:{lesson.id}"):
                     response["new_words"].append({"id": item.id, "lemma": item.lemma, "reading": item.reading,

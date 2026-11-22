@@ -13,7 +13,7 @@ import { ERROR_TYPE_LABEL, LANGS } from "@/lib/languages";
 import type { Daily } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type Summary = { xp_total: number; minutes_total: number; words: number; kanji: number; lessons: number; conversations: number; reviews: number; daily: Daily };
+type Summary = { xp_total: number; minutes_total: number; words: number; kanji: number; kanji_known?: number; lessons: number; conversations: number; reviews: number; daily: Daily };
 type Charts = {
   accuracy_weekly: { week: string; accuracy: number; answers: number }[];
   time_by_activity: { activity: string; minutes: number }[];
@@ -56,7 +56,7 @@ export default function StatsPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Tile icon={Flame} label={`Day streak · best ${summary.daily.longest_streak}`} value={summary.daily.streak} />
         <Tile icon={Zap} label="Total XP" value={summary.xp_total.toLocaleString()} />
-        <Tile icon={Languages} label={lang === "ja" ? `Words · ${summary.kanji} kanji` : "Words learned"} value={summary.words} />
+        <Tile icon={Languages} label={lang === "ja" ? `Words · kanji ${summary.kanji_known ?? 0} known / ${summary.kanji} met` : "Words learned"} value={summary.words} />
         <Tile icon={Clock} label="Time practised" value={`${Math.floor(summary.minutes_total / 60)}h ${summary.minutes_total % 60}m`} />
         <Tile icon={BookOpen} label="Lessons completed" value={summary.lessons} />
         <Tile icon={Layers} label="Cards reviewed" value={summary.reviews} />

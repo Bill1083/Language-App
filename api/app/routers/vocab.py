@@ -14,7 +14,7 @@ from ..providers.base import ChatMessage
 from ..redis_client import get_redis
 from ..services.ai import AIService
 from ..services.conversation import LookupResult, lookup_system
-from ..services.srs import has_kanji, learn_vocab
+from ..services.srs import has_kanji, known_kanji_chars, learn_vocab
 from ..services.text import strip_ruby
 
 router = APIRouter(tags=["vocab"])
@@ -150,10 +150,14 @@ async def grammar_reference(lang: str, user: CurrentUser, db: Db, q: str = "") -
 
 @router.get("/kanji/{lang}")
 async def known_kanji(lang: str, user: CurrentUser, db: Db) -> dict[str, Any]:
+    """`kanji`/`count`: kanji the user can read (their kanji card is a few days stable) —
+    what the Furigana "New kanji" setting hides readings for. `met`: every kanji in
+    their learnt words."""
     if lang != "ja":
-        return {"kanji": "", "count": 0}
+        return {"kanji": "", "count": 0, "met": "", "met_count": 0}
     lemmas = await db.scalars(select(VocabItem.lemma).join(UserVocab, (UserVocab.vocab_item_id == VocabItem.id)
                                                            & (UserVocab.user_id == user.id))
                               .where(VocabItem.language_code == "ja"))
-    chars = sorted({ch for lemma in lemmas for ch in lemma if has_kanji(ch)})
-    return {"kanji": "".join(chars), "count": len(chars)}
+    met = sorted({ch for lemma in lemmas for ch in lemma if has_kanji(ch)})
+    known = await known_kanji_chars(db, user.id)
+    return {"kanji": "".join(known), "count": len(known), "met": "".join(met), "met_count": len(met)}

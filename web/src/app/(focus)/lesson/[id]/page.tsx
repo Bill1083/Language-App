@@ -7,7 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
-import { GrammarCard, KanaCard, VocabCard } from "@/components/lesson/cards";
+import { GrammarCard, KanaCard, KanjiCard, KanjiMoreCard, VocabCard } from "@/components/lesson/cards";
 import { Flag } from "@/components/flag";
 import {
   type AnswerValue,
@@ -341,6 +341,10 @@ function Player({ lesson, onRestart }: { lesson: LessonPayload; onRestart: () =>
             <GrammarCard grammar={ex.grammar} lang={lang} />
           ) : ex.type === "kana_intro" ? (
             <KanaCard ex={ex} />
+          ) : ex.type === "kanji_intro" ? (
+            <KanjiCard ex={ex} />
+          ) : ex.type === "kanji_more" ? (
+            <KanjiMoreCard ex={ex} />
           ) : (
             <div className="space-y-6">
               <ExerciseTitle ex={ex} />

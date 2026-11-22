@@ -13,6 +13,7 @@ from ..services.srs import (
     card_json,
     completed_lessons,
     ensure_kana_cards,
+    ensure_kanji_cards,
     forecast,
     level_summary,
     practice,
@@ -51,6 +52,7 @@ async def get_queue(lang: str, user: CurrentUser, db: Db, mistakes: bool = False
 async def deck_stats(lang: str, user: CurrentUser, db: Db) -> dict[str, Any]:
     if lang == "ja":
         await ensure_kana_cards(db, user.id)
+        await ensure_kanji_cards(db, user.id)
     _, counts = await queue(db, user, lang, limit=0)
     total = await db.scalar(select(func.count()).select_from(SrsCard).where(
         SrsCard.user_id == user.id, SrsCard.language_code == lang)) or 0
@@ -64,6 +66,7 @@ async def practice_levels(lang: str, user: CurrentUser, db: Db) -> list[dict[str
     """Everything learnt so far, grouped by level and unit, for "practise A1 / kana"."""
     if lang == "ja":
         await ensure_kana_cards(db, user.id)
+        await ensure_kanji_cards(db, user.id)
     return [lv | {"label": LEVEL_LABELS.get(lv["level"], lv["level"])} for lv in await level_summary(db, user, lang)]
 
 
@@ -85,6 +88,7 @@ async def _practice_cards(db, user, lang: str, *, level: str | None, units: str 
         raise HTTPException(400, "Pick the blocks you want to practise")
     if lang == "ja":
         await ensure_kana_cards(db, user.id)
+        await ensure_kanji_cards(db, user.id)
     limit = min(max(limit, 1), 100)
     if lesson_ids or by_lesson:
         chosen = await completed_lessons(db, user.id, lang, lesson_ids=lesson_ids, unit_ids=unit_ids, level=level)
@@ -105,6 +109,7 @@ async def get_practice_blocks(lang: str, user: CurrentUser, db: Db) -> list[dict
     """Finished lessons from the course map, by level and unit, to pick for practice."""
     if lang == "ja":
         await ensure_kana_cards(db, user.id)
+        await ensure_kanji_cards(db, user.id)
     return [lv | {"label": LEVEL_LABELS.get(lv["level"], lv["level"])} for lv in await practice_blocks(db, user, lang)]
 
 
@@ -125,7 +130,7 @@ async def practice_items(lang: str, user: CurrentUser, db: Db, level: str | None
                          limit: int = 20) -> dict[str, Any]:
     """Words (meaning → type the word) and kana (symbol → type the romaji) for typing practice."""
     cards, title = await _practice_cards(db, user, lang, level=level, units=units, unit_id=unit_id, lessons=lessons,
-                                         order=order, limit=min(limit, 50), card_types=["produce", "kana"],
+                                         order=order, limit=min(limit, 50), card_types=["produce", "kana", "kanji_char"],
                                          by_lesson=True)
     return {"items": [practice_item(c) for c in cards], "title": title}
 

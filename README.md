@@ -212,3 +212,12 @@ Design notes and every decision the spec left open are in [DECISIONS.md](DECISIO
 - Users can delete single conversations (with their recordings) or all their recordings in Settings.
 - Recordings and the database live on your VPS, so server hardening matters most: SSH keys only, a
   firewall, unattended security updates, and encrypted off-site backups.
+
+## Credits
+
+Kanji meanings, readings, stroke counts and parts (`curriculum/kanji.json`) come from
+[KANJIDIC2](https://www.edrdg.org/wiki/index.php/KANJIDIC_Project) and
+[KRADFILE](https://www.edrdg.org/krad/kradinf.html), property of the
+[Electronic Dictionary Research and Development Group](https://www.edrdg.org/), used under the
+[Creative Commons Attribution-ShareAlike 4.0 licence](https://www.edrdg.org/edrdg/licence.html).
+Rebuild the file with `scripts/build_kanji_data.py`.

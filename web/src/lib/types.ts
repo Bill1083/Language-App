@@ -161,6 +161,7 @@ export type CompleteResult = {
   goal_just_met: boolean;
   used_freeze: boolean;
   new_words: { id: number; lemma: string; reading: string | null; meaning: string; ruby: string | null }[];
+  new_kanji?: { char: string; meaning: string }[];
   achievements: Achievement[];
   level_up: { from: string; to: string } | null;
 };
@@ -258,7 +259,7 @@ export type Conversation = {
 
 export type SrsCard = {
   id: number;
-  card_type: "recognize" | "produce" | "listen" | "kanji" | "kana" | "mistake";
+  card_type: "recognize" | "produce" | "listen" | "kanji" | "kanji_char" | "kana" | "mistake";
   front: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   back: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   source: string;

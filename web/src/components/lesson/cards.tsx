@@ -7,6 +7,7 @@ import { RubyText } from "@/components/ruby-text";
 import { Badge } from "@/components/ui/primitives";
 import { GenderBadge } from "@/components/word-popover";
 import { useMe } from "@/hooks/use-me";
+import { stripRuby } from "@/lib/japanese";
 import type { Exercise, Grammar, Lang, Vocab } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -184,6 +185,96 @@ export function KanaCard({ ex }: { ex: Exercise }) {
         <AudioButton text={ex.audio_text ?? ex.char} lang="ja" autoPlay />
       </div>
       <p className="mt-5 max-w-sm text-[16px] text-muted-foreground">{ex.mnemonic}</p>
+    </div>
+  );
+}
+
+type KanjiWord = { word: string; reading?: string | null; meaning?: string | null };
+
+/** Readings, labelled for learners: on = from Chinese (in compounds), kun = native Japanese. */
+export function KanjiReadings({ on, kun }: { on?: string[]; kun?: string[] }) {
+  if (!on?.length && !kun?.length) return null;
+  return (
+    <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm">
+      {!!on?.length && (
+        <span>
+          <span className="text-muted-foreground">In compounds </span>
+          <span className="font-jp font-semibold" lang="ja">{on.join("・")}</span>
+        </span>
+      )}
+      {!!kun?.length && (
+        <span>
+          <span className="text-muted-foreground">On its own </span>
+          <span className="font-jp font-semibold" lang="ja">{kun.join("・")}</span>
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function KanjiWords({ words }: { words?: KanjiWord[] }) {
+  if (!words?.length) return null;
+  return (
+    <ul className="w-full max-w-sm divide-y rounded-2xl border bg-card text-left">
+      {words.map((w) => (
+        <li key={w.word} className="flex items-center gap-3 px-4 py-2.5">
+          <span className="min-w-0 flex-1">
+            <span className="block text-lg font-semibold" lang="ja"><RubyText text={w.word} lang="ja" showRomaji={false} /></span>
+            {w.meaning && <span className="block text-sm text-muted-foreground">{w.meaning}</span>}
+          </span>
+          <AudioButton text={stripRuby(w.word)} lang="ja" size="sm" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** "New kanji" card shown in a lesson just before the first word that uses it. */
+export function KanjiCard({ ex }: { ex: Exercise }) {
+  return (
+    <div className="flex flex-col items-center text-center">
+      <p className="text-sm font-bold uppercase tracking-wider text-primary">New kanji</p>
+      <div className="mt-6 flex size-40 items-center justify-center rounded-[2rem] border-2 bg-card font-jp text-[100px] leading-none shadow-sm sm:size-44 sm:text-[110px]" lang="ja">
+        {ex.char}
+      </div>
+      <p className="mt-5 text-3xl font-black tracking-tight">{(ex.meanings ?? []).slice(0, 2).join(", ")}</p>
+      {ex.hook && <p className="mt-2 max-w-sm text-[16px] text-muted-foreground">{ex.hook}</p>}
+      {ex.parts?.length > 0 && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          Built from <span className="font-jp text-base text-foreground" lang="ja">{ex.parts.join(" + ")}</span>
+        </p>
+      )}
+      <div className="mt-4"><KanjiReadings on={ex.on} kun={ex.kun} /></div>
+      {ex.words?.length > 0 && (
+        <div className="mt-5 flex w-full flex-col items-center gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">In this lesson</p>
+          <KanjiWords words={ex.words} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** One card for the less common new kanji of a lesson (each still gets a review card). */
+export function KanjiMoreCard({ ex }: { ex: Exercise }) {
+  const items = (ex.kanji ?? []) as { char: string; meaning: string; word?: KanjiWord | null }[];
+  return (
+    <div className="flex flex-col items-center text-center">
+      <p className="text-sm font-bold uppercase tracking-wider text-primary">Also new in this lesson</p>
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+        You&apos;ll see these in the words ahead. Each one gets its own review card once you finish the lesson.
+      </p>
+      <div className="mt-6 grid w-full max-w-sm grid-cols-3 gap-2.5">
+        {items.map((k) => (
+          <div key={k.char} className="rounded-2xl border bg-card px-2 py-3">
+            <p className="font-jp text-4xl leading-tight" lang="ja">{k.char}</p>
+            <p className="mt-1 text-sm font-semibold leading-tight">{k.meaning}</p>
+            {k.word && (
+              <p className="mt-1.5 text-sm" lang="ja"><RubyText text={k.word.word} lang="ja" showRomaji={false} /></p>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

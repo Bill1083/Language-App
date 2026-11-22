@@ -458,6 +458,7 @@ class Video(Base):
     mime: Mapped[str | None] = mapped_column(String(40))
     stage: Mapped[str | None] = mapped_column(String(24))  # uploading | repackaging | subtitles | transcribing
     subtitle_source: Mapped[str | None] = mapped_column(String(16))  # file | embedded | transcribed
+    clips_version: Mapped[int] = mapped_column(Integer, default=0)  # reels clips cut with this version of the rules
     added_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = _now_col()
     lines: Mapped[list["VideoLine"]] = relationship(
@@ -480,6 +481,23 @@ class VideoLine(Base):
     en: Mapped[str | None] = mapped_column(Text)
     words: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
     video: Mapped[Video] = relationship(back_populates="lines")
+
+
+class VideoClip(Base):
+    """A 15–45 s stretch of a video for the reels feed: whole lines, starting at the
+    beginning of a sentence or scene, with a difficulty estimate."""
+
+    __tablename__ = "video_clips"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    video_id: Mapped[int] = mapped_column(ForeignKey("videos.id", ondelete="CASCADE"), index=True)
+    first_idx: Mapped[int] = mapped_column(Integer)
+    last_idx: Mapped[int] = mapped_column(Integer)
+    start_ms: Mapped[int] = mapped_column(Integer)
+    end_ms: Mapped[int] = mapped_column(Integer)
+    level: Mapped[str] = mapped_column(String(4))  # CEFR estimate for this clip
+    score: Mapped[float] = mapped_column(Float)  # 0 = A1 … 4 = C1, finer than the level
+    words: Mapped[list[str]] = mapped_column(JSONB, default=list)  # key words, plain text
+    kanji: Mapped[str] = mapped_column(String(400), default="")  # distinct kanji in the clip
 
 
 class VideoProgress(Base):

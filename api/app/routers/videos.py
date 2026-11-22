@@ -11,9 +11,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from ..deps import CurrentUser, Db
-from ..models import User, Video, VideoLine, VideoProgress
+from ..models import User, Video, VideoClip, VideoLine, VideoProgress
 from ..services.jobs import enqueue
 from ..services.languages import LANGUAGES
+from ..services.reels import DIFFICULTIES, mark_seen, videos_needing_clips
+from ..services.reels import feed as reels_feed
 from ..services.subtitles import SubtitleError, parse
 from ..services.video_files import (
     ACCEPTED,
@@ -195,6 +197,47 @@ async def video_poster(video_id: int, user: CurrentUser, db: Db) -> FileResponse
     video = await _video(db, video_id)
     return FileResponse(_file(video, "poster.jpg"), media_type="image/jpeg",
                         headers={"Cache-Control": "private, max-age=86400"})
+
+
+@router.get("/reels")
+async def reels(lang: str, user: CurrentUser, db: Db, difficulty: str = "level", limit: int = 8,
+                exclude: str = "") -> dict[str, Any]:
+    """The next short clips for this person, matched to their level (see services/reels.py)."""
+    if lang not in LANGUAGES:
+        raise HTTPException(400, "Unknown language")
+    if difficulty not in DIFFICULTIES:
+        raise HTTPException(400, "difficulty is easier, level, harder or challenge")
+    for video_id in await videos_needing_clips(db):  # videos added before reels existed
+        await enqueue("build_clips", video_id, job_id=f"clips-{video_id}")
+    skip = {int(x) for x in exclude.split(",") if x.strip().isdigit()}
+    picked = await reels_feed(db, user.id, lang, difficulty, max(1, min(limit, 20)), skip)
+    items = []
+    for c in picked:
+        clip, video = c["clip"], c["video"]
+        lines = await db.scalars(select(VideoLine).where(
+            VideoLine.video_id == video.id, VideoLine.idx >= clip.first_idx, VideoLine.idx <= clip.last_idx)
+            .order_by(VideoLine.idx))
+        playable = video.source == "file" and "/" in (video.file_key or "")
+        items.append({
+            "id": clip.id, "video_id": video.id, "title": video.title, "source": video.source,
+            "youtube_id": video.youtube_id, "file_url": f"/api/v1/videos/{video.id}/file" if playable else None,
+            "poster": f"/api/v1/videos/{video.id}/poster" if playable else (
+                thumbnail(video.youtube_id) if video.youtube_id else None),
+            "start": clip.start_ms, "end": clip.end_ms, "level": clip.level,
+            "known": None if c["known"] is None else round(c["known"] * 100),
+            "lines": [line_json(r) for r in lines],
+        })
+    return {"difficulty": difficulty, "items": items}
+
+
+@router.post("/reels/{clip_id}/seen")
+async def reel_seen(clip_id: int, user: CurrentUser, db: Db) -> dict[str, bool]:
+    clip = await db.get(VideoClip, clip_id)
+    if clip is None:
+        raise HTTPException(404, "Clip not found")
+    video = await db.get(Video, clip.video_id)
+    await mark_seen(user.id, video.language_code if video else "", clip_id)
+    return {"ok": True}
 
 
 @router.get("")

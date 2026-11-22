@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clapperboard, FileText, FileVideo, LoaderCircle, Plus, RefreshCw, Trash, TriangleAlert, Upload } from "lucide-react";
+import { Clapperboard, FileText, FileVideo, LoaderCircle, Plus, RefreshCw, Smartphone, Trash, TriangleAlert, Upload } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
@@ -405,7 +405,12 @@ function Library() {
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Watch</h1>
           <p className="mt-1 text-muted-foreground">Real {LANGS[lang].name} videos with subtitles at your level.</p>
         </div>
-        <Button onClick={() => setAdding(true)} className="shrink-0"><Plus /> Add video</Button>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+          <Button onClick={() => setAdding(true)}><Plus /> Add video</Button>
+          {!!videos?.some((v) => v.status === "ready") && (
+            <Button asChild variant="outline"><Link href="/watch/reels"><Smartphone /> Reels</Link></Button>
+          )}
+        </div>
       </div>
 
       {isLoading || !videos ? (

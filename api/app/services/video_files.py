@@ -131,6 +131,25 @@ def subtitle_stream(info: dict[str, Any], lang: str) -> dict[str, Any] | None:
     return None
 
 
+async def keyframes(path: Path) -> list[int]:
+    """Keyframe times in ms, read from the container without decoding. Encoders put a
+    keyframe at each cut in the picture, so these mark possible scene changes."""
+    try:
+        out = await _run("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "packet=pts_time,flags",
+                         "-of", "csv=p=0", str(path), timeout=120)
+    except VideoFileError:
+        return []
+    times = []
+    for row in out.decode(errors="replace").splitlines():
+        pts, _, flags = row.partition(",")
+        if flags.startswith("K"):
+            try:
+                times.append(int(float(pts) * 1000))
+            except ValueError:
+                continue
+    return times
+
+
 def duration_of(info: dict[str, Any]) -> float:
     try:
         return float(info.get("format", {}).get("duration") or 0)

@@ -28,6 +28,7 @@ DEFAULT_USER_SETTINGS: dict[str, Any] = {
     "gender_colors": True, "reminders": False, "reminder_hour": 19, "timezone": "UTC", "active_language": None,
     "onboarded": False, "voice_notice_seen": False,
     "video_subtitles": "full", "video_autopause": False,  # Watch: subtitle level and pause after each line
+    "reels_difficulty": "level",  # Reels: easier | level | harder | challenge
 }
 
 

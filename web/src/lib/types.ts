@@ -21,6 +21,25 @@ export type UserSettings = {
   voice_notice_seen: boolean;
   video_subtitles: "full" | "kana" | "text";
   video_autopause: boolean;
+  reels_difficulty: ReelsDifficulty;
+};
+
+export type ReelsDifficulty = "easier" | "level" | "harder" | "challenge";
+
+/** A short clip from a library video for the reels feed. */
+export type Reel = {
+  id: number;
+  video_id: number;
+  title: string;
+  source: "youtube" | "file";
+  youtube_id: string | null;
+  file_url: string | null;
+  poster: string | null;
+  start: number;
+  end: number;
+  level: Cefr;
+  known: number | null;
+  lines: VideoLine[];
 };
 
 export type Enrolment = {

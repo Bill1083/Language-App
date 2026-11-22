@@ -37,7 +37,8 @@ from .audio_cache import tts_key
 from .course import course_map, upcoming_lessons
 from .kanji import new_kanji_by_lesson, write_hooks
 from .lesson_gen import generate_lesson
-from .video_files import VideoFileError, process_file, remove_files
+from .reels import build_clips
+from .video_files import VideoFileError, keyframes, process_file, remove_files, video_dir
 from .videos import prepare_video
 from .progress import award_xp, check_achievements, local_today, user_tz
 from .text import has_japanese
@@ -92,6 +93,22 @@ async def run_generate_lesson(lesson_id: int, force: bool = False, user_id: int 
     return "ok"
 
 
+async def run_build_clips(video_id: int) -> int:
+    """Cut a ready video into reels clips (uploaded files also use their picture cuts)."""
+    async with SessionLocal() as db:
+        video = await db.get(Video, video_id)
+        if video is None:
+            return 0
+        cuts: list[int] = []
+        if video.source == "file" and video.file_key and "/" in video.file_key:
+            cuts = await keyframes(video_dir(video_id) / Path(video.file_key).name)
+        try:
+            return await build_clips(db, video_id, cuts)
+        except Exception as e:  # reels are a bonus: never fail the video over them
+            log.warning("clips for video %s failed: %s", video_id, e)
+            return 0
+
+
 async def run_process_video(video_id: int) -> str:
     async with SessionLocal() as db:
         try:
@@ -99,6 +116,7 @@ async def run_process_video(video_id: int) -> str:
         except Exception as e:
             await job_log("video_failed", video_id=video_id, error=str(e)[:300])
             raise
+    await run_build_clips(video_id)
     await job_log("video_ready", video_id=video_id, lines=video.line_count, level=video.level)
     return "ok"
 
@@ -124,6 +142,7 @@ async def run_process_video_file(video_id: int) -> str:
                 return "refused"  # a problem with the file itself: retrying won't help
             raise
         await prepare_video(db, ai, video_id)
+    await run_build_clips(video_id)
     await job_log("video_ready", video_id=video_id)
     return "ok"
 

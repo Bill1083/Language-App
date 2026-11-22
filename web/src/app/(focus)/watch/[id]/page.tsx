@@ -10,54 +10,17 @@ import { toast } from "sonner";
 import { RubyText } from "@/components/ruby-text";
 import { Button } from "@/components/ui/button";
 import { Badge, Card, Progress, Segmented, Skeleton, Switch } from "@/components/ui/primitives";
+import { LineText, lineAt, type Mode } from "@/components/video/subtitles";
 import { useWordPopover, WordPopover } from "@/components/word-popover";
 import { useVideo } from "@/hooks/queries";
 import { useMe, useUpdateSettings } from "@/hooks/use-me";
 import { errorMessage, post, put } from "@/lib/api";
 import { stripRuby } from "@/lib/japanese";
+import { ENDED, loadYouTube, PLAYING, type YTPlayer } from "@/lib/youtube";
 import type { Lang, VideoLine, VideoWord } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------- YouTube player
-
-type YTPlayer = {
-  playVideo(): void;
-  pauseVideo(): void;
-  seekTo(seconds: number, allowSeekAhead: boolean): void;
-  getCurrentTime(): number;
-  setPlaybackRate(rate: number): void;
-  destroy(): void;
-  unloadModule?(name: string): void;
-};
-type YTNamespace = { Player: new (el: HTMLElement, opts: Record<string, unknown>) => YTPlayer };
-
-declare global {
-  interface Window {
-    YT?: YTNamespace;
-    onYouTubeIframeAPIReady?: () => void;
-  }
-}
-
-const PLAYING = 1;
-const ENDED = 0;
-
-let ytApi: Promise<YTNamespace> | null = null;
-/** YouTube's official IFrame Player API, loaded once. */
-function loadYouTube(): Promise<YTNamespace> {
-  ytApi ??= new Promise((resolve) => {
-    if (window.YT?.Player) return resolve(window.YT);
-    const previous = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      previous?.();
-      resolve(window.YT!);
-    };
-    const script = document.createElement("script");
-    script.src = "https://www.youtube.com/iframe_api";
-    script.async = true;
-    document.head.appendChild(script);
-  });
-  return ytApi;
-}
 
 function YouTubePlayer({ youtubeId, startS, onReady, onState }: {
   youtubeId: string; startS: number; onReady: (p: YTPlayer) => void; onState: (state: number) => void;
@@ -165,41 +128,6 @@ function FilePlayer({ src, poster, startS, onReady, onState, onSeek, overlay, fu
 }
 
 // ---------------------------------------------------------------- subtitles
-
-type Mode = "full" | "kana" | "text";
-
-/** Index of the line being spoken at `ms`: the last line that has started (-1 before the first). */
-function lineAt(lines: VideoLine[], ms: number): number {
-  let lo = 0;
-  let hi = lines.length - 1;
-  let found = -1;
-  while (lo <= hi) {
-    const mid = (lo + hi) >> 1;
-    if (lines[mid].start <= ms) {
-      found = mid;
-      lo = mid + 1;
-    } else hi = mid - 1;
-  }
-  return found;
-}
-
-function LineText({ line, mode, lang, big, onWordTap }: {
-  line: VideoLine; mode: Mode; lang: Lang; big?: boolean; onWordTap?: (w: string, el: HTMLElement) => void;
-}) {
-  const ja = lang === "ja";
-  const text = mode === "kana" && ja ? (line.kana ?? line.text) : line.text;
-  return (
-    <div className={cn(big ? "space-y-1.5" : "space-y-0.5")}>
-      <p className={cn(big ? "text-[22px] font-semibold leading-relaxed" : "text-[15px] leading-relaxed")} lang={lang}>
-        <RubyText text={text} lang={lang} furigana={mode === "full" ? "always" : "never"} romaji="off" showRomaji={false}
-          onWordTap={onWordTap} />
-      </p>
-      {mode === "full" && line.en && (
-        <p className={cn("text-muted-foreground", big ? "text-[15px]" : "text-xs")}>{line.en}</p>
-      )}
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------- words from this video
 

@@ -139,7 +139,7 @@ async def _seed_kana(up: _Upserter) -> None:
         for i, lesson in enumerate(s["lessons"]):
             up.lesson(f"ja-pre-{script}-l{i + 1}", unit, i + 1, "kana", lesson["title"],
                       {"script": script, "index": i, "chars": lesson["chars"], "words": lesson.get("words", []),
-                       "builder": BUILDER_VERSION})
+                       "builder": BUILDER_VERSION, **({"extra": True} if str(lesson.get("extra", "")).lower() == "yes" else {})})
         up.lesson(f"ja-pre-{script}-test", unit, 100, "kana", s["test"]["title"],
                   {"script": script, "index": -1, "test": True, "chars": [c for les in s["lessons"] for c in les["chars"]],
                    "builder": BUILDER_VERSION})

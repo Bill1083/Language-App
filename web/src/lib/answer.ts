@@ -50,11 +50,19 @@ const ROMAJI_ALIASES: [RegExp, string][] = [
   [/sy([aou])/g, "sh$1"], [/ty([aou])/g, "ch$1"], [/zy([aou])/g, "j$1"], [/jy([aou])/g, "j$1"],
 ];
 
+// Long vowels written with a macron or circumflex (Tōkyō, kōhī) mean the doubled vowel.
+const LONG_VOWELS: Record<string, string> = { ā: "aa", ī: "ii", ū: "uu", ē: "ee", ō: "oo", â: "aa", î: "ii", û: "uu", ê: "ee", ô: "oo" };
+
 function romajiKey(s: string) {
-  let t = s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[\s'’\-.,!?。、]/g, "");
+  let t = s.toLowerCase().replace(/[āīūēōâîûêô]/g, (c) => LONG_VOWELS[c]);
+  t = t.normalize("NFD").replace(/\p{M}/gu, "").replace(/[\s'’\-.,!?。、]/g, "");
   for (const [re, to] of ROMAJI_ALIASES) t = t.replace(re, to);
-  return t;
+  // おう is written ou or oo (ryokou / ryokoo); m before b/p is the older spelling of ん (sampo)
+  return t.replace(/ou/g, "oo").replace(/m(?=[bp])/g, "n");
 }
+
+// Kana whose sound differs from their usual romaji: を is said "o".
+const KANA_SPOKEN: Record<string, string[]> = { wo: ["o"] };
 
 export type PracticeVerdict = "correct" | "close" | "wrong";
 
@@ -66,7 +74,8 @@ export function practiceCheck(answer: string, accepted: string[], lang: string, 
   const romajiAnswer = kind === "kana" || (lang === "ja" && /^[\p{Script=Latin}\s'’\-.,!?]+$/u.test(typed));
   if (romajiAnswer) {
     const user = romajiKey(typed);
-    const variants = accepted.flatMap((a) => (kind === "kana" ? [a] : [romajiFor(a), a])).map(romajiKey).filter(Boolean);
+    const variants = accepted.flatMap((a) => (kind === "kana" ? [a, ...(KANA_SPOKEN[a] ?? [])] : [romajiFor(a), a]))
+      .map(romajiKey).filter(Boolean);
     if (variants.includes(user)) return "correct";
     return variants.some((v) => v.length >= 3 && editDistance(user, v, 1) <= 1) ? "close" : "wrong";
   }

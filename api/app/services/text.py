@@ -16,9 +16,17 @@ def strip_ruby(text: str) -> str:
     return RUBY.sub(r"\1", text)
 
 
+_READING_JUNK = re.compile(r"[・･\s]")
+
+
 def ruby_reading(text: str) -> str:
     """{日本|にほん}に → にほんに"""
-    return RUBY.sub(r"\2", text)
+    return RUBY.sub(lambda m: _READING_JUNK.sub("", m.group(2)), text)
+
+
+def clean_ruby(text: str) -> str:
+    """{先生|せん・せい} → {先生|せんせい}: models sometimes split readings with dots or spaces."""
+    return RUBY.sub(lambda m: "{" + m.group(1) + "|" + _READING_JUNK.sub("", m.group(2)) + "}", text)
 
 
 def speakable(text: str) -> str:

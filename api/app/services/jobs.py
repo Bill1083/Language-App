@@ -93,6 +93,30 @@ async def run_generate_lesson(lesson_id: int, force: bool = False, user_id: int 
     return "ok"
 
 
+async def run_repair_japanese(lesson_ids: list[int]) -> dict[str, int]:
+    """Admin → Content → Japanese check → Repair: fix furigana in already generated lessons."""
+    from .lesson_gen import japanese_lessons, repair_saved_lesson
+
+    totals = {"lessons": 0, "before": 0, "after": 0}
+    async with SessionLocal() as db:
+        ai = AIService(db, user_id=None)
+        wanted = set(lesson_ids)
+        for lesson in await japanese_lessons(db):
+            if lesson.id not in wanted:
+                continue
+            try:
+                result = await repair_saved_lesson(db, ai, lesson)
+            except Exception as e:
+                await db.rollback()
+                log.warning("repair of lesson %s failed: %s", lesson.id, e)
+                continue
+            totals["lessons"] += 1
+            totals["before"] += result["before"]
+            totals["after"] += result["after"]
+    await job_log("japanese_repair", **totals)
+    return totals
+
+
 async def run_build_clips(video_id: int) -> int:
     """Cut a ready video into reels clips (uploaded files also use their picture cuts)."""
     async with SessionLocal() as db:

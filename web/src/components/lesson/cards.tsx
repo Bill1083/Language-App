@@ -7,7 +7,6 @@ import { RubyText } from "@/components/ruby-text";
 import { Badge } from "@/components/ui/primitives";
 import { GenderBadge } from "@/components/word-popover";
 import { useMe } from "@/hooks/use-me";
-import { stripRuby } from "@/lib/japanese";
 import type { Exercise, Grammar, Lang, Vocab } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -222,7 +221,7 @@ export function KanjiWords({ words }: { words?: KanjiWord[] }) {
             <span className="block text-lg font-semibold" lang="ja"><RubyText text={w.word} lang="ja" showRomaji={false} /></span>
             {w.meaning && <span className="block text-sm text-muted-foreground">{w.meaning}</span>}
           </span>
-          <AudioButton text={stripRuby(w.word)} lang="ja" size="sm" />
+          <AudioButton text={w.word} lang="ja" size="sm" />
         </li>
       ))}
     </ul>

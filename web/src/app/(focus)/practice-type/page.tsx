@@ -17,7 +17,6 @@ import { usePracticeItems, type PracticeItem } from "@/hooks/queries";
 import { useActiveLang } from "@/hooks/use-language";
 import { ApiError, post } from "@/lib/api";
 import { practiceCheck } from "@/lib/answer";
-import { stripRuby } from "@/lib/japanese";
 import { LANGS } from "@/lib/languages";
 import { queueOffline } from "@/lib/outbox";
 import { sounds } from "@/lib/sounds";
@@ -274,7 +273,7 @@ function Session() {
                 <p className="text-2xl font-extrabold" lang={symbol ? undefined : lang}>
                   {symbol ? item!.answer : <RubyText text={item!.answer} lang={lang} />}
                 </p>
-                {item!.audio_text && <AudioButton text={stripRuby(item!.audio_text)} lang={lang} autoPlay />}
+                {item!.audio_text && <AudioButton text={item!.audio_text} lang={lang} autoPlay />}
               </div>
               {!correct && <p className="text-sm text-muted-foreground">You typed: <span className="line-through">{typed}</span></p>}
               {symbol && item!.hint && <p className="text-sm text-muted-foreground">{item!.hint}</p>}

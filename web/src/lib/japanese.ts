@@ -3,13 +3,16 @@
 export type RubyToken = { base: string; reading?: string };
 
 const RUBY_RE = /\{([^{}|]+)\|([^{}]+)\}/g;
+// Models sometimes split a reading with dots or spaces (せん・せい): never show or match those.
+const READING_JUNK = /[・･\s]/g;
+const cleanReading = (r: string) => r.replace(READING_JUNK, "");
 
 export function parseRuby(text: string): RubyToken[] {
   const out: RubyToken[] = [];
   let last = 0;
   for (const m of text.matchAll(RUBY_RE)) {
     if (m.index! > last) out.push({ base: text.slice(last, m.index) });
-    out.push({ base: m[1], reading: m[2] });
+    out.push({ base: m[1], reading: cleanReading(m[2]) });
     last = m.index! + m[0].length;
   }
   if (last < text.length) out.push({ base: text.slice(last) });
@@ -17,7 +20,7 @@ export function parseRuby(text: string): RubyToken[] {
 }
 
 export const stripRuby = (text: string) => text.replace(RUBY_RE, "$1");
-export const rubyReading = (text: string) => text.replace(RUBY_RE, "$2");
+export const rubyReading = (text: string) => text.replace(RUBY_RE, (_m, _b, r: string) => cleanReading(r));
 
 /** While streaming, hide a half-written `{漢字|かん` group. */
 export function stripOpenRuby(text: string) {

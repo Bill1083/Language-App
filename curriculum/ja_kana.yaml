@@ -5,6 +5,8 @@
 # chars:  [kana, romaji, mnemonic, optional example word to play — for signs
 #          like っ and ー that have no sound of their own]
 # words:  [word, romaji, meaning] — only uses kana taught up to that lesson
+# extra:  yes for lessons added after the module first shipped; they don't
+#         count towards unlocking A1, so finished learners aren't locked out.
 
 hiragana:
   title: Hiragana
@@ -176,6 +178,59 @@ hiragana:
         - [りょこう, ryokou, travel]
         - [ちょっと, chotto, a little]
         - [おちゃ, ocha, tea]
+    - title: More combinations きゅ しょ ちゃ にゅ
+      extra: yes
+      chars:
+        - [きゅ, kyu, "き + small ゅ — kyu, as in 'cue'"]
+        - [きょ, kyo, "き + small ょ — kyo, as in Tokyo"]
+        - [しゃ, sha, "し + small ゃ — sha"]
+        - [しょ, sho, "し + small ょ — sho, as in 'show'"]
+        - [ちゃ, cha, "ち + small ゃ — cha, as in 'cha-cha'"]
+        - [ちゅ, chu, "ち + small ゅ — chu, as in 'choose'"]
+        - [にゅ, nyu, "に + small ゅ — nyu, as in 'menu'"]
+        - [にょ, nyo, "に + small ょ — nyo"]
+      words:
+        - [きょう, kyou, today]
+        - [きゅうり, kyuuri, cucumber]
+        - [しょくじ, shokuji, meal]
+        - [ちゃわん, chawan, rice bowl]
+        - [ちゅうい, chuui, caution]
+    - title: More combinations ひゃ みゃ りゅ
+      extra: yes
+      chars:
+        - [ひゃ, hya, "ひ + small ゃ — hya"]
+        - [ひゅ, hyu, "ひ + small ゅ — hyu, as in 'huge'"]
+        - [ひょ, hyo, "ひ + small ょ — hyo"]
+        - [みゃ, mya, "み + small ゃ — mya"]
+        - [みゅ, myu, "み + small ゅ — myu, as in 'music'"]
+        - [みょ, myo, "み + small ょ — myo"]
+        - [りゃ, rya, "り + small ゃ — rya"]
+        - [りゅ, ryu, "り + small ゅ — ryu"]
+      words:
+        - [ひゃく, hyaku, hundred]
+        - [みょうじ, myouji, family name]
+        - [りゅう, ryuu, dragon]
+        - [ひょう, hyou, leopard / hail]
+    - title: Voiced combinations ぎゃ じゅ びょ ぴょ
+      extra: yes
+      chars:
+        - [ぎゃ, gya, "ぎ + small ゃ — gya"]
+        - [ぎゅ, gyu, "ぎ + small ゅ — gyu, as in gyudon"]
+        - [ぎょ, gyo, "ぎ + small ょ — gyo, as in gyoza"]
+        - [じゅ, ju, "じ + small ゅ — ju, as in 'juice'"]
+        - [じょ, jo, "じ + small ょ — jo, as in 'jog'"]
+        - [びゃ, bya, "び + small ゃ — bya"]
+        - [びゅ, byu, "び + small ゅ — byu, as in 'beautiful'"]
+        - [びょ, byo, "び + small ょ — byo"]
+        - [ぴゃ, pya, "ぴ + small ゃ — pya"]
+        - [ぴゅ, pyu, "ぴ + small ゅ — pyu"]
+        - [ぴょ, pyo, "ぴ + small ょ — pyo, as in ぴょんぴょん (hop hop)"]
+      words:
+        - [ぎゅうにゅう, gyuunyuu, milk]
+        - [じゅぎょう, jugyou, class / lesson]
+        - [びょういん, byouin, hospital]
+        - [じょうず, jouzu, good at]
+        - [はっぴょう, happyou, presentation]
   test:
     title: Hiragana test
 
@@ -283,8 +338,8 @@ katakana:
         - [ギ, gi, "キ plus ゛ — gi"]
         - [グ, gu, "ク plus ゛ — gu"]
         - [ゲ, ge, "ケ plus ゛ — ge"]
-        - [ザ, za, "サ plus ゛ — za"]
         - [ゴ, go, "コ plus ゛ — go"]
+        - [ザ, za, "サ plus ゛ — za"]
         - [ジ, ji, "シ plus ゛ — ji"]
         - [ズ, zu, "ス plus ゛ — zu"]
         - [ゼ, ze, "セ plus ゛ — ze"]
@@ -321,5 +376,24 @@ katakana:
         - [チョコレート, chokoreeto, chocolate]
         - [カップ, kappu, cup]
         - [パーティー, paatii, party]
+    - title: More combinations ジュ ニュ フォ
+      extra: yes
+      chars:
+        - [キュ, kyu, "キ + small ュ — kyu"]
+        - [ショ, sho, "シ + small ョ — sho"]
+        - [チャ, cha, "チ + small ャ — cha"]
+        - [ジャ, ja, "ジ + small ャ — ja, as in 'jam'"]
+        - [ジュ, ju, "ジ + small ュ — ju, as in 'juice'"]
+        - [ジョ, jo, "ジ + small ョ — jo"]
+        - [ニュ, nyu, "ニ + small ュ — nyu, as in 'news'"]
+        - [フォ, fo, "フ + small ォ — fo (foreign sound)"]
+        - [フェ, fe, "フ + small ェ — fe (foreign sound)"]
+        - [ディ, di, "デ + small ィ — di (foreign sound)"]
+      words:
+        - [ジュース, juusu, juice]
+        - [ニュース, nyuusu, news]
+        - [ジャム, jamu, jam]
+        - [フォーク, fooku, fork]
+        - [カフェ, kafe, café]
   test:
     title: Katakana test

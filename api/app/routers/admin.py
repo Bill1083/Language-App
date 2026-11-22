@@ -32,7 +32,8 @@ from ..services import runtime_config
 from ..services.ai import AIService, clear_overloaded
 from ..services.audio_cache import audio_url, tts_key
 from ..services.jobs import JOB_LOG, enqueue
-from ..services.lesson_gen import generate_placement_bank, save_content
+from ..services.ja_check import check_lesson, issues_json
+from ..services.lesson_gen import generate_placement_bank, japanese_lessons, save_content, saved_content
 from ..services.pricing import pricing_table
 from ..services.runtime_config import OVERRIDABLE, PROVIDER_KEY_ENV, get_ai_config, mask
 
@@ -324,6 +325,39 @@ async def content(admin: AdminUser, db: Db, lang: str) -> dict[str, Any]:
             units.append({"id": u.id, "title": u.title, "lessons": lessons})
         out.append({"cefr": lv.cefr, "units": units})
     return {"levels": out, "counts": counts}
+
+
+@router.get("/japanese-check")
+async def japanese_check(admin: AdminUser, db: Db) -> dict[str, Any]:
+    """Furigana, readings and tiles checked across every generated Japanese lesson (no AI calls)."""
+    out = []
+    lessons = await japanese_lessons(db)
+    for le in lessons:
+        content, _ = await saved_content(db, le)
+        issues = check_lesson(content)
+        if issues:
+            out.append({"id": le.id, "title": le.title, "cefr": le.unit.level.cefr, "kind": le.kind,
+                        "errors": sum(i.severity == "error" for i in issues),
+                        "warnings": sum(i.severity == "warning" for i in issues), "issues": issues_json(issues)})
+    return {"checked": len(lessons), "lessons": out}
+
+
+class RepairIn(BaseModel):
+    ids: list[int] | None = None  # default: every lesson with errors
+
+
+@router.post("/japanese-check/repair")
+async def japanese_repair(body: RepairIn, admin: AdminUser, db: Db) -> dict[str, int]:
+    ids = body.ids
+    if ids is None:
+        ids = []
+        for le in await japanese_lessons(db):
+            content, _ = await saved_content(db, le)
+            if any(i.severity == "error" for i in check_lesson(content)):
+                ids.append(le.id)
+    if ids:
+        await enqueue("repair_japanese", ids, job_id="repair-japanese")
+    return {"queued": len(ids)}
 
 
 @router.get("/lessons/{lesson_id}")

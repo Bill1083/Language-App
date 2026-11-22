@@ -36,7 +36,7 @@ levels:
       lessons:
         - title: Numbers
           objectives: [Count to 100, Give a phone number]
-          vocab: [一, 二, 三, 四, 五, 十, 百, 電話番号]
+          vocab: [一, 二, 三, 四, 五, 六, 七, 八, 九, 十, 百, 電話番号]
           grammar: [Number readings (よん or し and なな or しち)]
         - title: What time is it?
           objectives: [Ask and tell the time]
@@ -44,11 +44,11 @@ levels:
           grammar: [Time + に, から and まで]
         - title: Days and dates
           objectives: [Say days of the week and dates]
-          vocab: [月曜日, 火曜日, 水曜日, 日曜日, 今日, 明日, 昨日, 誕生日]
+          vocab: [月曜日, 火曜日, 水曜日, 木曜日, 金曜日, 土曜日, 日曜日, 今日, 明日, 誕生日]
           grammar: [Irregular date readings (ついたち and はつか)]
         - title: How much is it?
           objectives: [Ask prices and buy things]
-          vocab: [円, いくら, これ, それ, あれ, どれ, 高い, 安い]
+          vocab: [円, いくら, これ, それ, あれ, どれ, 高い, 安い, 千, 万]
           grammar: [これ / それ / あれ / どれ, 〜をください]
 
     - unit: Things & places
@@ -82,7 +82,7 @@ levels:
           grammar: [ます verbs, The object particle を]
         - title: Every day
           objectives: [Say when and how often you do things]
-          vocab: [毎日, 毎朝, よく, 時々, あまり, 全然, 週末, 働きます]
+          vocab: [毎日, 毎朝, よく, 時々, あまり, 全然, 夜, 働きます]
           grammar: [Frequency adverbs and negative ません]
         - title: Going places
           objectives: [Say where you go and how]
@@ -103,7 +103,7 @@ levels:
           grammar: [Listing with と and や]
         - title: At a restaurant
           objectives: [Order politely]
-          vocab: [メニュー, 注文, お願いします, 一つ, 二つ, 水, お会計, いらっしゃいませ]
+          vocab: [メニュー, 注文, お願いします, 一つ, 二つ, お箸, お会計, いらっしゃいませ]
           grammar: [〜をお願いします, Counter つ]
         - title: I like sushi
           objectives: [Say what you like and dislike]
@@ -153,7 +153,7 @@ levels:
           grammar: [X は Y が Adj (彼女は髪が長いです)]
         - title: Counting
           objectives: [Count people and things]
-          vocab: [一人, 二人, 三人, 一つ, 一枚, 一本, 一冊, 何本]
+          vocab: [一人, 二人, 三人, いくつ, 一枚, 一本, 一冊, 何本]
           grammar: [Counters 人 / つ / 枚 / 本 / 冊]
 
     - unit: Weather & plans
@@ -162,7 +162,7 @@ levels:
       lessons:
         - title: The weather
           objectives: [Describe the weather]
-          vocab: [天気, 晴れ, 雨, 雪, 曇り, 風, 天気予報, 降ります]
+          vocab: [気温, 晴れ, 雨, 雪, 曇り, 風, 天気予報, 降ります]
           grammar: [Weather expressions (雨が降ります)]
         - title: Seasons
           objectives: [Talk about seasons]
@@ -174,7 +174,7 @@ levels:
           grammar: [Verb stem + たいです, X が欲しいです]
         - title: Weekend plans
           objectives: [Talk about plans]
-          vocab: [予定, 週末, 土曜日, 何をしますか, 掃除, 洗濯, 友達と, 家で]
+          vocab: [予定, 週末, 暇, 何をしますか, 掃除, 洗濯, 友達と, 家で]
           grammar: [Particles で (place of action) and と (with)]
 
   A2:
@@ -192,7 +192,7 @@ levels:
           grammar: [〜てください]
         - title: I'm doing it now
           objectives: [Describe ongoing actions and states]
-          vocab: [〜ています, 住んでいます, 知っています, 持っています, 今, 電話, 雨が降っています, 着ています]
+          vocab: [〜ています, 住んでいます, 知っています, 持っています, 勤めています, 電話, 雨が降っています, 着ています]
           grammar: [〜ています for progress and states]
         - title: After that
           objectives: [Sequence actions]
@@ -259,7 +259,7 @@ levels:
           grammar: [Potential verb forms]
         - title: My hobbies
           objectives: [Talk about hobbies]
-          vocab: [趣味, 〜のが好き, 〜こと, 映画を見ること, 釣り, 集める, 絵を描く, 上手 / 下手]
+          vocab: [趣味, 〜のが好き, 〜こと, 映画を見ること, 釣り, 集める, 絵を描く, 下手]
           grammar: [Nominalising with の and こと]
 
     - unit: Reasons & opinions
@@ -268,7 +268,7 @@ levels:
       lessons:
         - title: Because
           objectives: [Give reasons]
-          vocab: [から, ので, 疲れた, 熱がある, 忙しい, 遅れて, 道が込んでいて, 理由]
+          vocab: [から, ので, 疲れた, 熱がある, 忙しい, 遅れて, 道が混んでいて, 理由]
           grammar: [から vs ので]
         - title: I think
           objectives: [Give your opinion]
@@ -280,7 +280,7 @@ levels:
           grammar: [Quotation with と言う]
         - title: Probably
           objectives: [Make guesses]
-          vocab: [〜でしょう, 〜かもしれません, 明日は晴れる, 多分, 遅れる, 間に合う, 試合, 勝つ]
+          vocab: [〜でしょう, 〜かもしれません, 明日は晴れる, 台風, 遅れる, 間に合う, 試合, 勝つ]
           grammar: [でしょう and かもしれない]
 
     - unit: Giving & receiving
@@ -301,7 +301,7 @@ levels:
           grammar: [Benefactive auxiliaries てあげる / てもらう / てくれる]
         - title: Thank you for…
           objectives: [Thank people for favours]
-          vocab: [〜てくれてありがとう, お世話になりました, 感謝, わざわざ, おかげで, 気を使う, 恐縮, とんでもない]
+          vocab: [〜てくれてありがとう, お世話になりました, 感謝, わざわざ, おかげで, 気を使う, いろいろ, とんでもない]
           grammar: [Thanking with 〜てくれて / 〜ていただいて]
 
     - unit: Conditions
@@ -314,11 +314,11 @@ levels:
           grammar: [〜たら conditional]
         - title: Whenever (と)
           objectives: [Describe automatic consequences]
-          vocab: [〜と, 押すと, 曲がると, 春になると, ボタン, 出る, 見える, 右]
+          vocab: [〜と, 押すと, 曲がると, 春になると, ボタン, 出る, 電気がつく, 橋]
           grammar: [〜と for natural consequences]
         - title: If (ば)
           objectives: [Use the ば conditional]
-          vocab: [〜ば, 行けば, 安ければ, 時間があれば, 練習すれば, 間に合う, 上手になる, どうすれば]
+          vocab: [〜ば, 行けば, 安ければ, 時間があれば, 練習すれば, もっと, 上手になる, どうすれば]
           grammar: [ば-form]
         - title: If that's the case (なら)
           objectives: [Give advice with なら]
@@ -339,7 +339,7 @@ levels:
           grammar: [に乗る / を降りる]
         - title: At the hotel
           objectives: [Check in and make requests]
-          vocab: [予約, チェックイン, 部屋, 鍵, 朝食, 和室, 一泊, 荷物]
+          vocab: [フロント, チェックイン, タオル, 鍵, 朝食, 和室, 一泊, 荷物]
           grammar: [Polite requests 〜ていただけますか]
         - title: Let's go
           objectives: [Make plans with the volitional]
@@ -428,7 +428,7 @@ levels:
           grammar: [Business phone keigo]
         - title: Customer service
           objectives: [Understand shop and service keigo]
-          vocab: [いらっしゃいませ, ございます, 〜でございます, お決まりでしょうか, ご注文, お待たせしました, お会計, またお越しください]
+          vocab: [お預かりします, ございます, 〜でございます, お決まりでしょうか, ご注文, お待たせしました, 〜になります, またお越しください]
           grammar: [丁寧語 (ございます) and service phrases]
 
     - unit: Purpose & change
@@ -551,7 +551,7 @@ levels:
           grammar: [Softening opinions (〜かと思います)]
         - title: Negotiation
           objectives: [Negotiate indirectly]
-          vocab: [条件, 価格, 値引き, 納期, 前向きに, 難しい, 譲歩, 合意]
+          vocab: [条件, 価格, 値引き, 納期, 前向きに, 見積もり, 譲歩, 合意]
           grammar: [Indirect refusal (〜は少し難しいかと)]
         - title: Apologising at work
           objectives: [Apologise formally]

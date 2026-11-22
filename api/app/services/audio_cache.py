@@ -14,6 +14,7 @@ from ..config import get_settings
 from ..models import AudioCache
 from ..providers.tts import SHORT_TEXT_VOICES
 from .ai import AIService, tts_for
+from .ja_check import speakable_japanese
 from .text import speakable
 
 _locks: dict[str, asyncio.Lock] = {}
@@ -56,7 +57,7 @@ def audio_url(key: str) -> str:
 async def tts_key(ai: AIService, text: str, lang: str, *, purpose: str = "lesson", gender: str = "female",
                   speed: float = 1.0, voice: str | None = None) -> str:
     """Return the cache key for this clip, synthesising it first if needed."""
-    text = speakable(text)
+    text = speakable(speakable_japanese(text) if lang == "ja" else text)
     if not text:
         raise ValueError("Nothing to say")
     cfg = await ai.config()

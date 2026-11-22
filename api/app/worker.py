@@ -19,6 +19,10 @@ async def generate_lesson(ctx, lesson_id: int, force: bool = False) -> str:
     return await jobs.run_generate_lesson(lesson_id, force)
 
 
+async def repair_japanese(ctx, lesson_ids: list[int]) -> dict:
+    return await jobs.run_repair_japanese(lesson_ids)
+
+
 async def build_clips(ctx, video_id: int) -> int:
     return await jobs.run_build_clips(video_id)
 
@@ -70,7 +74,8 @@ async def startup(ctx) -> None:
 class WorkerSettings:
     functions = [generate_lesson, precache_lesson_audio, pregenerate, analyze_turn, summarize_conversation,
                  kanji_hooks, func(process_video, timeout=1800),
-                 func(process_video_file, timeout=3600), build_clips]  # long videos take a while
+                 func(process_video_file, timeout=3600), build_clips,
+                 func(repair_japanese, timeout=3600)]  # long videos take a while
     cron_jobs = [
         cron(cleanup_recordings, hour={3}, minute={17}),
         cron(cleanup_uploads, hour={3}, minute={27}),

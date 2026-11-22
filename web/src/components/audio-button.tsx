@@ -66,7 +66,8 @@ export function AudioButton({
       }
       if (!clean) return;
       setLoading(true);
-      const url = await ttsUrl(clean, lang, { speed: rate, purpose, gender });
+      // furigana goes to the server too: Japanese words are spoken with the reading the lesson teaches
+      const url = await ttsUrl(text!, lang, { speed: rate, purpose, gender });
       setLoading(false);
       await player.play(url, id);
     } catch (e) {

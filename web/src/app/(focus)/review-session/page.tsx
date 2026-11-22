@@ -19,7 +19,6 @@ import { useActiveLang } from "@/hooks/use-language";
 import { ApiError, post } from "@/lib/api";
 import { localCheck } from "@/lib/answer";
 import { player } from "@/lib/audio";
-import { stripRuby } from "@/lib/japanese";
 import { queueOffline } from "@/lib/outbox";
 import { sounds } from "@/lib/sounds";
 import type { Lang, SrsCard } from "@/lib/types";
@@ -130,7 +129,7 @@ function Back({ card, lang, verdict }: { card: SrsCard; lang: Lang; verdict: str
         )}
         <div className="flex items-center gap-3">
           <p className="text-3xl font-extrabold"><RubyText text={b.answer} lang={lang} /></p>
-          {(b.audio_text ?? b.answer) && <AudioButton text={stripRuby(b.audio_text ?? b.answer)} lang={lang} autoPlay />}
+          {(b.audio_text ?? b.answer) && <AudioButton text={b.audio_text ?? b.answer} lang={lang} autoPlay />}
         </div>
         {b.explanation && <p className="max-w-md text-center text-sm text-muted-foreground">{b.explanation}</p>}
         {b.example && (

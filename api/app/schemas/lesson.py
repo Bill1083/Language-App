@@ -204,6 +204,23 @@ class LessonDraft(BaseModel):
     pronunciation: list[str] = Field(default_factory=list)
     exercises: list[dict[str, Any]] = Field(min_length=1)
 
+    @field_validator("pronunciation", mode="before")
+    @classmethod
+    def _tips_as_text(cls, v: Any) -> Any:
+        # models sometimes return {"topic": …, "tip": …} instead of a plain string
+        if isinstance(v, list):
+            return [" — ".join(str(x) for x in t.values() if x) if isinstance(t, dict) else t for t in v]
+        return v
+
+
+class QuizDraft(LessonDraft):
+    """Checkpoints and level tests only use the exercises: anything else the model adds
+    (it often fills in grammar or tips in its own shape) is ignored, not a reason to fail."""
+
+    vocab: list[Any] = Field(default_factory=list)  # type: ignore[assignment]
+    grammar: list[Any] = Field(default_factory=list)  # type: ignore[assignment]
+    pronunciation: list[Any] = Field(default_factory=list)  # type: ignore[assignment]
+
 
 def validate_exercises(raw: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:
     good, errors = [], []

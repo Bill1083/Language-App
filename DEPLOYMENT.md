@@ -121,6 +121,14 @@ Migrations run automatically. Lessons whose YAML skeleton changed are regenerate
 If you changed `nginx.conf` in the repo, copy the changed lines into `/etc/nginx/sites-available/parlo`
 (not the whole file — Certbot edited yours), then `sudo nginx -t && sudo systemctl reload nginx`.
 
+## Japanese content check
+
+**Admin → Content → Japanese → Japanese check** lists furigana problems in generated lessons (kanji without
+furigana, readings that don't fit the kanji, broken markup, word-bank tiles that don't spell the answer). New
+lessons are checked and repaired as they're generated; for lessons generated before this existed, press
+**Repair** once after updating. It fixes only the faulty sentences (a few cents for a whole level) and keeps
+answer history. Warnings about alternative typed answers without furigana are harmless.
+
 ## Troubleshooting conversations
 
 - **"Can't connect" / "Connection refused"** — the WebSocket was rejected before it opened. Check the

@@ -35,8 +35,10 @@ LANGUAGE_RULES = {
     ),
     "ja": (
         "Japanese: write with kanji where a native would at this level, and put furigana markup on EVERY word that "
-        "contains kanji, as {漢字|かな} — e.g. {日本|にほん}に{行|い}きます, {食|た}べる. Words written only in kana "
-        "carry no markup. Never write romaji in Japanese fields. Give `reading` (kana) for every vocab entry. Use "
+        "contains kanji, as {漢字|かな} — e.g. {日本|にほん}に{行|い}きます, {食|た}べる — in EVERY Japanese string, "
+        "including options, answers, passages and tiles. The reading is plain hiragana with no dots or spaces "
+        "({先生|せんせい}, never {先生|せん・せい}). Words written only in kana carry no markup, and a blank ___ "
+        "never goes inside markup. Never write romaji in Japanese fields. Give `reading` (kana) for every vocab entry. Use "
         "です/ます polite style unless the lesson teaches plain form, and label each grammar point's register in "
         "`politeness` (polite / plain / both). Grammar points about particles say which particle and why."
     ),

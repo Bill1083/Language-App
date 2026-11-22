@@ -394,6 +394,75 @@ function LessonEditor({ id, onClose }: { id: number; onClose: () => void }) {
 
 const STATUS_TONE: Record<string, "success" | "warning" | "danger" | "neutral" | "primary"> = { ready: "success", queued: "primary", generating: "warning", failed: "danger", pending: "neutral" };
 
+type CheckIssue = { where: string; kind: string; detail: string; severity: "error" | "warning" };
+type CheckResult = {
+  checked: number;
+  lessons: { id: number; title: string; cefr: string; kind: string; errors: number; warnings: number; issues: CheckIssue[] }[];
+};
+
+/** Furigana, readings and tiles across every generated Japanese lesson, with a one-click repair. */
+function JapaneseCheck({ onOpen }: { onOpen: (id: number) => void }) {
+  const [repairing, setRepairing] = React.useState(false);
+  const { data, refetch, isFetching } = useQuery({
+    queryKey: ["admin", "japanese-check"],
+    queryFn: () => get<CheckResult>("/admin/japanese-check"),
+    refetchInterval: repairing ? 6000 : false,
+  });
+  const repair = useMutation({
+    mutationFn: () => post<{ queued: number }>("/admin/japanese-check/repair", {}),
+    onSuccess: (r) => {
+      toast.success(r.queued ? `Repairing ${r.queued} lessons in the background` : "Nothing to repair");
+      setRepairing(r.queued > 0);
+      setTimeout(() => setRepairing(false), 5 * 60_000);
+    },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+  const errors = data?.lessons.reduce((n, l) => n + l.errors, 0) ?? 0;
+  const warnings = data?.lessons.reduce((n, l) => n + l.warnings, 0) ?? 0;
+  return (
+    <Card className="space-y-3 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="font-bold">Japanese check</p>
+          <p className="text-sm text-muted-foreground">
+            {data ? `${data.checked} lessons checked · ${errors} errors · ${warnings} warnings` : "Checking…"}
+            {repairing && " · repairing…"}
+          </p>
+        </div>
+        <Button size="sm" variant="ghost" loading={isFetching} onClick={() => void refetch()}><RefreshCw /> Check</Button>
+        <Button size="sm" disabled={!errors} loading={repair.isPending} onClick={() => repair.mutate()}><Wand /> Repair</Button>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Errors are things a learner would see: kanji without furigana, a reading that doesn&apos;t fit the kanji, broken
+        markup, tiles that don&apos;t spell the answer. Repair asks the AI to fix only those sentences and keeps a fix only
+        if the visible text stays the same.
+      </p>
+      {!!data?.lessons.length && (
+        <div className="max-h-96 divide-y overflow-y-auto rounded-xl border">
+          {data.lessons.map((l) => (
+            <details key={l.id} className="px-3 py-2 text-sm">
+              <summary className="flex cursor-pointer items-center gap-2">
+                <Badge>{l.cefr}</Badge>
+                <span className="min-w-0 flex-1 truncate">{l.title}</span>
+                {l.errors > 0 && <Badge tone="danger">{l.errors}</Badge>}
+                {l.warnings > 0 && <Badge tone="warning">{l.warnings}</Badge>}
+              </summary>
+              <ul className="mt-2 space-y-1">
+                {l.issues.map((i, n) => (
+                  <li key={n} className={cn("break-words", i.severity === "error" ? "text-danger" : "text-muted-foreground")} lang="ja">
+                    {i.detail}
+                  </li>
+                ))}
+              </ul>
+              <Button size="sm" variant="outline" className="mt-2" onClick={() => onOpen(l.id)}><Settings2 /> Open lesson</Button>
+            </details>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function ContentTab() {
   const qc = useQueryClient();
   const [lang, setLang] = React.useState<string>("fr");
@@ -422,6 +491,7 @@ function ContentTab() {
         {data && Object.entries(data.counts).map(([s, n]) => <Badge key={s} tone={STATUS_TONE[s] ?? "neutral"}>{s}: {n}</Badge>)}
         <Button variant="outline" size="sm" className="ml-auto" loading={placement.isPending} onClick={() => placement.mutate()}><RefreshCw /> Placement bank</Button>
       </div>
+      {lang === "ja" && <JapaneseCheck onOpen={setEditing} />}
       {!data ? <Skeleton className="h-96" /> : data.levels.map((lv) => (
         <details key={lv.cefr} className="rounded-2xl border bg-card" open={lv.cefr === "A1"}>
           <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 font-bold">

@@ -17,9 +17,17 @@ from sqlalchemy.orm import selectinload
 
 from ..models import Exercise, Lesson, Level, PlacementBank, Scenario, Unit, VocabItem
 from ..providers.base import ChatMessage
-from ..schemas.lesson import LessonDraft, PlacementBankDraft, UnitScenarioDraft, VocabEntry, validate_exercises
+from ..schemas.lesson import (
+    LessonDraft,
+    PlacementBankDraft,
+    QuizDraft,
+    UnitScenarioDraft,
+    VocabEntry,
+    validate_exercises,
+)
 from . import prompts
 from .ai import AIService
+from .ja_check import autofix, check_lesson, issues_json, repair
 from .kana import build_kana_lesson
 from .languages import CEFR
 from .text import ruby_reading, strip_ruby
@@ -118,7 +126,8 @@ async def _draft(ai: AIService, lesson: Lesson, db: AsyncSession) -> LessonDraft
             for s in skeletons]}, ensure_ascii=False)
 
     messages = [ChatMessage("user", request)]
-    draft = await ai.llm_json("lesson_generation", "content", LessonDraft, system=system, messages=messages,
+    schema = LessonDraft if lesson.kind == "lesson" else QuizDraft
+    draft = await ai.llm_json("lesson_generation", "content", schema, system=system, messages=messages,
                               temperature=0.6, max_tokens=16000)
     good, errors = validate_exercises(draft.exercises)
     if len(good) < MIN_EXERCISES.get(lesson.kind, 8):
@@ -126,13 +135,57 @@ async def _draft(ai: AIService, lesson: Lesson, db: AsyncSession) -> LessonDraft
         messages += [ChatMessage("assistant", draft.model_dump_json()[:6000]),
                      ChatMessage("user", "Several exercises were invalid:\n- " + "\n- ".join(errors[:12])
                                  + "\nReturn the full corrected lesson JSON.")]
-        draft = await ai.llm_json("lesson_generation", "content", LessonDraft, system=system, messages=messages,
+        draft = await ai.llm_json("lesson_generation", "content", schema, system=system, messages=messages,
                                   temperature=0.4, max_tokens=16000)
         good, errors = validate_exercises(draft.exercises)
         if len(good) < MIN_EXERCISES.get(lesson.kind, 8) // 2:
             raise ValueError(f"Too few valid exercises after retry: {errors[:3]}")
     draft.exercises = good
     return draft
+
+
+async def check_japanese(ai: AIService, lesson: Lesson, content: dict[str, Any]) -> list[dict[str, str]]:
+    """Clean and repair furigana, then record what's still wrong for Admin → Content check."""
+    try:
+        fixed, left = await repair(ai, content)
+    except Exception as e:  # a failed repair never costs the learner the lesson
+        log.warning("furigana repair failed for %s: %s", lesson.slug, e)
+        fixed, left = autofix(content), check_lesson(content)
+    content["checks"] = issues_json(left)
+    if fixed or left:
+        log.info("lesson %s: %d furigana fixes, %d issues left", lesson.slug, fixed, len(left))
+    return content["checks"]
+
+
+async def saved_content(db: AsyncSession, lesson: Lesson) -> tuple[dict[str, Any], list[Exercise]]:
+    """A stored lesson as one content dict (exercises in order), plus the exercise rows."""
+    rows = list(await db.scalars(select(Exercise).where(Exercise.lesson_id == lesson.id).order_by(Exercise.order)))
+    return {**(lesson.content_json or {}), "exercises": [r.payload_json for r in rows]}, rows
+
+
+async def japanese_lessons(db: AsyncSession) -> list[Lesson]:
+    """Generated Japanese lessons, checkpoints and tests (kana lessons are built from YAML)."""
+    return list(await db.scalars(
+        select(Lesson).join(Unit, Lesson.unit_id == Unit.id).join(Level, Unit.level_id == Level.id)
+        .where(Level.language_code == "ja", Lesson.status == "ready", Lesson.kind != "kana")
+        .order_by(Level.order, Unit.order, Lesson.order)
+        .options(selectinload(Lesson.unit).selectinload(Unit.level))))
+
+
+async def repair_saved_lesson(db: AsyncSession, ai: AIService, lesson: Lesson) -> dict[str, int]:
+    """Clean and repair a lesson's furigana in place: exercise rows keep their ids, so
+    answer history and reports stay attached."""
+    content, rows = await saved_content(db, lesson)
+    before = len([i for i in check_lesson(content) if i.severity == "error"])
+    await check_japanese(ai, lesson, content)
+    for row, payload in zip(rows, content["exercises"], strict=True):
+        if payload != row.payload_json:
+            row.payload_json = payload
+    lesson.content_json = {k: v for k, v in content.items() if k != "exercises"}
+    await upsert_lesson_vocab(db, lesson, content.get("vocab", []))
+    await db.commit()
+    after = len([i for i in content["checks"] if i["severity"] == "error"])
+    return {"before": before, "after": after}
 
 
 async def save_content(db: AsyncSession, lesson: Lesson, content: dict[str, Any], model: str | None) -> None:
@@ -189,6 +242,8 @@ async def generate_lesson(db: AsyncSession, lesson_id: int, ai: AIService | None
             ai = ai or AIService(db)
             draft = await _draft(ai, lesson, db)
             content = assemble(draft, draft.exercises, seed=lesson.id * 7919 + lesson.version, kind=lesson.kind)
+            if lesson.unit.level.language_code == "ja":
+                await check_japanese(ai, lesson, content)
             cfg = await ai.config()
             await save_content(db, lesson, content, model=f"{cfg.llm_provider}/{cfg.llm_models['content']}")
         await db.commit()

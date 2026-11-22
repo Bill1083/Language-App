@@ -29,7 +29,9 @@ def kana_done(enrolment: Enrolment, progress: dict[int, LessonProgress], levels:
     for unit in pre.units:
         lessons = unit.lessons
         test = next((le for le in lessons if le.order == 100), None)
-        all_done = all(progress.get(le.id) and progress[le.id].status == "completed" for le in lessons if le.order != 100)
+        # lessons added to the module later ("extra") don't re-lock A1 for people who already finished it
+        all_done = all(progress.get(le.id) and progress[le.id].status == "completed" for le in lessons
+                       if le.order != 100 and not (le.skeleton_json or {}).get("extra"))
         if (test and progress.get(test.id) and progress[test.id].status == "completed") or all_done:
             tests_passed += 1
     return tests_passed == len(pre.units)

@@ -83,6 +83,8 @@ and compare voices side by side.
 | `REGISTRATION_MODE` | `invite` | `open`, `invite` (admin creates links) or `closed`. The first account is always allowed. |
 | `RECORDING_RETENTION_DAYS` | `30` | Voice recordings older than this are deleted nightly. |
 | `STORE_RECORDINGS` | `true` | `false` keeps transcripts only; audio is deleted right after transcription. |
+| `VIDEO_MAX_FILE_MB`, `VIDEO_MAX_MINUTES`, `VIDEO_STORAGE_GB` | `2048`, `60`, `25` | Limits for uploaded video files (per file, per video, whole library). |
+| `VIDEO_UPLOADERS` | `admin` | Who can upload video files: `admin` or `everyone`. Anyone can add YouTube links. |
 | `COOKIE_SECURE` | `auto` | Secure cookies from `X-Forwarded-Proto`; force with `true`/`false`. |
 | `LLM_PROVIDER` | `gemini` | `gemini`, `anthropic`, `openai`, `openrouter`, `openai_compatible`. |
 | `LLM_API_KEY` | — | Key for the LLM provider. |

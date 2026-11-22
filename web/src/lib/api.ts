@@ -27,17 +27,23 @@ type Options = {
   method?: string;
   body?: unknown;
   form?: FormData;
+  /** raw bytes (e.g. a piece of a video upload) */
+  blob?: Blob;
   signal?: AbortSignal;
   /** return the raw Response (for 202 handling) */
   raw?: boolean;
 };
 
 export async function api<T = unknown>(path: string, opts: Options = {}): Promise<T> {
-  const method = opts.method ?? (opts.body !== undefined || opts.form ? "POST" : "GET");
+  const method = opts.method ?? (opts.body !== undefined || opts.form || opts.blob ? "POST" : "GET");
   const headers: Record<string, string> = {};
   if (method !== "GET") headers["x-csrf-token"] = csrfToken();
   let body: BodyInit | undefined;
   if (opts.form) body = opts.form;
+  else if (opts.blob) {
+    headers["content-type"] = "application/octet-stream";
+    body = opts.blob;
+  }
   else if (opts.body !== undefined) {
     headers["content-type"] = "application/json";
     body = JSON.stringify(opts.body);

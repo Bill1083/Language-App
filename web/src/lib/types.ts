@@ -327,8 +327,13 @@ export type Video = {
   thumbnail: string | null;
   duration_s: number | null;
   level: string | null;
-  status: "pending" | "processing" | "ready" | "failed";
+  status: "uploading" | "pending" | "processing" | "ready" | "failed";
+  stage: "uploading" | "repackaging" | "subtitles" | "transcribing" | null;
   progress: number;
+  file_url: string | null;
+  poster: string | null;
+  size_bytes: number;
+  subtitle_source: "file" | "embedded" | "transcribed" | null;
   error: string | null;
   line_count: number;
   can_delete: boolean;

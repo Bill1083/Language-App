@@ -102,6 +102,14 @@ crontab -e
 
 Set `BACKUP_PASSPHRASE` in `.env` to encrypt the files, and copy `./backups` somewhere off the box.
 
+### Uploaded videos
+
+Video files live in the `parlo_videos` Docker volume. They are **not** in the nightly backup (they're
+large and you have the originals). Limits are in `.env`: `VIDEO_MAX_FILE_MB` (default 2048),
+`VIDEO_MAX_MINUTES` (60), `VIDEO_STORAGE_GB` (25 for the whole library) and `VIDEO_UPLOADERS`
+(`admin` or `everyone`). Check free space with `df -h` and keep about 30% of the disk free. Space used by
+videos: `docker system df -v | grep videos`. Uploads go in 6 MB pieces, so Nginx needs no change.
+
 ## Updating
 
 ```bash

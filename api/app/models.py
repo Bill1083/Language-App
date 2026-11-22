@@ -449,10 +449,15 @@ class Video(Base):
     file_key: Mapped[str | None] = mapped_column(String(120))
     duration_s: Mapped[int | None] = mapped_column(Integer)
     level: Mapped[str | None] = mapped_column(String(4))
-    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending | processing | ready | failed
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # uploading | pending | processing | ready | failed
     progress: Mapped[int] = mapped_column(Integer, default=0)  # percent of lines prepared
     error: Mapped[str | None] = mapped_column(Text)
     line_count: Mapped[int] = mapped_column(Integer, default=0)
+    # uploaded files: bytes on disk (reserved while uploading), served type, current step
+    size_bytes: Mapped[int] = mapped_column(BigInteger, default=0)
+    mime: Mapped[str | None] = mapped_column(String(40))
+    stage: Mapped[str | None] = mapped_column(String(24))  # uploading | repackaging | subtitles | transcribing
+    subtitle_source: Mapped[str | None] = mapped_column(String(16))  # file | embedded | transcribed
     added_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = _now_col()
     lines: Mapped[list["VideoLine"]] = relationship(

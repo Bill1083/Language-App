@@ -354,6 +354,39 @@ class AIService:
                        latency_ms=int((time.monotonic() - started) * 1000))
         return result.audio, result.mime, tts.name
 
+    async def transcribe_segments(self, audio: bytes, mime: str, lang: str, seconds: float
+                                  ) -> list[tuple[float, float, str]]:
+        """Timed segments for one clip of a video, with the same fallback as transcribe()."""
+        cfg = await self.config()
+        models = stt_model_order(cfg)
+        error: ProviderError | None = None
+        for i, model in enumerate(models):
+            if i and model == models[i - 1]:
+                await asyncio.sleep(RETRY_DELAY)
+            stt = stt_for(cfg, model)
+            started = time.monotonic()
+            try:
+                segments = await asyncio.wait_for(stt.transcribe_segments(audio, mime, lang), 120)
+            except TimeoutError:
+                error = ProviderError(f"{stt.name} took over 2 minutes on one clip", retryable=True, status=504)
+            except ProviderError as e:
+                error = e
+            except httpx.HTTPError as e:
+                error = network_error(stt.name, e)
+            except ValueError as e:
+                error = ProviderError(f"{stt.name} returned unreadable timestamps: {e}", retryable=True)
+            else:
+                await self.log(task="stt_video", provider=stt.name, model=stt.model, audio_seconds=seconds,
+                               cost=pricing.stt_cost(stt.name, seconds, cfg.pricing),
+                               latency_ms=int((time.monotonic() - started) * 1000))
+                return segments
+            await self.log(task="stt_video", provider=stt.name, model=stt.model, audio_seconds=seconds, ok=False)
+            if overloaded(error):
+                await mark_overloaded(stt.name, model)
+            if not error.retryable:
+                break
+        raise error  # type: ignore[misc]
+
     async def transcribe(self, audio: bytes, mime: str, lang: str, duration_s: float,
                          feedback_instructions: str | None = None,
                          on_retry: Callable[[str], Awaitable[None]] | None = None) -> STTResult:

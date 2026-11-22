@@ -27,6 +27,7 @@ from ..models import (
     Streak,
     Unit,
     User,
+    Video,
 )
 from ..providers.base import ChatMessage, ProviderError
 from ..redis_client import get_redis
@@ -36,6 +37,7 @@ from .audio_cache import tts_key
 from .course import course_map, upcoming_lessons
 from .kanji import new_kanji_by_lesson, write_hooks
 from .lesson_gen import generate_lesson
+from .video_files import VideoFileError, process_file, remove_files
 from .videos import prepare_video
 from .progress import award_xp, check_achievements, local_today, user_tz
 from .text import has_japanese
@@ -99,6 +101,45 @@ async def run_process_video(video_id: int) -> str:
             raise
     await job_log("video_ready", video_id=video_id, lines=video.line_count, level=video.level)
     return "ok"
+
+
+async def run_process_video_file(video_id: int) -> str:
+    """Uploaded file → playable copy + subtitle lines → the usual annotation."""
+    async with SessionLocal() as db:
+        ai = AIService(db, user_id=None)
+        try:
+            await process_file(db, ai, video_id)
+        except Exception as e:
+            await db.rollback()
+            video = await db.get(Video, video_id)
+            if video is not None:
+                video.status, video.stage = "failed", None
+                video.error = str(e) if isinstance(e, VideoFileError) else f"Couldn't process the file: {str(e)[:300]}"
+                if isinstance(e, VideoFileError):  # retrying won't help, so free the disk space now
+                    remove_files(video_id)
+                    video.size_bytes = 0
+                await db.commit()
+            await job_log("video_failed", video_id=video_id, error=str(e)[:300])
+            if isinstance(e, VideoFileError):
+                return "refused"  # a problem with the file itself: retrying won't help
+            raise
+        await prepare_video(db, ai, video_id)
+    await job_log("video_ready", video_id=video_id)
+    return "ok"
+
+
+async def run_cleanup_uploads() -> int:
+    """Uploads abandoned for two days free their reserved space."""
+    cutoff = datetime.now(UTC) - timedelta(days=2)
+    async with SessionLocal() as db:
+        stale = list(await db.scalars(select(Video).where(Video.status == "uploading", Video.created_at < cutoff)))
+        for video in stale:
+            remove_files(video.id)
+            await db.delete(video)
+        await db.commit()
+    if stale:
+        await job_log("uploads_cleanup", removed=len(stale))
+    return len(stale)
 
 
 async def run_kanji_hooks(chars: list[str]) -> int:

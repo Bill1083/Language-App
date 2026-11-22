@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     registration_mode: Literal["open", "invite", "closed"] = "invite"
     recording_retention_days: int = 30
     store_recordings: bool = True
+    # Watch: uploaded video files (YouTube videos aren't stored)
+    video_max_file_mb: int = 2048
+    video_max_minutes: int = 60
+    video_storage_gb: float = 25
+    video_uploaders: str = "admin"  # admin | everyone
     cookie_secure: Literal["auto", "true", "false"] = "auto"
     session_days: int = 30
     data_dir: Path = Path("/data")
@@ -104,6 +109,10 @@ class Settings(BaseSettings):
     @property
     def recordings_dir(self) -> Path:
         return self.data_dir / "recordings"
+
+    @property
+    def videos_dir(self) -> Path:
+        return self.data_dir / "videos"
 
 
 @lru_cache

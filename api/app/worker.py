@@ -19,6 +19,14 @@ async def generate_lesson(ctx, lesson_id: int, force: bool = False) -> str:
     return await jobs.run_generate_lesson(lesson_id, force)
 
 
+async def process_video_file(ctx, video_id: int) -> str:
+    return await jobs.run_process_video_file(video_id)
+
+
+async def cleanup_uploads(ctx) -> int:
+    return await jobs.run_cleanup_uploads()
+
+
 async def process_video(ctx, video_id: int) -> str:
     return await jobs.run_process_video(video_id)
 
@@ -57,9 +65,11 @@ async def startup(ctx) -> None:
 
 class WorkerSettings:
     functions = [generate_lesson, precache_lesson_audio, pregenerate, analyze_turn, summarize_conversation,
-                 kanji_hooks, func(process_video, timeout=1800)]  # long videos take a while
+                 kanji_hooks, func(process_video, timeout=1800),
+                 func(process_video_file, timeout=3600)]  # long videos take a while
     cron_jobs = [
         cron(cleanup_recordings, hour={3}, minute={17}),
+        cron(cleanup_uploads, hour={3}, minute={27}),
         cron(push_reminders, minute={0}),
     ]
     redis_settings = jobs.redis_settings()

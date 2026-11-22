@@ -6,6 +6,9 @@
 # ---------------------------------------------------------------------------
 
 FROM python:3.13-slim-bookworm AS base
+# ffmpeg: repackaging uploaded videos, reading their subtitle tracks, audio for transcription
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -27,7 +30,7 @@ FROM base AS runtime
 COPY api/ ./
 COPY curriculum/ /app/curriculum/
 RUN useradd --create-home --uid 1000 parlo \
-    && mkdir -p /data/audio_cache /data/recordings \
+    && mkdir -p /data/audio_cache /data/recordings /data/videos \
     && chown -R parlo:parlo /data \
     && chmod +x docker-entrypoint.sh
 USER parlo

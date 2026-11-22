@@ -24,6 +24,13 @@ COMBINED_PROMPT = VERBATIM_PROMPT.rsplit("- Output only", 1)[0] + """- Then asse
 Return JSON: {{"transcript": "<verbatim transcript>", "pronunciation_notes": ["<short note about a sound
 the speaker mispronounced, in English>"], "feedback": <feedback object as described in the system instructions>}}"""
 
+SEGMENTS_PROMPT = """Transcribe the {language} speech in this audio clip as subtitles.
+- Write exactly what is said, in {language}{script_note}. Do not translate or summarise.
+- One segment per sentence or short phrase, at most about 8 seconds each.
+- start and end are seconds from the start of THIS clip, as precisely as you can.
+- Leave out music, sound effects and silence. If nobody speaks, return no segments.
+Return JSON: {{"segments": [{{"start": 0.0, "end": 2.4, "text": "..."}}]}}"""
+
 DEFAULT_STT_MODELS = {
     "gemini": "gemini-3.8-flash",
     "openai": "gpt-4o-transcribe",
@@ -60,6 +67,10 @@ class STTProvider:
     async def transcribe(self, audio: bytes, mime: str, lang: str, duration_s: float = 0.0) -> STTResult:
         raise NotImplementedError
 
+    async def transcribe_segments(self, audio: bytes, mime: str, lang: str) -> list[tuple[float, float, str]]:
+        """Timed subtitle segments (start s, end s, text) for a clip of up to a few minutes."""
+        raise ProviderError(f"{self.name} speech-to-text can't give timestamps — switch to Gemini or Groq")
+
 
 class GeminiSTT(STTProvider):
     name = "gemini"
@@ -74,6 +85,21 @@ class GeminiSTT(STTProvider):
                                                   thinking="minimal")
         text = result.text.strip().strip('"')
         return STTResult(text=text, provider=self.name, model=self.model, audio_seconds=duration_s, usage=result.usage)
+
+    async def transcribe_segments(self, audio, mime, lang):
+        prompt = SEGMENTS_PROMPT.format(language=LANG_NAMES.get(lang, lang), script_note=_script_note(lang))
+        result = await self._llm().complete_audio(model=self.model, prompt=prompt, audio=audio, mime=mime,
+                                                  json_mode=True, thinking="minimal")
+        data = extract_json(result.text) if result.text.strip() else {}
+        out = []
+        for seg in (data.get("segments") or []) if isinstance(data, dict) else []:
+            try:
+                start, end, text = float(seg["start"]), float(seg["end"]), str(seg["text"]).strip()
+            except (KeyError, TypeError, ValueError):
+                continue
+            if text:
+                out.append((start, max(end, start + 0.5), text))
+        return out
 
     async def transcribe_with_feedback(self, audio, mime, lang, feedback_instructions: str, duration_s=0.0):
         """Optional combined call: verbatim transcript + feedback JSON + pronunciation notes."""
@@ -116,6 +142,19 @@ class OpenAISTT(STTProvider):
             text=(body.get("text") or "").strip(), provider=self.name, model=self.model, words=words,
             audio_seconds=float(body.get("duration") or duration_s),
         )
+
+    async def transcribe_segments(self, audio, mime, lang):
+        if self.model.startswith("gpt-4o"):
+            raise ProviderError(f"{self.model} doesn't give timestamps — use whisper-1, Groq or Gemini for videos")
+        base = self.base_url or self.DEFAULT_BASE
+        headers = {"authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+        data = {"model": self.model, "language": lang, "response_format": "verbose_json",
+                "timestamp_granularities[]": "segment"}
+        files = {"file": (f"clip.{audio_ext(mime)}", audio, mime.split(";")[0])}
+        resp = await self.client.post(f"{base}/audio/transcriptions", headers=headers, data=data, files=files)
+        raise_for_status(resp, f"{self.name} STT")
+        return [(float(seg["start"]), float(seg["end"]), str(seg.get("text", "")).strip())
+                for seg in resp.json().get("segments") or [] if str(seg.get("text", "")).strip()]
 
 
 class GroqSTT(OpenAISTT):

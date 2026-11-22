@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Check, LoaderCircle, Pause, Play, Repeat, SkipBack, SkipForward } from "lucide-react";
+import { ArrowLeft, Check, LoaderCircle, Maximize, Minimize, Pause, Play, Repeat, SkipBack, SkipForward } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
@@ -96,6 +96,70 @@ function YouTubePlayer({ youtubeId, startS, onReady, onState }: {
   return (
     <div className="aspect-video w-full overflow-hidden bg-black [&_iframe]:size-full">
       <div ref={host} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- your own file
+
+const PAUSED = 2;
+
+/** A plain <video> behind the same small interface as the YouTube player, with room for
+ * subtitles on the picture and a full-screen mode that keeps them. */
+function FilePlayer({ src, poster, startS, onReady, onState, onSeek, overlay, fullscreen, onFullscreen }: {
+  src: string; poster: string | null; startS: number; onReady: (p: YTPlayer) => void; onState: (s: number) => void;
+  onSeek: (ms: number) => void; overlay: React.ReactNode; fullscreen: boolean; onFullscreen: (on: boolean) => void;
+}) {
+  const box = React.useRef<HTMLDivElement>(null);
+  const el = React.useRef<HTMLVideoElement>(null);
+  const started = React.useRef(false);
+
+  React.useEffect(() => {
+    const h = () => onFullscreen(document.fullscreenElement === box.current);
+    document.addEventListener("fullscreenchange", h);
+    return () => document.removeEventListener("fullscreenchange", h);
+  }, [onFullscreen]);
+
+  const toggleFullscreen = () => {
+    const v = el.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else if (box.current?.requestFullscreen) void box.current.requestFullscreen().catch(() => v?.webkitEnterFullscreen?.());
+    else v?.webkitEnterFullscreen?.(); // iPhone: the system player (subtitles stay below)
+  };
+
+  return (
+    <div ref={box} className={cn("relative w-full bg-black", fullscreen ? "flex h-full items-center" : "aspect-video")}>
+      <video ref={el} src={src} poster={poster ?? undefined} controls playsInline preload="metadata"
+        controlsList="nofullscreen nodownload" disablePictureInPicture className="size-full"
+        onLoadedMetadata={(e) => {
+          const v = e.currentTarget;
+          if (!started.current && startS > 1 && startS < v.duration - 5) v.currentTime = startS;
+          started.current = true;
+          onReady({
+            playVideo: () => void v.play().catch(() => {}),
+            pauseVideo: () => v.pause(),
+            seekTo: (s) => { v.currentTime = s; },
+            getCurrentTime: () => v.currentTime,
+            setPlaybackRate: (r) => { v.playbackRate = r; },
+            destroy: () => v.pause(),
+          });
+        }}
+        onPlay={() => onState(PLAYING)} onPause={() => onState(PAUSED)} onEnded={() => onState(ENDED)}
+        onSeeked={(e) => onSeek(Math.round(e.currentTarget.currentTime * 1000))} />
+      {overlay && (
+        <div className={cn("pointer-events-none absolute inset-x-0 flex justify-center px-3",
+          fullscreen ? "bottom-16 sm:bottom-20" : "bottom-14")}>
+          <div className={cn("pointer-events-auto max-w-[92%] rounded-xl bg-black/70 px-3 py-1.5 text-center text-white",
+            "[&_rt]:text-white/80", fullscreen && "sm:max-w-[70%] sm:px-5 sm:py-2.5 sm:text-2xl")}>
+            {overlay}
+          </div>
+        </div>
+      )}
+      <Button size="icon-sm" variant="ghost" aria-label={fullscreen ? "Exit full screen" : "Full screen with subtitles"}
+        onClick={toggleFullscreen}
+        className="absolute right-2 top-2 size-9 rounded-full bg-black/55 text-white hover:bg-black/75 hover:text-white">
+        {fullscreen ? <Minimize /> : <Maximize />}
+      </Button>
     </div>
   );
 }
@@ -221,6 +285,15 @@ export default function WatchVideoPage() {
   const [ended, setEnded] = React.useState(false);
   const [ms, setMs] = React.useState(0);
   const [slow, setSlow] = React.useState(false);
+  const [fullscreen, setFullscreen] = React.useState(false);
+  const [onPicture, setOnPicture] = React.useState(true);
+  React.useEffect(() => {
+    try { setOnPicture(localStorage.getItem("parlo.subs-on-video") !== "0"); } catch { /* default on */ }
+  }, []);
+  const pictureSubs = (on: boolean) => {
+    setOnPicture(on);
+    try { localStorage.setItem("parlo.subs-on-video", on ? "1" : "0"); } catch { /* not remembered */ }
+  };
   const stopAt = React.useRef<number | null>(null); // pause-after-each-line target
   const transcript = React.useRef<HTMLDivElement>(null);
   const userScrolledAt = React.useRef(0);
@@ -321,6 +394,22 @@ export default function WatchVideoPage() {
       </header>
 
       <div className="sticky top-0 z-10 sm:static">
+        {video.file_url && (
+          <FilePlayer src={video.file_url} poster={video.poster} startS={video.position_ms / 1000}
+            fullscreen={fullscreen} onFullscreen={setFullscreen} onSeek={setMs}
+            onReady={(p) => { player.current = p; setReady(true); }}
+            onState={(s) => { setPlaying(s === PLAYING); if (s === ENDED) setEnded(true); }}
+            overlay={(onPicture || fullscreen) && showing ? (
+              <div lang={lang}>
+                <p className="text-[17px] font-semibold leading-snug sm:text-[1.15em]">
+                  <RubyText text={mode === "kana" && lang === "ja" ? (showing.kana ?? showing.text) : showing.text} lang={lang}
+                    furigana={mode === "full" ? "always" : "never"} romaji="off" showRomaji={false}
+                    onWordTap={fullscreen ? undefined : (w, el) => { player.current?.pauseVideo(); words.open(w, el, stripRuby(showing.text)); }} />
+                </p>
+                {mode === "full" && showing.en && <p className="text-[13px] text-white/80 sm:text-[0.7em]">{showing.en}</p>}
+              </div>
+            ) : null} />
+        )}
         {video.youtube_id && (
           <YouTubePlayer youtubeId={video.youtube_id} startS={video.position_ms / 1000}
             onReady={(p) => { player.current = p; setReady(true); }}
@@ -329,7 +418,7 @@ export default function WatchVideoPage() {
       </div>
 
       <main className="flex-1 space-y-4 px-3 pb-10 pt-3 sm:px-4">
-        {video.status !== "ready" && (
+        {video.status !== "ready" && video.status !== "failed" && (
           <p className="flex items-center gap-2 rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">
             <LoaderCircle className="size-4 animate-spin text-primary" /> Preparing subtitles — {video.progress}%.
             You can start watching; readings and English fill in as they&apos;re ready.
@@ -366,6 +455,15 @@ export default function WatchVideoPage() {
             </span>
             <Switch checked={autopause} onCheckedChange={(c) => update.mutate({ video_autopause: c })} />
           </label>
+          {video.file_url && (
+            <label className="flex items-center justify-between gap-3 border-t pt-3 text-sm">
+              <span>
+                <span className="block font-semibold">Subtitles on the video</span>
+                <span className="block text-xs text-muted-foreground">Full screen always shows them.</span>
+              </span>
+              <Switch checked={onPicture} onCheckedChange={pictureSubs} />
+            </label>
+          )}
         </Card>
 
         {ended && <p className="text-center text-sm font-semibold text-primary-strong">Finished! Pick the words you want to keep below.</p>}

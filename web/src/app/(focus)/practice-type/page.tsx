@@ -40,7 +40,7 @@ function Session() {
   const router = useRouter();
   const qc = useQueryClient();
   const scope = {
-    lessons: params.get("lessons"), units: params.get("units"), unit: params.get("unit"), level: params.get("level"),
+    vocab: params.get("vocab"), lessons: params.get("lessons"), units: params.get("units"), unit: params.get("unit"), level: params.get("level"),
     order: params.get("order") ?? "course", limit: params.get("limit") ?? "20",
   };
   const { data, isLoading } = usePracticeItems(lang, scope);

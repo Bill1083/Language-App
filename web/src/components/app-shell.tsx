@@ -5,6 +5,7 @@ import {
   ChartColumn,
   Check,
   ChevronDown,
+  Clapperboard,
   Flame,
   House,
   Layers,
@@ -37,6 +38,7 @@ const PRIMARY = [
   { href: "/", label: "Home", icon: House },
   { href: "/learn", label: "Learn", icon: BookOpen },
   { href: "/talk", label: "Talk", icon: MessageCircle },
+  { href: "/watch", label: "Watch", icon: Clapperboard },
   { href: "/review", label: "Review", icon: Layers },
   { href: "/profile", label: "Profile", icon: User },
 ];
@@ -241,7 +243,7 @@ function BottomNav() {
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/90 backdrop-blur-lg safe-bottom lg:hidden"
     >
-      <div className="mx-auto grid h-16 max-w-lg grid-cols-5">
+      <div className="mx-auto grid h-16 max-w-lg grid-cols-6">
         {PRIMARY.map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
           return (

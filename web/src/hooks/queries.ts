@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { get } from "@/lib/api";
-import type { Achievement, Conversation, Course, Dashboard, Lang, Scenario, SrsCard } from "@/lib/types";
+import type { Achievement, Conversation, Course, Dashboard, Lang, Scenario, SrsCard, Video } from "@/lib/types";
 
 export function useDashboard(lang: Lang | null) {
   return useQuery({
@@ -35,6 +35,7 @@ export type SessionScope = {
   unit?: string | null;
   units?: string | null; // "3,4,5"
   lessons?: string | null; // lesson blocks from the course map, "12,13,14"
+  vocab?: string | null; // exact words, e.g. the ones just saved from a video
   order?: string | null; // "course" | "shuffle"
   limit?: string | null;
 };
@@ -42,7 +43,8 @@ export type SessionScope = {
 /** Query string for a practice selection (a level, one unit or several). */
 export function practiceParams(scope: SessionScope) {
   const p = new URLSearchParams();
-  if (scope.lessons) p.set("lessons", scope.lessons);
+  if (scope.vocab) p.set("vocab", scope.vocab);
+  else if (scope.lessons) p.set("lessons", scope.lessons);
   else if (scope.units) p.set("units", scope.units);
   else if (scope.unit) p.set("unit_id", scope.unit);
   else if (scope.level) p.set("level", scope.level);
@@ -149,5 +151,25 @@ export function useKnownKanji(lang: Lang | null) {
     queryFn: () => get<{ kanji: string; count: number; met: string; met_count: number }>(`/kanji/${lang}`),
     enabled: lang === "ja",
     staleTime: 300_000,
+  });
+}
+
+const preparing = (v?: Video) => v?.status === "pending" || v?.status === "processing";
+
+/** The Watch library for a language; polls while any video is still being prepared. */
+export function useVideos(lang: Lang | null) {
+  return useQuery({
+    queryKey: ["videos", lang],
+    queryFn: () => get<Video[]>(`/videos?lang=${lang}`),
+    enabled: !!lang,
+    refetchInterval: (q) => (q.state.data?.some(preparing) ? 3000 : false),
+  });
+}
+
+export function useVideo(id: number) {
+  return useQuery({
+    queryKey: ["video", id],
+    queryFn: () => get<Video>(`/videos/${id}`),
+    refetchInterval: (q) => (preparing(q.state.data) ? 3000 : false),
   });
 }

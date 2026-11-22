@@ -434,3 +434,55 @@ class AudioCache(Base):
     provider: Mapped[str] = mapped_column(String(24))
     chars: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = _now_col()
+
+
+class Video(Base):
+    """A video in the shared Watch library: a YouTube video (played with YouTube's own
+    player) or an uploaded file, with subtitle lines prepared for learners."""
+
+    __tablename__ = "videos"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    language_code: Mapped[str] = mapped_column(ForeignKey("languages.code"), index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    source: Mapped[str] = mapped_column(String(16))  # youtube | file
+    youtube_id: Mapped[str | None] = mapped_column(String(32))
+    file_key: Mapped[str | None] = mapped_column(String(120))
+    duration_s: Mapped[int | None] = mapped_column(Integer)
+    level: Mapped[str | None] = mapped_column(String(4))
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending | processing | ready | failed
+    progress: Mapped[int] = mapped_column(Integer, default=0)  # percent of lines prepared
+    error: Mapped[str | None] = mapped_column(Text)
+    line_count: Mapped[int] = mapped_column(Integer, default=0)
+    added_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = _now_col()
+    lines: Mapped[list["VideoLine"]] = relationship(
+        back_populates="video", order_by="VideoLine.idx", cascade="all, delete-orphan", passive_deletes=True)
+
+
+class VideoLine(Base):
+    """One subtitle line: the original text and its learner layers."""
+
+    __tablename__ = "video_lines"
+    __table_args__ = (UniqueConstraint("video_id", "idx"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    video_id: Mapped[int] = mapped_column(ForeignKey("videos.id", ondelete="CASCADE"), index=True)
+    idx: Mapped[int] = mapped_column(Integer)
+    start_ms: Mapped[int] = mapped_column(Integer)
+    end_ms: Mapped[int] = mapped_column(Integer)
+    raw: Mapped[str] = mapped_column(Text)  # as in the subtitle file
+    ja: Mapped[str | None] = mapped_column(Text)  # with {漢字|かな} furigana (Japanese) / tidied text
+    kana: Mapped[str | None] = mapped_column(Text)  # Japanese only: the line in hiragana
+    en: Mapped[str | None] = mapped_column(Text)
+    words: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
+    video: Mapped[Video] = relationship(back_populates="lines")
+
+
+class VideoProgress(Base):
+    """Where each person got to in a video."""
+
+    __tablename__ = "video_progress"
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    video_id: Mapped[int] = mapped_column(ForeignKey("videos.id", ondelete="CASCADE"), primary_key=True)
+    position_ms: Mapped[int] = mapped_column(Integer, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(),
+                                                 onupdate=func.now())

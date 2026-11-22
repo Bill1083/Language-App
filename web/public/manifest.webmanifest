@@ -15,9 +15,15 @@
     { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
+  "share_target": {
+    "action": "/watch",
+    "method": "GET",
+    "params": { "title": "share_title", "text": "share_text", "url": "share_url" }
+  },
   "shortcuts": [
     { "name": "Continue learning", "url": "/learn", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "Review", "url": "/review-session", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Talk", "url": "/talk", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Talk", "url": "/talk", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Watch", "url": "/watch", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

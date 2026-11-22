@@ -6,7 +6,7 @@ Run with:  arq app.worker.WorkerSettings
 
 import logging
 
-from arq import cron
+from arq import cron, func
 
 from .logging_setup import setup_logging
 from .services import jobs
@@ -17,6 +17,10 @@ log = logging.getLogger("parlo.worker")
 
 async def generate_lesson(ctx, lesson_id: int, force: bool = False) -> str:
     return await jobs.run_generate_lesson(lesson_id, force)
+
+
+async def process_video(ctx, video_id: int) -> str:
+    return await jobs.run_process_video(video_id)
 
 
 async def kanji_hooks(ctx, chars: list[str]) -> int:
@@ -53,7 +57,7 @@ async def startup(ctx) -> None:
 
 class WorkerSettings:
     functions = [generate_lesson, precache_lesson_audio, pregenerate, analyze_turn, summarize_conversation,
-                 kanji_hooks]
+                 kanji_hooks, func(process_video, timeout=1800)]  # long videos take a while
     cron_jobs = [
         cron(cleanup_recordings, hour={3}, minute={17}),
         cron(push_reminders, minute={0}),

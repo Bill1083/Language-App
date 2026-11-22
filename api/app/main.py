@@ -22,6 +22,7 @@ from .routers import (
     push,
     srs,
     stats,
+    videos,
     vocab,
 )
 from .services.ai import BudgetExceeded
@@ -83,5 +84,5 @@ async def healthz():
     return JSONResponse({"ok": ok, **status}, status_code=200 if ok else 503)
 
 
-for r in (auth, languages, course, srs, vocab, audio, conversations, stats, admin, export, push):
+for r in (auth, languages, course, srs, vocab, audio, conversations, stats, admin, export, push, videos):
     app.include_router(r.router, prefix="/api/v1")

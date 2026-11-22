@@ -19,6 +19,8 @@ export type UserSettings = {
   active_language: Lang | null;
   onboarded: boolean;
   voice_notice_seen: boolean;
+  video_subtitles: "full" | "kana" | "text";
+  video_autopause: boolean;
 };
 
 export type Enrolment = {
@@ -301,4 +303,36 @@ export type VocabRow = {
   unit: string | null;
   status: string | null;
   learned_at: string | null;
+};
+
+export type VideoWord = { word: string; reading?: string | null; meaning: string };
+
+export type VideoLine = {
+  i: number;
+  start: number; // ms
+  end: number;
+  raw: string;
+  text: string; // with {漢字|かな} furigana for Japanese
+  kana: string | null;
+  en: string | null;
+  words: VideoWord[];
+};
+
+export type Video = {
+  id: number;
+  language: Lang;
+  title: string;
+  source: "youtube" | "file";
+  youtube_id: string | null;
+  thumbnail: string | null;
+  duration_s: number | null;
+  level: string | null;
+  status: "pending" | "processing" | "ready" | "failed";
+  progress: number;
+  error: string | null;
+  line_count: number;
+  can_delete: boolean;
+  position_ms: number;
+  created_at: string | null;
+  lines?: VideoLine[];
 };

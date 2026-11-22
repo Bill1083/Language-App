@@ -28,7 +28,7 @@ class WordIn(BaseModel):
     pos: str | None = Field(default=None, max_length=32)
     example: str | None = Field(default=None, max_length=500)
     example_translation: str | None = Field(default=None, max_length=500)
-    source: str = Field(default="custom", pattern="^(custom|conversation|lesson)$")
+    source: str = Field(default="custom", pattern="^(custom|conversation|lesson|video)$")
     source_ref: str | None = None
 
 

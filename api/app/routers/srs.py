@@ -126,9 +126,15 @@ async def practice_session(lang: str, user: CurrentUser, db: Db, level: str | No
 
 @router.get("/{lang}/practice/items")
 async def practice_items(lang: str, user: CurrentUser, db: Db, level: str | None = None, unit_id: int | None = None,
-                         units: str | None = None, lessons: str | None = None, order: str = "course",
-                         limit: int = 20) -> dict[str, Any]:
-    """Words (meaning → type the word) and kana (symbol → type the romaji) for typing practice."""
+                         units: str | None = None, lessons: str | None = None, vocab: str | None = None,
+                         order: str = "course", limit: int = 20) -> dict[str, Any]:
+    """Words (meaning → type the word) and kana (symbol → type the romaji) for typing practice.
+    `vocab=ids` practises exactly those words (e.g. the ones just saved from a video)."""
+    if vocab_ids := _ids(vocab):
+        found = {c.vocab_item_id: c for c in await db.scalars(select(SrsCard).where(
+            SrsCard.user_id == user.id, SrsCard.card_type == "produce", SrsCard.vocab_item_id.in_(vocab_ids)))}
+        cards = [found[i] for i in dict.fromkeys(vocab_ids) if i in found][:50]
+        return {"items": [practice_item(c) for c in cards], "title": "Your saved words"}
     cards, title = await _practice_cards(db, user, lang, level=level, units=units, unit_id=unit_id, lessons=lessons,
                                          order=order, limit=min(limit, 50), card_types=["produce", "kana", "kanji_char"],
                                          by_lesson=True)

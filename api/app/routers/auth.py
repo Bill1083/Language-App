@@ -27,6 +27,7 @@ DEFAULT_USER_SETTINGS: dict[str, Any] = {
     "voice_gender": "female", "speech_speed": 1.0, "furigana": "always", "romaji": "auto", "strictness": "normal",
     "gender_colors": True, "reminders": False, "reminder_hour": 19, "timezone": "UTC", "active_language": None,
     "onboarded": False, "voice_notice_seen": False,
+    "video_subtitles": "full", "video_autopause": False,  # Watch: subtitle level and pause after each line
 }
 
 

@@ -36,6 +36,7 @@ from .audio_cache import tts_key
 from .course import course_map, upcoming_lessons
 from .kanji import new_kanji_by_lesson, write_hooks
 from .lesson_gen import generate_lesson
+from .videos import prepare_video
 from .progress import award_xp, check_achievements, local_today, user_tz
 from .text import has_japanese
 
@@ -86,6 +87,17 @@ async def run_generate_lesson(lesson_id: int, force: bool = False, user_id: int 
         new = (await new_kanji_by_lesson(db)).get(lesson_id)
     if new:
         await enqueue("kanji_hooks", new, job_id=f"kanji-hooks-{lesson_id}")
+    return "ok"
+
+
+async def run_process_video(video_id: int) -> str:
+    async with SessionLocal() as db:
+        try:
+            video = await prepare_video(db, AIService(db, user_id=None), video_id)
+        except Exception as e:
+            await job_log("video_failed", video_id=video_id, error=str(e)[:300])
+            raise
+    await job_log("video_ready", video_id=video_id, lines=video.line_count, level=video.level)
     return "ok"
 
 
